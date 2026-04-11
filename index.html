@@ -3,449 +3,1314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MedStock - Residencia Sol de Otoño</title>
+<title>MedStock – Residencia Sol de Otoño</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh}
-.screen{display:none;min-height:100vh}
-.screen.active{display:flex;flex-direction:column}
-#loginScreen{background:linear-gradient(135deg,#1e3a5f 0%,#2d6a9f 100%);align-items:center;justify-content:center;padding:2rem}
-.login-box{background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
-.login-logo{text-align:center;margin-bottom:1.5rem}
-.login-logo .icon{font-size:48px}
-.login-logo h1{font-size:22px;font-weight:700;color:#1e3a5f;margin-top:8px}
-.login-logo p{font-size:13px;color:#718096;margin-top:4px}
-.form-group{margin-bottom:1rem}
-.form-group label{display:block;font-size:13px;font-weight:600;color:#4a5568;margin-bottom:6px}
-.form-group input,.form-group select{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;outline:none}
-.btn-primary{width:100%;padding:12px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;margin-top:.5rem}
-.login-roles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
-.role-btn{padding:10px 8px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;text-align:center;font-size:13px;color:#4a5568}
-.role-btn.selected{border-color:#2d6a9f;background:#ebf5fb;color:#1e3a5f;font-weight:600}
-.role-btn span{display:block;font-size:22px;margin-bottom:4px}
-.app-header{background:#1e3a5f;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.app-header h2{font-size:17px;font-weight:600}
-.app-header .subtitle{font-size:12px;opacity:.75;margin-top:2px}
-.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer}
-.bottom-nav{background:#fff;border-top:1px solid #e2e8f0;display:flex;position:sticky;bottom:0}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px;cursor:pointer;border:none;background:none;color:#718096;font-size:11px;gap:3px}
-.nav-item.active{color:#1e3a5f}
-.nav-icon{font-size:22px}
-.content{flex:1;padding:16px;overflow-y:auto;max-width:700px;width:100%;margin:0 auto}
-.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #e2e8f0}
-.card-title{font-size:15px;font-weight:600;color:#1a202c;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.med-item{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
-.med-icon{width:44px;height:44px;border-radius:10px;background:#ebf5fb;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-.med-info{flex:1;min-width:0}
-.med-name{font-size:15px;font-weight:600;color:#1a202c}
-.med-detail{font-size:12px;color:#718096;margin-top:2px}
-.med-qty{text-align:right;flex-shrink:0}
-.qty-num{font-size:20px;font-weight:700;color:#1e3a5f}
-.qty-unit{font-size:11px;color:#718096;display:block}
-.stock-badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-top:4px}
-.badge-ok{background:#e6f4ea;color:#1e7e34}
-.badge-low{background:#fff3cd;color:#856404}
-.badge-out{background:#fce8e8;color:#a32d2d}
-.progress-bar{height:4px;background:#e2e8f0;border-radius:4px;margin-top:6px;overflow:hidden}
-.progress-fill{height:100%;border-radius:4px}
-.fill-ok{background:#34a853}
-.fill-low{background:#fbbc04}
-.fill-out{background:#ea4335}
-.resident-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px}
-.avatar{width:44px;height:44px;border-radius:50%;background:#1e3a5f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-.summary-card{background:#ebf5fb;border-radius:10px;padding:14px;text-align:center}
-.summary-num{font-size:28px;font-weight:700;color:#1e3a5f}
-.summary-label{font-size:12px;color:#4a5568;margin-top:4px}
-.alert-item{background:#fff;border-left:4px solid #fbbc04;border-radius:0 10px 10px 0;padding:12px 14px;margin-bottom:10px;display:flex;gap:10px}
-.alert-icon{font-size:20px;flex-shrink:0}
-.alert-sub{font-size:12px;color:#718096;margin-top:2px}
-.field-label{font-size:13px;font-weight:600;color:#4a5568;margin-bottom:5px}
-.field-input{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;outline:none}
-.btn-add{background:#1e3a5f;color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
-.btn-secondary{background:#ebf5fb;color:#1e3a5f;border:1px solid #2d6a9f;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.form-row.single{grid-template-columns:1fr}
-.section-title{font-size:13px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
-.search-bar{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;margin-bottom:12px;background:#fff}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px}
-.modal-overlay.open{display:flex}
-.modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.modal-title{font-size:17px;font-weight:700}
-.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:#718096}
-.op-row{display:flex;gap:8px;margin-bottom:12px}
-.op-btn{flex:1;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:#4a5568}
-.op-btn.active{border-color:#2d6a9f;background:#ebf5fb;color:#1e3a5f}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1e3a5f;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:300;display:none;white-space:nowrap}
-.toast.show{display:block}
+  :root {
+    --cream: #faf7f2;
+    --warm-white: #fff9f2;
+    --amber: #d4883a;
+    --amber-light: #f0b060;
+    --amber-dark: #a05e20;
+    --brown: #5c3d1e;
+    --brown-light: #8a6040;
+    --green: #4a7c59;
+    --green-light: #e8f4ec;
+    --red: #c0392b;
+    --red-light: #fdecea;
+    --yellow: #e6a817;
+    --yellow-light: #fef9e7;
+    --blue: #2c6fad;
+    --blue-light: #e8f0fb;
+    --text: #2d1f0e;
+    --text-muted: #7a5c40;
+    --border: #e8d8c4;
+    --shadow: 0 2px 16px rgba(92,61,30,0.10);
+    --shadow-lg: 0 8px 40px rgba(92,61,30,0.16);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ====== LOGIN ====== */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fdf3e3 0%, #f5e6d0 50%, #eeddc0 100%);
+    padding: 20px;
+  }
+
+  .login-card {
+    background: white;
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .login-logo .icon {
+    font-size: 52px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .login-logo h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    color: var(--brown);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .login-logo p {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--warm-white);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--amber);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: white;
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .btn-primary:hover { background: var(--amber-dark); }
+
+  .btn-secondary {
+    background: var(--border);
+    color: var(--brown);
+  }
+
+  .btn-secondary:hover { background: #d8c4a8; }
+
+  .btn-green {
+    background: var(--green);
+    color: white;
+  }
+
+  .btn-green:hover { background: #3a6347; }
+
+  .btn-red {
+    background: var(--red);
+    color: white;
+  }
+
+  .btn-red:hover { background: #a93226; }
+
+  .btn-sm {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
+
+  .login-error {
+    background: var(--red-light);
+    color: var(--red);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ====== APP SHELL ====== */
+  #app { display: none; min-height: 100vh; background: var(--cream); }
+
+  .topbar {
+    background: var(--brown);
+    color: white;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .topbar-brand span { font-size: 22px; }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .user-badge {
+    background: rgba(255,255,255,0.15);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+  }
+
+  .btn-logout {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+  }
+
+  .btn-logout:hover { background: rgba(255,255,255,0.25); }
+
+  .nav-tabs {
+    background: white;
+    border-bottom: 2px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-tab:hover { color: var(--amber); }
+  .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  .main-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+
+  /* ====== CARDS ====== */
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--brown);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-body { padding: 20px 22px; }
+
+  /* ====== STATS ====== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
+  .stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--brown); font-family: 'Fraunces', serif; }
+  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  /* ====== TABLE ====== */
+  .table-wrapper { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+  th {
+    background: var(--cream);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--warm-white); }
+
+  /* ====== BADGES ====== */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge-ok { background: var(--green-light); color: var(--green); }
+  .badge-low { background: var(--yellow-light); color: var(--yellow); }
+  .badge-out { background: var(--red-light); color: var(--red); }
+  .badge-role { background: var(--blue-light); color: var(--blue); }
+
+  /* ====== PROGRESS BAR ====== */
+  .progress-bar {
+    background: var(--border);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    min-width: 80px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s;
+  }
+
+  .fill-ok { background: var(--green); }
+  .fill-low { background: var(--yellow); }
+  .fill-out { background: var(--red); }
+
+  /* ====== MODAL ====== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    color: var(--brown);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+
+  /* ====== ALERTS ====== */
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .alert-low { background: var(--yellow-light); border-left: 4px solid var(--yellow); }
+  .alert-out { background: var(--red-light); border-left: 4px solid var(--red); }
+
+  /* ====== SEARCH ====== */
+  .search-bar {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .search-bar input {
+    width: 100%;
+    padding: 10px 16px 10px 38px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: var(--warm-white);
+    outline: none;
+  }
+
+  .search-bar input:focus { border-color: var(--amber); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 16px;
+  }
+
+  /* ====== RESIDENT LIST ====== */
+  .resident-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .resident-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+  }
+
+  .resident-card:hover {
+    border-color: var(--amber);
+    box-shadow: 0 4px 20px rgba(212,136,58,0.15);
+    transform: translateY(-2px);
+  }
+
+  .resident-name {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 8px;
+  }
+
+  .resident-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ====== MOVEMENTS ====== */
+  .movement-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    align-items: flex-start;
+  }
+
+  .movement-item:last-child { border-bottom: none; }
+
+  .movement-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .mov-in { background: var(--green-light); }
+  .mov-out { background: var(--red-light); }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tag {
+    display: inline-block;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--brown);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    display: none;
+    z-index: 9999;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 16px;
+    padding: 4px 0;
+  }
+
+  .back-btn:hover { color: var(--amber); }
+
+  @media (max-width: 768px) {
+    .main-content { padding: 16px; }
+    .login-card { padding: 32px 24px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .modal { padding: 24px 20px; }
+  }
 </style>
 </head>
 <body>
 
-<div id="loginScreen" class="screen active">
-  <div class="login-box">
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
     <div class="login-logo">
-      <div class="icon">💊</div>
-      <h1>MedStock</h1>
-      <p>Residencia Sol de Otoño</p>
+      <span class="icon">🍂</span>
+      <h1>Residencia Sol de Otoño</h1>
+      <p>Sistema de gestión de medicamentos</p>
     </div>
-    <div class="section-title" style="text-align:center;margin-bottom:10px">Ingresá como</div>
-    <div class="login-roles">
-      <div class="role-btn selected" onclick="selectRole('familiar')" id="rol-familiar"><span>👨‍👩‍👧</span>Familiar</div>
-      <div class="role-btn" onclick="selectRole('staff')" id="rol-staff"><span>👩‍⚕️</span>Personal</div>
-    </div>
+    <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
     <div class="form-group">
-      <label>Residente</label>
-      <select id="loginResidente">
-        <option value="">Seleccioná un residente...</option>
-        <option value="0">García, María Elena</option>
-        <option value="1">Rodríguez, Juan Carlos</option>
-        <option value="2">López, Ana Rosa</option>
-      </select>
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="loginPass" placeholder="••••••" value="1234">
+      <input type="password" id="login-pass" placeholder="••••••••">
     </div>
-    <button class="btn-primary" onclick="doLogin()">Ingresar</button>
+    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
   </div>
 </div>
 
-<div id="appScreen" class="screen">
-  <div class="app-header">
-    <div>
-      <h2 id="headerTitle">MedStock</h2>
-      <div class="subtitle" id="headerSub">Residencia Sol de Otoño</div>
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span>🍂</span> MedStock
     </div>
-    <button class="logout-btn" onclick="doLogout()">Salir</button>
+    <div class="topbar-user">
+      <span class="user-badge" id="user-display"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
   </div>
-  <div class="content" id="mainContent"></div>
-  <div class="bottom-nav" id="bottomNav"></div>
+
+  <div class="nav-tabs" id="nav-tabs"></div>
+
+  <div class="main-content" id="main-content"></div>
 </div>
 
-<div class="modal-overlay" id="modalAgregar">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">➕ Cargar medicamento</span>
-      <button class="close-btn" onclick="closeModal('modalAgregar')">✕</button>
-    </div>
-    <div class="form-row">
-      <div><div class="field-label">Residente</div>
-        <select class="field-input" id="fResidente">
-          <option value="0">García, María Elena</option>
-          <option value="1">Rodríguez, Juan Carlos</option>
-          <option value="2">López, Ana Rosa</option>
-        </select>
-      </div>
-      <div><div class="field-label">Tipo</div>
-        <select class="field-input" id="fTipo">
-          <option>Medicamento</option><option>Insumo</option><option>Suplemento</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row single"><div>
-      <div class="field-label">Nombre comercial</div>
-      <input class="field-input" id="fNombre" placeholder="Ej: Atenolol">
-    </div></div>
-    <div class="form-row">
-      <div><div class="field-label">Droga / Principio activo</div>
-        <input class="field-input" id="fDroga" placeholder="Ej: Atenolol">
-      </div>
-      <div><div class="field-label">Concentración</div>
-        <input class="field-input" id="fDosis" placeholder="Ej: 50 mg">
-      </div>
-    </div>
-    <div class="form-row">
-      <div><div class="field-label">Cantidad</div>
-        <input class="field-input" type="number" id="fCantidad" min="0" placeholder="0">
-      </div>
-      <div><div class="field-label">Unidad</div>
-        <select class="field-input" id="fUnidad">
-          <option>comprimidos</option><option>cápsulas</option><option>ml</option>
-          <option>frascos</option><option>ampollas</option><option>parches</option><option>unidades</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div><div class="field-label">Stock mínimo (alerta)</div>
-        <input class="field-input" type="number" id="fMinimo" min="0" placeholder="Ej: 10">
-      </div>
-      <div><div class="field-label">Vencimiento</div>
-        <input class="field-input" type="date" id="fVence">
-      </div>
-    </div>
-    <button class="btn-add" onclick="guardarMed()">Guardar medicamento</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalEditar">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="editTitulo">Actualizar stock</span>
-      <button class="close-btn" onclick="closeModal('modalEditar')">✕</button>
-    </div>
-    <div class="op-row">
-      <button class="op-btn active" id="opSumar" onclick="setOp('sumar')">➕ Sumar</button>
-      <button class="op-btn" id="opRestar" onclick="setOp('restar')">➖ Restar</button>
-      <button class="op-btn" id="opSetear" onclick="setOp('setear')">✏️ Fijar</button>
-    </div>
-    <div class="form-row single"><div>
-      <div class="field-label" id="editLabel">Cantidad a sumar</div>
-      <input class="field-input" type="number" id="editCantidad" min="0" value="1" oninput="updatePreview()">
-    </div></div>
-    <div style="font-size:13px;color:#718096;margin-bottom:12px" id="editPreview"></div>
-    <button class="btn-add" onclick="confirmarEdit()">Confirmar</button>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
+<div id="toast"></div>
 
 <script>
-var S={
-  rol:'familiar', residente:null, tab:'stock', editIdx:null, editOp:'sumar',
-  residentes:[
-    {nombre:'García, María Elena',edad:78,habitacion:'101'},
-    {nombre:'Rodríguez, Juan Carlos',edad:82,habitacion:'204'},
-    {nombre:'López, Ana Rosa',edad:75,habitacion:'312'}
-  ],
-  meds:[
-    {res:0,nombre:'Atenolol',droga:'Atenolol',dosis:'50 mg',tipo:'Medicamento',cantidad:30,minimo:10,unidad:'comprimidos',vence:'2025-12-01',emoji:'❤️'},
-    {res:0,nombre:'Metformina',droga:'Metformina HCl',dosis:'850 mg',tipo:'Medicamento',cantidad:8,minimo:15,unidad:'comprimidos',vence:'2025-09-15',emoji:'💊'},
-    {res:0,nombre:'Pañales talla G',droga:'-',dosis:'-',tipo:'Insumo',cantidad:0,minimo:5,unidad:'unidades',vence:'',emoji:'🧻'},
-    {res:1,nombre:'Losartan',droga:'Losartan potásico',dosis:'100 mg',tipo:'Medicamento',cantidad:45,minimo:10,unidad:'comprimidos',vence:'2026-03-01',emoji:'💊'},
-    {res:1,nombre:'Omeprazol',droga:'Omeprazol',dosis:'20 mg',tipo:'Medicamento',cantidad:6,minimo:10,unidad:'cápsulas',vence:'2025-11-01',emoji:'💊'},
-    {res:2,nombre:'Calcio + Vit D',droga:'Calcio carbonato',dosis:'600 mg',tipo:'Suplemento',cantidad:60,minimo:15,unidad:'comprimidos',vence:'2026-06-01',emoji:'🦴'},
-    {res:2,nombre:'Paracetamol',droga:'Paracetamol',dosis:'500 mg',tipo:'Medicamento',cantidad:20,minimo:10,unidad:'comprimidos',vence:'2025-10-01',emoji:'💊'}
-  ]
+// =====================================================
+// DATOS
+// =====================================================
+
+const USERS = [
+  // Dueños
+  { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
+  { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
+  // Encargada
+  { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
+  // Enfermeras
+  { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
+  { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
+  { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
+  { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
+  { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
+  { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
+  // Familiares
+  { user: 'amelia.lopez', pass: '1234', name: 'Familiar – Amelia López', role: 'family', residentId: 1 },
+  { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
+  { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
+  { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
+  { user: 'rosa.andraca', pass: '1234', name: 'Familiar – Rosa Andraca', role: 'family', residentId: 5 },
+  { user: 'emilia.giron', pass: '1234', name: 'Familiar – Emilia Girón', role: 'family', residentId: 6 },
+  { user: 'susana.bustos', pass: '1234', name: 'Familiar – Susana Bustos', role: 'family', residentId: 7 },
+  { user: 'ines.rivera', pass: '1234', name: 'Familiar – Inés Rivera', role: 'family', residentId: 8 },
+  { user: 'olga.marinelli', pass: '1234', name: 'Familiar – Olga Marinelli', role: 'family', residentId: 9 },
+  { user: 'esther.moreno', pass: '1234', name: 'Familiar – Esther Moreno', role: 'family', residentId: 10 },
+  { user: 'carlos.quiroga', pass: '1234', name: 'Familiar – Carlos Quiroga', role: 'family', residentId: 11 },
+  { user: 'mario.rivero', pass: '1234', name: 'Familiar – Mario Rivero', role: 'family', residentId: 12 },
+  { user: 'antonio.delavega', pass: '1234', name: 'Familiar – Antonio de la Vega', role: 'family', residentId: 13 },
+  { user: 'mireya.olivares', pass: '1234', name: 'Familiar – Mireya Olivares', role: 'family', residentId: 14 },
+  { user: 'rosa.oche', pass: '1234', name: 'Familiar – Rosa Oche', role: 'family', residentId: 15 },
+  { user: 'susana.serignani', pass: '1234', name: 'Familiar – Susana Serignani', role: 'family', residentId: 16 },
+  { user: 'manuel.ricavarren', pass: '1234', name: 'Familiar – Manuel Ricavarren', role: 'family', residentId: 17 },
+  { user: 'carmen.narvaez', pass: '1234', name: 'Familiar – Carmen Narváez', role: 'family', residentId: 18 },
+  { user: 'francisco.cara', pass: '1234', name: 'Familiar – Francisco Cara', role: 'family', residentId: 19 },
+  { user: 'jose.collado', pass: '1234', name: 'Familiar – José Collado', role: 'family', residentId: 20 },
+  { user: 'nelson.tello', pass: '1234', name: 'Familiar – Nelson Tello', role: 'family', residentId: 21 },
+  { user: 'linares.francisco', pass: '1234', name: 'Familiar – Linares Francisco', role: 'family', residentId: 22 },
+  { user: 'gladys.nunez', pass: '1234', name: 'Familiar – Gladys Núñez', role: 'family', residentId: 23 },
+];
+
+const RESIDENTS = [
+  { id: 1, name: 'Amelia López' },
+  { id: 2, name: 'María Doralinda Moreno' },
+  { id: 3, name: 'Lidia Esther Gómez' },
+  { id: 4, name: 'Amelia Cigala' },
+  { id: 5, name: 'Rosa Andraca' },
+  { id: 6, name: 'Emilia Girón' },
+  { id: 7, name: 'Susana Bustos' },
+  { id: 8, name: 'Inés Rivera' },
+  { id: 9, name: 'Olga Marinelli' },
+  { id: 10, name: 'Esther Moreno' },
+  { id: 11, name: 'Carlos Quiroga' },
+  { id: 12, name: 'Mario Rivero' },
+  { id: 13, name: 'Antonio de la Vega' },
+  { id: 14, name: 'Mireya Olivares' },
+  { id: 15, name: 'Rosa Oche' },
+  { id: 16, name: 'Susana Serignani' },
+  { id: 17, name: 'Manuel Ricavarren' },
+  { id: 18, name: 'Carmen Narváez' },
+  { id: 19, name: 'Francisco Cara' },
+  { id: 20, name: 'José Collado' },
+  { id: 21, name: 'Nelson Tello' },
+  { id: 22, name: 'Linares Francisco' },
+  { id: 23, name: 'Gladys Núñez' },
+];
+
+const ROLE_LABELS = {
+  owner: 'Dueño/a',
+  manager: 'Encargada',
+  nurse: 'Enfermera',
+  family: 'Familiar'
 };
 
-function selectRole(r){
-  S.rol=r;
-  document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected')});
-  document.getElementById('rol-'+r).classList.add('selected');
-}
+// =====================================================
+// ESTADO
+// =====================================================
 
-function doLogin(){
-  var res=document.getElementById('loginResidente').value;
-  var pass=document.getElementById('loginPass').value;
-  if(S.rol==='familiar'&&!res){showToast('Seleccioná un residente');return}
-  if(!pass){showToast('Ingresá la contraseña');return}
-  S.residente=S.rol==='familiar'?parseInt(res):null;
-  document.getElementById('loginScreen').classList.remove('active');
-  document.getElementById('appScreen').classList.add('active');
+let currentUser = null;
+let currentTab = 'home';
+let medications = JSON.parse(localStorage.getItem('medstock_meds') || '[]');
+let movements = JSON.parse(localStorage.getItem('medstock_movs') || '[]');
+
+function saveMeds() { localStorage.setItem('medstock_meds', JSON.stringify(medications)); }
+function saveMovs() { localStorage.setItem('medstock_movs', JSON.stringify(movements)); }
+
+// =====================================================
+// AUTH
+// =====================================================
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  const found = USERS.find(x => x.user === u && x.pass === p);
+  if (!found) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+  currentUser = found;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
   buildNav();
-  showTab('stock');
+  renderTab('home');
 }
 
-function doLogout(){
-  document.getElementById('appScreen').classList.remove('active');
-  document.getElementById('loginScreen').classList.add('active');
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
 }
 
-function buildNav(){
-  var tabs=[
-    {id:'stock',icon:'📦',label:'Stock'},
-    {id:'alertas',icon:'🔔',label:'Alertas'},
-    {id:'agregar',icon:'➕',label:'Cargar'},
-    {id:'historial',icon:'📋',label:'Registros'}
-  ];
-  if(S.rol==='staff') tabs.push({id:'residentes',icon:'👥',label:'Residentes'});
-  document.getElementById('bottomNav').innerHTML=tabs.map(function(t){
-    return '<button class="nav-item" id="nav-'+t.id+'" onclick="showTab(\''+t.id+'\')"><span class="nav-icon">'+t.icon+'</span>'+t.label+'</button>';
-  }).join('');
+function canEdit() { return ['owner','manager','nurse'].includes(currentUser.role); }
+function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
+
+// =====================================================
+// NAV
+// =====================================================
+
+function buildNav() {
+  const tabs = document.getElementById('nav-tabs');
+  let items = [];
+  if (currentUser.role === 'family') {
+    items = [
+      { id: 'home', label: '🏠 Inicio' },
+      { id: 'my-resident', label: '👤 Mi familiar' },
+    ];
+  } else {
+    items = [
+      { id: 'home', label: '🏠 Inicio' },
+      { id: 'residents', label: '👥 Residentes' },
+      { id: 'medications', label: '💊 Medicamentos' },
+      { id: 'movements', label: '📋 Movimientos' },
+    ];
+    if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
+  }
+  tabs.innerHTML = items.map(t =>
+    `<div class="nav-tab ${t.id === currentTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
+  ).join('');
 }
 
-function showTab(tab){
-  S.tab=tab;
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
-  var nb=document.getElementById('nav-'+tab);
-  if(nb) nb.classList.add('active');
-  if(tab==='agregar'){openModal('modalAgregar');return}
-  var titles={stock:'Stock de Medicamentos',alertas:'Alertas',historial:'Registros',residentes:'Residentes'};
-  document.getElementById('headerTitle').textContent=titles[tab]||'MedStock';
-  var c=document.getElementById('mainContent');
-  if(tab==='stock') c.innerHTML=renderStock();
-  else if(tab==='alertas') c.innerHTML=renderAlertas();
-  else if(tab==='historial') c.innerHTML=renderHistorial();
-  else if(tab==='residentes') c.innerHTML=renderResidentes();
+function renderTab(tab) {
+  currentTab = tab;
+  buildNav();
+  const c = document.getElementById('main-content');
+  if (tab === 'home') renderHome(c);
+  else if (tab === 'residents') renderResidents(c);
+  else if (tab === 'my-resident') renderMyResident(c);
+  else if (tab === 'medications') renderMedications(c);
+  else if (tab === 'movements') renderMovements(c);
+  else if (tab === 'users') renderUsers(c);
 }
 
-function getMeds(){
-  return S.residente!==null?S.meds.filter(function(m){return m.res===S.residente}):S.meds;
+// =====================================================
+// HOME
+// =====================================================
+
+function renderHome(c) {
+  const alerts = getAlerts();
+  const totalMeds = medications.length;
+  const lowCount = medications.filter(m => getStatus(m) === 'low').length;
+  const outCount = medications.filter(m => getStatus(m) === 'out').length;
+
+  if (currentUser.role === 'family') {
+    const res = RESIDENTS.find(r => r.id === currentUser.residentId);
+    const myMeds = medications.filter(m => m.residentId === currentUser.residentId);
+    c.innerHTML = `
+      <h2 class="section-title">🍂 Bienvenida/o</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">💊</div>
+          <div class="stat-value">${myMeds.length}</div>
+          <div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div>
+          <div class="stat-label">Stock bajo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚨</div>
+          <div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div>
+          <div class="stat-label">Sin stock</div>
+        </div>
+      </div>
+      ${renderAlertsSection(myMeds)}
+    `;
+    return;
+  }
+
+  c.innerHTML = `
+    <h2 class="section-title">🍂 Panel general</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">${RESIDENTS.length}</div>
+        <div class="stat-label">Residentes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💊</div>
+        <div class="stat-value">${totalMeds}</div>
+        <div class="stat-label">Medicamentos cargados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-value" style="color:var(--yellow)">${lowCount}</div>
+        <div class="stat-label">Stock bajo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🚨</div>
+        <div class="stat-value" style="color:var(--red)">${outCount}</div>
+        <div class="stat-label">Sin stock</div>
+      </div>
+    </div>
+    ${renderAlertsSection(medications)}
+    <div class="card" style="margin-top:20px">
+      <div class="card-header">
+        <div class="card-title">📋 Últimos movimientos</div>
+      </div>
+      <div class="card-body">
+        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
+          movements.slice(-8).reverse().map(mov => {
+            const res = RESIDENTS.find(r => r.id === mov.residentId);
+            return `<div class="movement-item">
+              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
+              <div>
+                <strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
+                <span style="color:var(--text-muted);font-size:13px">${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit} · ${mov.by} · ${mov.date}</span>
+              </div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+  `;
 }
 
-function level(m){return m.cantidad===0?'out':m.cantidad<=m.minimo?'low':'ok'}
-function badge(l){return l==='ok'?'<span class="stock-badge badge-ok">OK</span>':l==='low'?'<span class="stock-badge badge-low">⚠️ Bajo</span>':'<span class="stock-badge badge-out">❌ Sin stock</span>'}
-
-function renderStock(){
-  var meds=getMeds();
-  var html='<input class="search-bar" placeholder="🔍 Buscar..." oninput="filterStock(this.value)">';
-  if(!meds.length) return html+'<div style="text-align:center;padding:40px;color:#718096">No hay medicamentos. Usá ➕ Cargar.</div>';
-  html+='<div id="medList">';
-  meds.forEach(function(m){
-    var idx=S.meds.indexOf(m);
-    var lv=level(m);
-    var pct=m.minimo>0?Math.min(100,Math.round(m.cantidad/m.minimo*100)):100;
-    var fc=lv==='ok'?'fill-ok':lv==='low'?'fill-low':'fill-out';
-    var resLabel=S.rol==='staff'?'<div class="med-detail">'+S.residentes[m.res].nombre+'</div>':'';
-    html+='<div class="med-item">'
-      +'<div class="med-icon">'+m.emoji+'</div>'
-      +'<div class="med-info"><div class="med-name">'+m.nombre+'</div>'
-        +'<div class="med-detail">'+m.droga+(m.dosis&&m.dosis!=='-'?' · '+m.dosis:'')+'</div>'
-        +resLabel
-        +'<div class="progress-bar"><div class="progress-fill '+fc+'" style="width:'+pct+'%"></div></div>'
-        +badge(lv)+'</div>'
-      +'<div class="med-qty"><div class="qty-num">'+m.cantidad+'</div>'
-        +'<span class="qty-unit">'+m.unidad+'</span>'
-        +'<div style="margin-top:6px"><button class="btn-secondary" onclick="openEdit('+idx+')">Actualizar</button></div>'
-      +'</div></div>';
-  });
-  return html+'</div>';
+function renderAlertsSection(meds) {
+  const alerts = meds.filter(m => getStatus(m) !== 'ok');
+  if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
+  return `<div class="card">
+    <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
+    <div class="card-body">
+      ${alerts.map(m => {
+        const res = RESIDENTS.find(r => r.id === m.residentId);
+        const st = getStatus(m);
+        return `<div class="alert-item ${st === 'out' ? 'alert-out' : 'alert-low'}">
+          <span>${st === 'out' ? '🚨' : '⚠️'}</span>
+          <div>
+            <strong>${m.name}</strong> ${m.drug ? `(${m.drug})` : ''} — ${res ? res.name : ''}<br>
+            <span style="font-size:13px">${st === 'out' ? 'Sin stock' : `Stock bajo: ${m.qty} ${m.unit} restantes`}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
 }
 
-function filterStock(v){
-  document.querySelectorAll('.med-item').forEach(function(el){
-    el.style.display=el.textContent.toLowerCase().includes(v.toLowerCase())?'flex':'none';
-  });
+function getAlerts() { return medications.filter(m => getStatus(m) !== 'ok'); }
+
+function getStatus(m) {
+  if (m.qty <= 0) return 'out';
+  if (m.minQty && m.qty <= m.minQty) return 'low';
+  return 'ok';
 }
 
-function renderAlertas(){
-  var alertas=getMeds().filter(function(m){return level(m)!=='ok'});
-  if(!alertas.length) return '<div style="text-align:center;padding:40px 0"><div style="font-size:48px">✅</div><div style="font-weight:600;color:#1e7e34;margin-top:12px">Todo en orden</div><div style="color:#718096;font-size:14px;margin-top:6px">No hay alertas de stock.</div></div>';
-  var html='<div class="card"><div class="card-title">⚠️ Requieren atención ('+alertas.length+')</div>';
-  alertas.forEach(function(m){
-    var lv=level(m);
-    var bc=lv==='out'?'#ea4335':'#fbbc04';
-    html+='<div class="alert-item" style="border-left-color:'+bc+'">'
-      +'<div class="alert-icon">'+(lv==='out'?'❌':'⚠️')+'</div>'
-      +'<div><strong>'+m.nombre+'</strong>'+(m.dosis&&m.dosis!=='-'?' ('+m.dosis+')':'')
-        +'<div class="alert-sub">Quedan: '+m.cantidad+' '+m.unidad+' · Mínimo: '+m.minimo
-        +(S.rol==='staff'?' · '+S.residentes[m.res].nombre:'')+'</div></div></div>';
-  });
-  return html+'</div>';
+// =====================================================
+// RESIDENTS
+// =====================================================
+
+function renderResidents(c) {
+  const search = (c._search || '').toLowerCase();
+  const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(search));
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">👥 Residentes</h2>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Buscar residente..." value="${c._search||''}" oninput="document.getElementById('main-content')._search=this.value;renderTab('residents')">
+      </div>
+    </div>
+    <div class="resident-grid">
+      ${list.map(r => {
+        const meds = medications.filter(m => m.residentId === r.id);
+        const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
+        return `<div class="resident-card" onclick="showResident(${r.id})">
+          <div class="resident-name">👤 ${r.name}</div>
+          <div class="resident-meta">
+            <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
+            ${alerts > 0 ? `<span class="badge badge-low">⚠️ ${alerts} alerta${alerts !== 1 ? 's' : ''}</span>` : '<span class="badge badge-ok">✅ OK</span>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
 }
 
-function renderHistorial(){
-  var meds=getMeds();
-  var html='<div class="card"><div class="card-title">📋 Inventario actual</div>';
-  meds.forEach(function(m){
-    var lv=level(m);
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f4f8">'
-      +'<div><div style="font-size:14px;font-weight:500">'+m.emoji+' '+m.nombre+'</div>'
-        +'<div style="font-size:12px;color:#718096">'+m.dosis+(m.vence?' · Vence: '+m.vence:'')+'</div></div>'
-      +'<div style="text-align:right"><div style="font-weight:700;color:#1e3a5f">'+m.cantidad+' '+m.unidad+'</div>'
-        +badge(lv)+'</div></div>';
-  });
-  return html+'</div>';
+function showResident(id) {
+  const res = RESIDENTS.find(r => r.id === id);
+  const meds = medications.filter(m => m.residentId === id);
+  const c = document.getElementById('main-content');
+  c.innerHTML = `
+    <div class="back-btn" onclick="renderTab('residents')">← Volver a residentes</div>
+    <h2 class="section-title">👤 ${res.name}</h2>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">💊 Medicamentos</div></div>
+      <div class="table-wrapper">
+        ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
+          `<table>
+            <thead><tr>
+              <th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
+            </tr></thead>
+            <tbody>${meds.map(m => {
+              const st = getStatus(m);
+              const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
+              return `<tr>
+                <td><strong>${m.name}</strong></td>
+                <td>${m.drug || '—'}</td>
+                <td>${m.concentration || '—'}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span>${m.qty} ${m.unit}</span>
+                    <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
+                  </div>
+                </td>
+                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
+                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
+                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                </td>` : ''}
+              </tr>`;
+            }).join('')}</tbody>
+          </table>`
+        }
+      </div>
+    </div>
+  `;
 }
 
-function renderResidentes(){
-  var alertasTotal=S.meds.filter(function(m){return level(m)!=='ok'}).length;
-  var html='<div class="summary-grid">'
-    +'<div class="summary-card"><div class="summary-num">'+S.residentes.length+'</div><div class="summary-label">Residentes</div></div>'
-    +'<div class="summary-card"><div class="summary-num">'+alertasTotal+'</div><div class="summary-label">Alertas activas</div></div>'
-    +'</div>';
-  S.residentes.forEach(function(r,i){
-    var meds=S.meds.filter(function(m){return m.res===i});
-    var al=meds.filter(function(m){return level(m)!=='ok'}).length;
-    var ini=r.nombre.split(',')[0].substring(0,2).toUpperCase();
-    html+='<div class="resident-card" onclick="verResidente('+i+')">'
-      +'<div class="avatar">'+ini+'</div>'
-      +'<div style="flex:1"><div style="font-size:15px;font-weight:600">'+r.nombre+'</div>'
-        +'<div style="font-size:12px;color:#718096">'+r.edad+' años · Hab. '+r.habitacion+'</div>'
-        +'<div style="font-size:12px;color:#2d6a9f;font-weight:600">'+meds.length+' medicamentos'+(al>0?' · ⚠️ '+al+' alertas':'')+'</div>'
-      +'</div><div style="font-size:20px;color:#718096">›</div></div>';
-  });
-  return html;
+// =====================================================
+// MY RESIDENT (FAMILIAR)
+// =====================================================
+
+function renderMyResident(c) {
+  showResident(currentUser.residentId);
+  // Remove back button for family
+  setTimeout(() => {
+    const bb = document.querySelector('.back-btn');
+    if (bb) bb.remove();
+  }, 0);
 }
 
-function verResidente(i){
-  S.residente=i;
-  document.getElementById('headerTitle').textContent=S.residentes[i].nombre;
-  document.getElementById('mainContent').innerHTML=renderStock();
-  S.tab='stock';
-  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
-  document.getElementById('nav-stock').classList.add('active');
+// =====================================================
+// MEDICATIONS (general list)
+// =====================================================
+
+function renderMedications(c) {
+  const search = (c._medSearch || '').toLowerCase();
+  const list = search ? medications.filter(m => {
+    const res = RESIDENTS.find(r => r.id === m.residentId);
+    return m.name.toLowerCase().includes(search) || (m.drug||'').toLowerCase().includes(search) || (res && res.name.toLowerCase().includes(search));
+  }) : medications;
+
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">💊 Todos los medicamentos</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Buscar..." value="${c._medSearch||''}" oninput="document.getElementById('main-content')._medSearch=this.value;renderTab('medications')">
+        </div>
+        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMedGeneral()">+ Agregar</button>` : ''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrapper">
+        ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
+          `<table>
+            <thead><tr>
+              <th>Residente</th><th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Vencimiento</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
+            </tr></thead>
+            <tbody>${list.map(m => {
+              const res = RESIDENTS.find(r => r.id === m.residentId);
+              const st = getStatus(m);
+              return `<tr>
+                <td>${res ? res.name : '—'}</td>
+                <td><strong>${m.name}</strong></td>
+                <td>${m.drug || '—'}</td>
+                <td>${m.concentration || '—'}</td>
+                <td>${m.qty} ${m.unit}</td>
+                <td>${m.expiry || '—'}</td>
+                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
+                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
+                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                </td>` : ''}
+              </tr>`;
+            }).join('')}</tbody>
+          </table>`
+        }
+      </div>
+    </div>
+  `;
 }
 
-function openEdit(idx){
-  S.editIdx=idx;S.editOp='sumar';
-  document.getElementById('editTitulo').textContent='✏️ '+S.meds[idx].nombre;
-  document.getElementById('editCantidad').value=1;
-  ['sumar','restar','setear'].forEach(function(o){document.getElementById('op'+o.charAt(0).toUpperCase()+o.slice(1)).classList.toggle('active',o==='sumar')});
-  document.getElementById('editLabel').textContent='Cantidad a sumar';
-  updatePreview();
-  openModal('modalEditar');
+// =====================================================
+// MOVEMENTS
+// =====================================================
+
+function renderMovements(c) {
+  c.innerHTML = `
+    <h2 class="section-title">📋 Historial de movimientos</h2>
+    <div class="card">
+      <div class="card-body">
+        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
+          movements.slice().reverse().map(mov => {
+            const res = RESIDENTS.find(r => r.id === mov.residentId);
+            return `<div class="movement-item">
+              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
+              <div>
+                <strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
+                <span style="color:var(--text-muted);font-size:13px">
+                  ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
+                  ${mov.note ? `· ${mov.note}` : ''}
+                  · <strong>${mov.by}</strong> · ${mov.date}
+                </span>
+              </div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+  `;
 }
 
-function setOp(op){
-  S.editOp=op;
-  ['sumar','restar','setear'].forEach(function(o){
-    document.getElementById('op'+o.charAt(0).toUpperCase()+o.slice(1)).classList.toggle('active',o===op);
-  });
-  var labels={sumar:'Cantidad a sumar',restar:'Cantidad a descontar',setear:'Nuevo total'};
-  document.getElementById('editLabel').textContent=labels[op];
-  updatePreview();
+// =====================================================
+// USERS (admin only)
+// =====================================================
+
+function renderUsers(c) {
+  const staff = USERS.filter(u => u.role !== 'family');
+  const family = USERS.filter(u => u.role === 'family');
+  c.innerHTML = `
+    <h2 class="section-title">⚙️ Usuarios del sistema</h2>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th></tr></thead>
+          <tbody>${staff.map(u => `<tr>
+            <td>${u.name}</td>
+            <td><code>${u.user}</code></td>
+            <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
+          </tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>Residente</th><th>Usuario familiar</th><th>Contraseña inicial</th></tr></thead>
+          <tbody>${family.map(u => {
+            const res = RESIDENTS.find(r => r.id === u.residentId);
+            return `<tr>
+              <td>${res ? res.name : '—'}</td>
+              <td><code>${u.user}</code></td>
+              <td><code>1234</code></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
-function updatePreview(){
-  if(S.editIdx===null) return;
-  var m=S.meds[S.editIdx];
-  var val=parseInt(document.getElementById('editCantidad').value)||0;
-  var nuevo=S.editOp==='sumar'?m.cantidad+val:S.editOp==='restar'?Math.max(0,m.cantidad-val):val;
-  document.getElementById('editPreview').textContent='Stock actual: '+m.cantidad+' → Nuevo: '+nuevo+' '+m.unidad;
+// =====================================================
+// MODALS: ADD MED
+// =====================================================
+
+function openAddMed(residentId) {
+  showModal(`
+    <div class="modal-title">💊 Agregar medicamento</div>
+    <div class="grid-2">
+      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
+      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
+      <div class="form-group"><label>Unidad</label>
+        <select id="m-unit">
+          <option>comprimidos</option><option>cápsulas</option><option>ml</option><option>mg</option><option>gotas</option><option>parches</option><option>unidades</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
+      <div class="form-group"><label>Stock mínimo (alerta)</label><input id="m-min" type="number" min="0" value="5"></div>
+    </div>
+    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
+    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMed(${residentId})">Guardar</button>
+    </div>
+  `);
 }
 
-function confirmarEdit(){
-  var m=S.meds[S.editIdx];
-  var val=parseInt(document.getElementById('editCantidad').value)||0;
-  if(S.editOp==='sumar') m.cantidad+=val;
-  else if(S.editOp==='restar') m.cantidad=Math.max(0,m.cantidad-val);
-  else m.cantidad=val;
-  closeModal('modalEditar');
-  showTab(S.tab);
-  showToast('Stock actualizado');
+function openAddMedGeneral() {
+  showModal(`
+    <div class="modal-title">💊 Agregar medicamento</div>
+    <div class="form-group"><label>Residente</label>
+      <select id="m-res">
+        ${RESIDENTS.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
+      <div class="form-group"><label>Droga</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
+      <div class="form-group"><label>Unidad</label>
+        <select id="m-unit">
+          <option>comprimidos</option><option>cápsulas</option><option>ml</option><option>mg</option><option>gotas</option><option>parches</option><option>unidades</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
+      <div class="form-group"><label>Stock mínimo</label><input id="m-min" type="number" min="0" value="5"></div>
+    </div>
+    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
+    </div>
+  `);
 }
 
-function guardarMed(){
-  var nombre=document.getElementById('fNombre').value.trim();
-  if(!nombre){showToast('Ingresá el nombre');return}
-  var tipo=document.getElementById('fTipo').value;
-  var emojis={Medicamento:'💊',Insumo:'🧻',Suplemento:'🌿'};
-  S.meds.push({
-    res:parseInt(document.getElementById('fResidente').value),
-    nombre:nombre,
-    droga:document.getElementById('fDroga').value.trim()||'-',
-    dosis:document.getElementById('fDosis').value.trim()||'-',
-    tipo:tipo,
-    cantidad:parseInt(document.getElementById('fCantidad').value)||0,
-    minimo:parseInt(document.getElementById('fMinimo').value)||5,
-    unidad:document.getElementById('fUnidad').value,
-    vence:document.getElementById('fVence').value,
-    emoji:emojis[tipo]||'💊'
-  });
-  ['fNombre','fDroga','fDosis','fCantidad','fMinimo','fVence'].forEach(function(id){document.getElementById(id).value=''});
-  closeModal('modalAgregar');
-  showTab('stock');
-  showToast('Medicamento cargado');
+function saveMed(residentId) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { showToast('El nombre es obligatorio'); return; }
+  const med = {
+    id: Date.now(),
+    residentId,
+    name,
+    drug: document.getElementById('m-drug').value.trim(),
+    concentration: document.getElementById('m-conc').value.trim(),
+    unit: document.getElementById('m-unit').value,
+    qty: parseInt(document.getElementById('m-qty').value) || 0,
+    minQty: parseInt(document.getElementById('m-min').value) || 0,
+    expiry: document.getElementById('m-exp').value || '',
+    obs: document.getElementById('m-obs') ? document.getElementById('m-obs').value : '',
+    addedBy: currentUser.name,
+    addedDate: today()
+  };
+  medications.push(med);
+  saveMeds();
+  // Register movement
+  if (med.qty > 0) {
+    movements.push({ id: Date.now()+1, medId: med.id, medName: med.name, residentId, type: 'in', qty: med.qty, unit: med.unit, by: currentUser.name, date: today(), note: 'Stock inicial' });
+    saveMovs();
+  }
+  closeModal();
+  showToast('Medicamento agregado ✅');
+  showResident(residentId);
 }
 
-function openModal(id){document.getElementById(id).classList.add('open')}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  if(id==='modalAgregar') showTab(S.tab==='agregar'?'stock':S.tab);
+function saveMedGeneral() {
+  const residentId = parseInt(document.getElementById('m-res').value);
+  document.getElementById('m-obs') || document.createElement('input');
+  saveMed(residentId);
 }
 
-function showToast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(function(){t.classList.remove('show')},2500);
+function deleteMed(id) {
+  if (!confirm('¿Eliminar este medicamento?')) return;
+  const med = medications.find(m => m.id === id);
+  const rid = med ? med.residentId : null;
+  medications = medications.filter(m => m.id !== id);
+  saveMeds();
+  showToast('Medicamento eliminado');
+  if (rid) showResident(rid); else renderTab('medications');
 }
 
-document.querySelectorAll('.modal-overlay').forEach(function(el){
-  el.addEventListener('click',function(e){if(e.target===el)closeModal(el.id)});
-});
+// =====================================================
+// MODALS: MOVEMENT
+// =====================================================
+
+function openMovement(medId, type) {
+  const med = medications.find(m => m.id === medId);
+  if (!med) return;
+  showModal(`
+    <div class="modal-title">${type === 'in' ? '⬆️ Entrada de stock' : '⬇️ Salida de stock'}</div>
+    <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">
+      <strong>${med.name}</strong> — Stock actual: ${med.qty} ${med.unit}
+    </p>
+    <div class="form-group"><label>Cantidad</label><input id="mov-qty" type="number" min="1" value="1"></div>
+    <div class="form-group"><label>Observación (opcional)</label><input id="mov-note" type="text" placeholder="${type === 'in' ? 'Ej: Compra farmacia' : 'Ej: Administrado'}"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn ${type === 'in' ? 'btn-green' : 'btn-red'}" onclick="saveMovement(${medId}, '${type}')">Confirmar</button>
+    </div>
+  `);
+}
+
+function saveMovement(medId, type) {
+  const qty = parseInt(document.getElementById('mov-qty').value) || 0;
+  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
+  const note = document.getElementById('mov-note').value.trim();
+  const med = medications.find(m => m.id === medId);
+  if (!med) return;
+  if (type === 'out' && med.qty < qty) { showToast('No hay suficiente stock'); return; }
+  med.qty = type === 'in' ? med.qty + qty : med.qty - qty;
+  saveMeds();
+  movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type, qty, unit: med.unit, by: currentUser.name, date: today(), note });
+  saveMovs();
+  closeModal();
+  showToast(type === 'in' ? `+${qty} ${med.unit} agregados ✅` : `-${qty} ${med.unit} registrados ✅`);
+  showResident(med.residentId);
+}
+
+// =====================================================
+// MODAL HELPERS
+// =====================================================
+
+function showModal(html) {
+  let ov = document.getElementById('modal-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'modal-overlay';
+    ov.className = 'modal-overlay';
+    ov.innerHTML = `<div class="modal" id="modal-box"></div>`;
+    ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
+    document.body.appendChild(ov);
+  }
+  document.getElementById('modal-box').innerHTML = html;
+  ov.style.display = 'flex';
+}
+
+function closeModal() {
+  const ov = document.getElementById('modal-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+// =====================================================
+// UTILS
+// =====================================================
+
+function today() {
+  return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
 </script>
 </body>
 </html>
