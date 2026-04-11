@@ -720,6 +720,221 @@ const ROLE_LABELS = {
 // ESTADO
 // =====================================================
 
+// =====================================================
+// MEDICAMENTOS INICIALES (extraídos de planillas abril 2026)
+// =====================================================
+const INITIAL_MEDICATIONS = [
+  // 1. AMELIA LÓPEZ
+  {residentId:1,name:'T4 Montpellier 150mg',drug:'Levotiroxina',concentration:'150mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:1,name:'Diurex 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:1,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:1,name:'Calmador Plus',drug:'Tramadol/Paracetamol',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:1,name:'Risperin 2mg',drug:'Risperidona',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:1,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:1,name:'Lucidex 10mg',drug:'Memantina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:1,name:'Sidenar 2,5mg',drug:'Lorazepam',concentration:'2,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:1,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:1,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS / 21:00',sos:true},
+  {residentId:1,name:'Mupicil 2%',drug:'Mupirocina',concentration:'2%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 24:00',sos:false},
+  // 2. MARÍA DORALINDA MORENO
+  {residentId:2,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:2,name:'Dolocox 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:2,name:'Aucic 1%',drug:'Carboximetilcelulosa',concentration:'1%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
+  {residentId:2,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:2,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:2,name:'Taxagon AD 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'22:00',sos:false},
+  {residentId:2,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:2,name:'Deltisona B 20mg',drug:'Meprednisona',concentration:'20mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00 (10 días)',sos:false},
+  // 3. LIDIA ESTHER GÓMEZ
+  {residentId:3,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:3,name:'Nebilet 5mg',drug:'Nebivolol',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:3,name:'Niten 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:3,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (días pares)',sos:false},
+  {residentId:3,name:'Tiarix 20mg',drug:'Paroxetina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:3,name:'Dolofrix',drug:'Codeína/Paracetamol',concentration:'',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:3,name:'Furadantina MC 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  // 4. AMELIA CIGALA
+  {residentId:4,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:4,name:'T4 Montpellier 125mg',drug:'Levotiroxina',concentration:'125mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:4,name:'Clonagin 1mg',drug:'Clonazepam',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:4,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
+  {residentId:4,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:4,name:'Neumoterol 200',drug:'Budesonide',concentration:'200mcg',unit:'puffs',qty:1,minQty:1,horario:'SOS',sos:true},
+  {residentId:4,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (días pares)',sos:false},
+  {residentId:4,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  // 5. ROSA ANDRACA
+  {residentId:5,name:'Losacor 100mg',drug:'Losartán',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:5,name:'Diondel 100mg',drug:'Flecainida',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:5,name:'Levotiroxina 50mg',drug:'Levotiroxina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:5,name:'Biatrix XR 50',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:5,name:'Pelmec 5',drug:'Amlodipina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:5,name:'Controllip 160mg',drug:'Fenofibrato',concentration:'160mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:5,name:'Anemidox Ultra',drug:'Hierro',concentration:'',unit:'comprimidos',qty:12,minQty:3,horario:'09:00 / 21:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:5,name:'Micopirox',drug:'Ciclopirox 8%',concentration:'8%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 (días impares)',sos:false},
+  {residentId:5,name:'Endoclar',drug:'Donepecilo',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  // 6. EMILIA GIRÓN
+  {residentId:6,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:6,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:6,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:6,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  // 8. INÉS RIVERA
+  {residentId:8,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:8,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:8,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:8,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  // 9. OLGA MARINELLI
+  {residentId:9,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:9,name:'Merital 20mg',drug:'Memantina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:9,name:'Dropstar',drug:'Hialuronato de sodio',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
+  {residentId:9,name:'Ibupirac Flex 600',drug:'Clorzoxazona/Ibuprofeno',concentration:'600mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:9,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:9,name:'Xumer 90mg',drug:'Etoricoxib',concentration:'90mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:9,name:'Indomet crema',drug:'Indometacina',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 24:00',sos:false},
+  // 10. ESTHER MORENO
+  {residentId:10,name:'Improval 500mg',drug:'Divalproato de sodio',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
+  {residentId:10,name:'Risperin 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:10,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:10,name:'Losacor D 100mg',drug:'Losartán/Hidroclorotiazida',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:10,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:10,name:'Nicardil 10mg',drug:'Bisoprolol',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:10,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:10,name:'Furadantina 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',qty:21,minQty:5,horario:'09:00 / 15:00 / 21:00',sos:false},
+  {residentId:10,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:10,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:10,name:'Herapina Gel',drug:'Heparina gel',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 21:00',sos:false},
+  // 11. CARLOS QUIROGA
+  {residentId:11,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
+  {residentId:11,name:'Parkinel 250/25',drug:'Levodopa/Carbidopa',concentration:'250/25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 12:00 / 17:00',sos:false},
+  {residentId:11,name:'Quetiazic 50mg XR',drug:'Quetiapina XR',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:11,name:'Alplax 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 17:00 / 21:00',sos:false},
+  {residentId:11,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
+  {residentId:11,name:'Treg 20mg',drug:'Omeprazol',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:11,name:'Fecofar 40mg',drug:'Furosemida',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:11,name:'Lactulon 65gr',drug:'Lactulosa',concentration:'',unit:'ml',qty:300,minQty:50,horario:'12:00',sos:false},
+  {residentId:11,name:'Diosmin 500mg',drug:'Diosmina/Hesperidina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 17:00 / 23:00',sos:false},
+  {residentId:11,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:11,name:'Procto Ikatral',drug:'Lidocaína/Hidrocortisona',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'SOS',sos:true},
+  // 12. MARIO RIVERO
+  {residentId:12,name:'Clonagin 0,25',drug:'Clonazepam',concentration:'0,25mg',unit:'gotas',qty:30,minQty:5,horario:'09:00 / 17:00 / 21:00',sos:false},
+  {residentId:12,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:12,name:'Sarval 80/125',drug:'Valsartán/Hidroclorotiazida',concentration:'80/125mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:12,name:'Ataraxone 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
+  {residentId:12,name:'Tansiloprost 0,4',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:12,name:'Cortipyren B40',drug:'Meprednisona',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:12,name:'Acemuk',drug:'Acetilcisteína',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:12,name:'Dermaex crema',drug:'Clobetasol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 21:00',sos:false},
+  {residentId:12,name:'Eucerin',drug:'Crema hidratante',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 21:00',sos:false},
+  // 13. ANTONIO DE LA VEGA
+  {residentId:13,name:'Aspirina Prevent 100',drug:'Ácido acetilsalicílico',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:13,name:'Tansiloprost 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
+  {residentId:13,name:'Clonagin 0,5mg',drug:'Clonazepam',concentration:'0,5mg',unit:'gotas',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:13,name:'Quetiazic XR 50mg',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:13,name:'Clopilep 75mg',drug:'Clopidogrel',concentration:'75mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:13,name:'Rovastal 10mg',drug:'Rosuvastatina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:13,name:'Zomarist Met',drug:'Vildagliptina/Metformina',concentration:'50/500mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
+  {residentId:13,name:'Crema de Bismuto',drug:'Hidróxido de bismuto',concentration:'',unit:'ml',qty:100,minQty:20,horario:'SOS',sos:true},
+  // 14. MIREYA OLIVARES
+  {residentId:14,name:'Carvedil 6,25mg',drug:'Carvedilol',concentration:'6,25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:14,name:'Lotrial 10mg',drug:'Enalapril',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:14,name:'Valcote 250mg',drug:'Divalproato de sodio',concentration:'250mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:14,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:14,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:14,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:14,name:'Unesia crema',drug:'Bifonazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
+  // 15. ROSA OCHE
+  {residentId:15,name:'Somit 5mg',drug:'Zolpidem',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:15,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:15,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:15,name:'Ataraxone 50mg',drug:'Hidroclorotiazida',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  // 16. SUSANA SERIGNANI
+  {residentId:16,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:16,name:'T4 100mg',drug:'Levotiroxina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:16,name:'Insulina Insular',drug:'Insulina regular',concentration:'',unit:'unidades',qty:30,minQty:10,horario:'09:00',sos:false},
+  {residentId:16,name:'Insulina Novo Rapid',drug:'Insulina aspártica',concentration:'',unit:'unidades',qty:10,minQty:5,horario:'SOS',sos:true},
+  {residentId:16,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'ml',qty:1,minQty:1,horario:'12:00 (día 27)',sos:false},
+  {residentId:16,name:'Risperidona 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 20:00',sos:false},
+  {residentId:16,name:'Trazodona 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:16,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  // 17. MANUEL RICAVARREN
+  {residentId:17,name:'Apixaban 5mg',drug:'Apixabán',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:17,name:'Rosuvastatina 40mg',drug:'Rosuvastatina',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:17,name:'Paracetamol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:17,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:17,name:'Tranquinal 0,5mg',drug:'Alprazolam',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:17,name:'Meridian 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:17,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:17,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  // 18. CARMEN NARVÁEZ
+  {residentId:18,name:'Neuroplus 20',drug:'Memantina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
+  {residentId:18,name:'Tranquinal 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:18,name:'Remexal 10mg',drug:'Rivaroxabán',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
+  {residentId:18,name:'Optive gotas',drug:'Carboximetilcelulosa sódica',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 12:00 / 17:00 / 21:00',sos:false},
+  {residentId:18,name:'Acrylarm Gel',drug:'Ácido poliacrílico',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'14:00 / 21:00',sos:false},
+  {residentId:18,name:'Ataraxone 25mg',drug:'Hidroxicina',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  // 19. FRANCISCO CARA
+  {residentId:19,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:19,name:'Macril crema',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'21:00 (uñas del pie)',sos:false},
+  {residentId:19,name:'Sucralmax',drug:'Sucralfato',concentration:'',unit:'ml',qty:300,minQty:50,horario:'09:00 / 21:00',sos:false},
+  {residentId:19,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
+  {residentId:19,name:'Quetiapina 25mg',drug:'Quetiapina',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:19,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'ml',qty:1,minQty:1,horario:'09:00 (día 27)',sos:false},
+  {residentId:19,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:19,name:'Alernix 24',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  // 20. JOSÉ COLLADO
+  {residentId:20,name:'Enantyum 25mg',drug:'Dexketoprofeno',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:20,name:'Dilatrand 12,5mg',drug:'Carvedilol',concentration:'12,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
+  {residentId:20,name:'Tranquinal 1mg',drug:'Alprazolam',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:20,name:'Anaflex Plus',drug:'Diclofenac',concentration:'',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:20,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:20,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00 / 21:00',sos:false},
+  // 21. NELSON TELLO
+  {residentId:21,name:'Clonagin 2mg',drug:'Clonazepam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:21,name:'Madopar 250mg',drug:'Levodopa',concentration:'250mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:21,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:21,name:'DBI AP 850',drug:'Metformina',concentration:'850mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:21,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  // 22. LINARES FRANCISCO
+  {residentId:22,name:'Rostrum 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:22,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 20:00',sos:false},
+  {residentId:22,name:'Tamsulosina 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:22,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:22,name:'Fenitoína 100mg',drug:'Fenitoína sódica',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 16:00 / 22:00',sos:false},
+  // 23. GLADYS NÚÑEZ
+  {residentId:23,name:'Sarval D 160/25',drug:'Valsartán/Hidroclorotiazida',concentration:'160/25mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:23,name:'T4 75mg',drug:'Levotiroxina',concentration:'75mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
+  {residentId:23,name:'Pelmec 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
+  {residentId:23,name:'Calcimax Forte',drug:'Citrato de calcio',concentration:'',unit:'comprimidos',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
+  {residentId:23,name:'Dormilan 10mg',drug:'Zolpidem',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:23,name:'Rentop 150',drug:'Risedronato',concentration:'150mg',unit:'comprimidos',qty:1,minQty:1,horario:'1ro de cada mes',sos:false},
+  {residentId:23,name:'Gadoferol CB 100.000',drug:'Colecalciferol',concentration:'100.000 UI',unit:'comprimidos',qty:1,minQty:1,horario:'10:00 (mensual)',sos:false},
+  {residentId:23,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:23,name:'Factor Dérmico',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'08:00 / 16:00 / 22:00',sos:false},
+];
+
+function loadInitialMeds() {
+  if (localStorage.getItem('medstock_initialized')) return;
+  const ts = Date.now();
+  const meds = INITIAL_MEDICATIONS.map((m, i) => ({
+    id: ts + i,
+    residentId: m.residentId,
+    name: m.name,
+    drug: m.drug,
+    concentration: m.concentration,
+    unit: m.unit,
+    qty: m.qty,
+    minQty: m.minQty,
+    horario: m.horario || '',
+    sos: m.sos || false,
+    expiry: '',
+    obs: '',
+    addedBy: 'Sistema',
+    addedDate: '11/04/2026'
+  }));
+  localStorage.setItem('medstock_meds', JSON.stringify(meds));
+  localStorage.setItem('medstock_initialized', '1');
+}
+loadInitialMeds();
+
 let currentUser = null;
 let currentTab = 'home';
 let medications = JSON.parse(localStorage.getItem('medstock_meds') || '[]');
@@ -960,15 +1175,16 @@ function showResident(id) {
         ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
           `<table>
             <thead><tr>
-              <th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
+              <th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
             </tr></thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
               const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
               return `<tr>
-                <td><strong>${m.name}</strong></td>
+                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-low" style="font-size:10px">SOS</span>' : ''}</td>
                 <td>${m.drug || '—'}</td>
                 <td>${m.concentration || '—'}</td>
+                <td style="font-size:13px;color:var(--text-muted)">${m.horario || '—'}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span>${m.qty} ${m.unit}</span>
