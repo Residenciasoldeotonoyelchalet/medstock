@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MedStock · Residencia</title>
+  <meta name="description" content="Gestión de medicamentos para residencias" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MedStock" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- ══════════════════════════════════════════════
+       🔥 FIREBASE CONFIG — REEMPLAZÁ ESTOS VALORES
+       con los de tu proyecto en Firebase Console
+  ═══════════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // ⚠️  REEMPLAZÁ ESTO con tu configuración de Firebase:
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY",
+      authDomain: "TU_PROYECTO.firebaseapp.com",
+      projectId: "TU_PROYECTO_ID",
+      storageBucket: "TU_PROYECTO.appspot.com",
+      messagingSenderId: "TU_SENDER_ID",
+      appId: "TU_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // ── Exponer al scope global ──
+    window._db = db;
+    window._auth = auth;
+    window._fb = { collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, serverTimestamp, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+    window._firebaseReady = true;
+    document.dispatchEvent(new Event("firebaseReady"));
+  </script>
+
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface2: #1a2438;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.13);
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      --blue: #3b82f6;
+      --blue-dim: rgba(59,130,246,0.12);
+      --green: #4ade80;
+      --green-dim: rgba(74,222,128,0.1);
+      --yellow: #fbbf24;
+      --yellow-dim: rgba(251,191,36,0.1);
+      --red: #f87171;
+      --red-dim: rgba(248,113,113,0.1);
+      --radius: 14px;
+      --radius-sm: 9px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overscroll-behavior: none;
+    }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+    input,select,textarea,button { font-family: 'DM Sans', sans-serif; }
+    button { cursor: pointer; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ── Utilities ── */
+    .hidden { display: none !important; }
+    .fade-up { animation: fadeUp 0.35s ease both; }
+    .spinner { width:24px; height:24px; border:2px solid rgba(255,255,255,0.1); border-top-color:var(--blue); border-radius:50%; animation:spin 0.7s linear infinite; }
+
+    /* ── Layout ── */
+    #app { display:flex; flex-direction:column; min-height:100vh; }
+    .screen { flex:1; display:flex; flex-direction:column; }
+
+    /* ── Login ── */
+    #login-screen {
+      background: radial-gradient(ellipse at 30% 20%, rgba(59,130,246,0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.06) 0%, transparent 60%),
+                  var(--bg);
+      align-items:center; justify-content:center; padding:24px;
+    }
+    .login-box {
+      width:100%; max-width:360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      animation: fadeUp 0.5s ease;
+    }
+    .login-icon { font-size:48px; text-align:center; margin-bottom:12px; }
+    .login-title { font-size:26px; font-weight:800; text-align:center; letter-spacing:-0.5px; }
+    .login-sub { color:var(--muted); font-size:13px; text-align:center; margin-top:6px; margin-bottom:28px; }
+
+    /* ── Header ── */
+    #app-header {
+      position:sticky; top:0; z-index:40;
+      background: rgba(11,17,32,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+    }
+    .header-inner { max-width:640px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; }
+    .header-brand { display:flex; align-items:center; gap:10px; }
+    .header-brand-icon { font-size:22px; }
+    .header-title { font-size:18px; font-weight:800; letter-spacing:-0.3px; }
+    .header-user { color:var(--muted); font-size:11px; margin-top:1px; }
+
+    /* ── Nav ── */
+    #app-nav {
+      background: rgba(11,17,32,0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 2px 16px;
+      overflow-x: auto;
+    }
+    .nav-inner { max-width:640px; margin:0 auto; display:flex; gap:2px; }
+    .nav-btn {
+      background:none; border:none; color:var(--muted);
+      padding:10px 14px; border-radius:8px;
+      font-size:13px; font-weight:500;
+      transition:all 0.2s; white-space:nowrap;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nav-btn:hover { color:var(--muted2); background:rgba(255,255,255,0.04); }
+    .nav-btn.active { background:var(--blue-dim); color:#60a5fa; }
+
+    /* ── Content ── */
+    .content { max-width:640px; margin:0 auto; padding:18px 14px 80px; width:100%; }
+
+    /* ── Cards ── */
+    .card {
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:18px;
+      transition:border-color 0.2s;
+      animation: fadeUp 0.3s ease;
+    }
+    .card:hover { border-color:var(--border-hover); }
+    .card + .card { margin-top:12px; }
+
+    /* ── Inputs ── */
+    .label { color:var(--muted2); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:7px; }
+    .inp {
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.09);
+      color:var(--text); padding:11px 13px;
+      border-radius:var(--radius-sm); font-size:14px;
+      width:100%; outline:none; transition:all 0.2s;
+    }
+    .inp:focus { border-color:var(--blue); background:rgba(59,130,246,0.06); }
+    .inp option { background:var(--surface2); }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background:var(--blue); color:white; border:none;
+      padding:12px 20px; border-radius:var(--radius-sm);
+      font-size:14px; font-weight:600; width:100%;
+      transition:all 0.2s;
+    }
+    .btn-primary:hover { background:#2563eb; transform:translateY(-1px); }
+    .btn-primary:active { transform:translateY(0); }
+    .btn-ghost {
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--muted2); padding:10px 16px;
+      border-radius:var(--radius-sm); font-size:13px;
+      transition:all 0.2s;
+    }
+    .btn-ghost:hover { background:rgba(255,255,255,0.09); color:white; }
+    .btn-danger {
+      background:rgba(239,68,68,0.12); color:var(--red);
+      border:1px solid rgba(239,68,68,0.2);
+      padding:10px 16px; border-radius:var(--radius-sm); font-size:13px;
+      transition:all 0.2s;
+    }
+    .btn-danger:hover { background:rgba(239,68,68,0.2); }
+
+    /* ── Badges ── */
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+    .ok { background:var(--green-dim); color:var(--green); }
+    .low { background:var(--yellow-dim); color:var(--yellow); }
+    .crit { background:var(--red-dim); color:var(--red); }
+
+    /* ── Tags ── */
+    .tag { display:inline-block; background:rgba(148,163,184,0.08); color:var(--muted2); padding:2px 8px; border-radius:5px; font-size:11px; }
+
+    /* ── Alert banner ── */
+    .alert-banner {
+      background:var(--red-dim); border:1px solid rgba(248,113,113,0.2);
+      border-radius:12px; padding:14px 16px;
+      display:flex; align-items:center; gap:12px;
+      margin-bottom:14px;
+    }
+
+    /* ── Progress bar ── */
+    .progress { height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+    .progress-fill { height:100%; border-radius:3px; transition:width 0.6s ease; }
+
+    /* ── Stats grid ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 10px; text-align:center; }
+    .stat-val { font-family:'Syne',sans-serif; font-size:26px; font-weight:800; margin:6px 0 3px; }
+    .stat-lbl { color:var(--muted); font-size:11px; }
+
+    /* ── Med card ── */
+    .med-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:16px;
+      transition:all 0.2s; animation: fadeUp 0.3s ease both;
+    }
+    .med-card:hover { border-color:var(--border-hover); transform:translateY(-1px); }
+    .med-card + .med-card { margin-top:10px; }
+    .med-card.clickable { cursor:pointer; }
+
+    /* ── History item ── */
+    .hist-item {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:14px 16px;
+      display:flex; align-items:center; gap:14px;
+      animation: fadeUp 0.3s ease both;
+    }
+    .hist-item + .hist-item { margin-top:8px; }
+    .hist-icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.75);
+      display:flex; align-items:flex-end; justify-content:center;
+      z-index:60; padding:12px; animation:fadeIn 0.2s;
+    }
+    .modal-box {
+      background:var(--surface2); border:1px solid rgba(255,255,255,0.1);
+      border-radius:20px 20px 16px 16px; padding:24px;
+      width:100%; max-width:460px;
+      max-height:88vh; overflow-y:auto;
+      animation:slideUp 0.3s ease;
+    }
+    .modal-title { font-size:18px; font-weight:700; margin-bottom:4px; }
+    .modal-sub { color:var(--muted); font-size:13px; margin-bottom:20px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+    .tipo-btn {
+      padding:12px; border-radius:10px; font-size:14px; font-weight:600;
+      transition:all 0.2s; border:2px solid rgba(255,255,255,0.08);
+      background:transparent; color:var(--muted);
+    }
+    .tipo-btn.ing-active { border-color:var(--green); background:var(--green-dim); color:var(--green); }
+    .tipo-btn.egr-active { border-color:var(--red); background:var(--red-dim); color:var(--red); }
+
+    /* ── Residente selector ── */
+    .res-chip {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 14px; border-radius:20px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:transparent; color:var(--muted2);
+      font-size:12px; font-weight:500; cursor:pointer;
+      transition:all 0.2s; white-space:nowrap;
+    }
+    .res-chip.active { background:var(--blue-dim); border-color:rgba(59,130,246,0.3); color:#93c5fd; }
+
+    /* ── Search bar ── */
+    .search-wrap { position:relative; margin-bottom:14px; }
+    .search-wrap .ico { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:16px; pointer-events:none; }
+    .search-inp { padding-left:38px !important; }
+
+    /* ── Empty state ── */
+    .empty { text-align:center; padding:48px 20px; color:var(--muted); }
+    .empty-icon { font-size:40px; margin-bottom:12px; }
+
+    /* ── Toast ── */
+    #toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+      background:#1e293b; border:1px solid rgba(255,255,255,0.12);
+      color:white; padding:12px 20px; border-radius:12px;
+      font-size:14px; font-weight:500; z-index:100;
+      transition:transform 0.3s ease, opacity 0.3s;
+      opacity:0; white-space:nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    #toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    /* ── Loading ── */
+    #loading {
+      position:fixed; inset:0; background:var(--bg);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+      z-index:200;
+    }
+    #loading .l-icon { font-size:48px; animation:pulse 1.5s infinite; }
+    #loading .l-text { color:var(--muted); font-size:14px; }
+
+    /* ── Responsivo ── */
+    @media(max-width:400px) {
+      .stats-grid { grid-template-columns:repeat(3,1fr); }
+      .stat-val { font-size:22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading splash -->
+<div id="loading">
+  <div class="l-icon">💊</div>
+  <div class="spinner"></div>
+  <div class="l-text">Iniciando MedStock...</div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<div id="app">
+
+  <!-- ══════════ LOGIN ══════════ -->
+  <div id="login-screen" class="screen hidden">
+    <div class="login-box">
+      <div class="login-icon">💊</div>
+      <h1 class="login-title">MedStock</h1>
+      <p class="login-sub">Gestión de medicamentos · Residencia</p>
+
+      <div class="form-group">
+        <label class="label">Email</label>
+        <input id="login-email" class="inp" type="email" placeholder="usuario@residencia.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="label">Contraseña</label>
+        <input id="login-pass" class="inp" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <p id="login-error" style="color:var(--red);font-size:13px;text-align:center;margin-bottom:12px;display:none;"></p>
+      <button class="btn-primary" onclick="doLogin()">Ingresar →</button>
+      <p style="color:var(--muted);font-size:11px;text-align:center;margin-top:16px;">
+        Contactá al administrador para obtener tu acceso
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════ APP ══════════ -->
+  <div id="main-app" class="hidden" style="display:flex;flex-direction:column;flex:1;">
+
+    <!-- Header -->
+    <div id="app-header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <span class="header-brand-icon">💊</span>
+          <div>
+            <div class="header-title">MedStock</div>
+            <div class="header-user" id="header-user-label">—</div>
+          </div>
+        </div>
+        <button class="btn-ghost" onclick="doLogout()" style="padding:7px 13px;font-size:12px;">Salir</button>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <div id="app-nav">
+      <div class="nav-inner" id="nav-btns"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="content" id="main-content"></div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL UNIVERSAL
+═══════════════════════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOnBg(event)">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ════════════════════════════════════════════════
+let STATE = {
+  user: null,       // Firebase user
+  perfil: null,     // { rol, nombre, residenteId? }
+  residentes: [],
+  stock: [],
+  movimientos: [],
+  vista: "dashboard",
+  filtroResidente: "todos",
+  busqueda: "",
+  unsubs: [],       // Firestore listeners para limpiar
+};
+
+// ════════════════════════════════════════════════
+// ESPERAR FIREBASE
+// ════════════════════════════════════════════════
+document.addEventListener("firebaseReady", () => {
+  const { onAuthStateChanged } = window._fb;
+  onAuthStateChanged(window._auth, async (user) => {
+    document.getElementById("loading").style.display = "none";
+    if (user) {
+      STATE.user = user;
+      await cargarPerfil(user.uid);
+      mostrarApp();
+    } else {
+      STATE.user = null;
+      mostrarLogin();
+    }
+  });
+});
+
+// ════════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById("login-email").value.trim();
+  const pass  = document.getElementById("login-pass").value;
+  const errEl = document.getElementById("login-error");
+  errEl.style.display = "none";
+  try {
+    await window._fb.signInWithEmailAndPassword(window._auth, email, pass);
+  } catch(e) {
+    errEl.textContent = "Email o contraseña incorrectos";
+    errEl.style.display = "block";
+  }
+}
+
+async function doLogout() {
+  STATE.unsubs.forEach(u => u());
+  STATE.unsubs = [];
+  await window._fb.signOut(window._auth);
+}
+
+// ════════════════════════════════════════════════
+// PERFIL DESDE FIRESTORE
+// colección: "usuarios/{uid}" → { rol, nombre, residenteId? }
+// ════════════════════════════════════════════════
+async function cargarPerfil(uid) {
+  const { doc } = window._fb;
+  const snap = await new Promise(res => {
+    const unsub = window._fb.onSnapshot(doc(window._db, "usuarios", uid), snap => { unsub(); res(snap); });
+  });
+  if (snap.exists()) {
+    STATE.perfil = snap.data();
+  } else {
+    // Perfil por defecto si no existe (primer uso)
+    STATE.perfil = { rol: "familiar", nombre: STATE.user.email };
+  }
+}
+
+// ════════════════════════════════════════════════
+// VISTAS
+// ════════════════════════════════════════════════
+function mostrarLogin() {
+  document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("main-app").classList.add("hidden");
+}
+
+function mostrarApp() {
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("main-app").classList.remove("hidden");
+  document.getElementById("header-user-label").textContent =
+    `${STATE.perfil.nombre} · ${STATE.perfil.rol}`;
+  construirNav();
+  suscribirDatos();
+  if (STATE.perfil.rol === "familiar") {
+    STATE.filtroResidente = STATE.perfil.residenteId || "todos";
+  }
+  renderVista();
+}
+
+function construirNav() {
+  const vistas = [
+    { id:"dashboard", label:"Inicio", icon:"🏠" },
+    { id:"stock",     label:"Stock",  icon:"📦" },
+    ...(STATE.perfil.rol === "staff" ? [
+      { id:"cargar",    label:"Cargar", icon:"➕" },
+      { id:"residentes",label:"Residentes", icon:"👥" },
+    ] : []),
+    { id:"historial", label:"Historial", icon:"📋" },
+  ];
+  const nav = document.getElementById("nav-btns");
+  nav.innerHTML = vistas.map(v =>
+    `<button class="nav-btn ${STATE.vista===v.id?"active":""}" onclick="cambiarVista('${v.id}')">${v.icon} ${v.label}</button>`
+  ).join("");
+}
+
+function cambiarVista(v) {
+  STATE.vista = v;
+  construirNav();
+  renderVista();
+}
+
+// ════════════════════════════════════════════════
+// FIRESTORE — LISTENERS EN TIEMPO REAL
+// ════════════════════════════════════════════════
+function suscribirDatos() {
+  const { collection, onSnapshot, query, orderBy, where } = window._fb;
+  const db = window._db;
+
+  // Residentes
+  const unsubRes = onSnapshot(
+    query(collection(db, "residentes"), orderBy("nombre")),
+    snap => {
+      STATE.residentes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderVista();
+    }
+  );
+
+  // Stock — si es familiar, filtrar por su residenteId
+  let stockQuery;
+  if (STATE.perfil.rol === "familiar" && STATE.perfil.residenteId) {
+    stockQuery = query(collection(db, "stock"), where("residenteId", "==", STATE.perfil.residenteId), orderBy("nombre"));
+  } else {
+    stockQuery = query(collection(db, "stock"), orderBy("nombre"));
+  }
+  const unsubStock = onSnapshot(stockQuery, snap => {
+    STATE.stock = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderVista();
+  });
+
+  // Movimientos (últimos 100)
+  const unsubMov = onSnapshot(
+    query(collection(db, "movimientos"), orderBy("fecha", "desc")),
+    snap => {
+      STATE.movimientos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderVista();
+    }
+  );
+
+  STATE.unsubs = [unsubRes, unsubStock, unsubMov];
+}
+
+// ════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ════════════════════════════════════════════════
+function renderVista() {
+  const c = document.getElementById("main-content");
+  switch(STATE.vista) {
+    case "dashboard":  c.innerHTML = renderDashboard(); break;
+    case "stock":      c.innerHTML = renderStock(); break;
+    case "cargar":     c.innerHTML = renderCargar(); break;
+    case "residentes": c.innerHTML = renderResidentes(); break;
+    case "historial":  c.innerHTML = renderHistorial(); break;
+  }
+}
+
+// ── Helpers ──
+function getResidente(id) { return STATE.residentes.find(r => r.id === id); }
+function getPct(s) { return Math.min(100, Math.round((s.cantidad / Math.max(1, s.minimo * 3)) * 100)); }
+function getNivel(s) { return s.cantidad === 0 ? "crit" : s.cantidad <= s.minimo ? "low" : "ok"; }
+function barColor(n) { return n === "ok" ? "var(--green)" : n === "low" ? "var(--yellow)" : "var(--red)"; }
+function nivelLabel(n) { return n === "ok" ? "✓ OK" : n === "low" ? "⚠ Bajo" : "✗ Crítico"; }
+function formatFecha(ts) {
+  if (!ts) return "—";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString("es-AR", { day:"2-digit", month:"2-digit", year:"2-digit" });
+}
+
+function stockFiltrado() {
+  return STATE.stock.filter(s => {
+    const mr = STATE.filtroResidente === "todos" || s.residenteId === STATE.filtroResidente;
+    const mb = !STATE.busqueda || s.nombre.toLowerCase().includes(STATE.busqueda.toLowerCase());
+    return mr && mb;
+  });
+}
+
+function stockBajo() { return STATE.stock.filter(s => s.cantidad <= s.minimo); }
+
+// ════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════
+function renderDashboard() {
+  const esStaff = STATE.perfil.rol === "staff";
+  const miStock = esStaff ? STATE.stock : STATE.stock.filter(s => s.residenteId === STATE.perfil.residenteId);
+  const alertas = miStock.filter(s => s.cantidad <= s.minimo);
+
+  let html = `<div style="display:flex;flex-direction:column;gap:14px;">`;
+
+  if (alertas.length > 0) {
+    html += `<div class="alert-banner">
+      <span style="font-size:22px;">⚠️</span>
+      <div>
+        <div style="font-weight:600;font-size:14px;color:var(--red);">Stock bajo — ${alertas.length} medicamento${alertas.length>1?"s":""}</div>
+        <div style="color:var(--muted2);font-size:12px;margin-top:3px;">${alertas.map(s=>s.nombre).join(", ")}</div>
+      </div>
+    </div>`;
+  }
+
+  if (esStaff) {
+    const bajo = stockBajo();
+    html += `<div class="stats-grid">
+      <div class="stat-card"><div style="font-size:22px;">👥</div><div class="stat-val" style="color:#60a5fa;">${STATE.residentes.length}</div><div class="stat-lbl">Residentes</div></div>
+      <div class="stat-card"><div style="font-size:22px;">💊</div><div class="stat-val" style="color:#a78bfa;">${STATE.stock.length}</div><div class="stat-lbl">Medicamentos</div></div>
+      <div class="stat-card"><div style="font-size:22px;">⚠️</div><div class="stat-val" style="color:${bajo.length>0?"var(--red)":"var(--green)"};">${bajo.length}</div><div class="stat-lbl">Stock bajo</div></div>
+    </div>`;
+
+    html += `<div class="card"><div style="font-weight:700;font-size:13px;color:var(--muted2);margin-bottom:14px;letter-spacing:0.5px;">ALERTAS DE STOCK</div>`;
+    if (bajo.length === 0) {
+      html += `<div style="color:var(--green);text-align:center;padding:20px 0;font-size:14px;">✓ Todo el stock en nivel óptimo</div>`;
+    } else {
+      bajo.forEach(s => {
+        const res = getResidente(s.residenteId);
+        const n = getNivel(s);
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:14px;">${s.nombre} <span style="color:var(--muted);font-weight:400;">${s.dosis||""}</span></div>
+            <div style="color:var(--muted);font-size:12px;">${res?.nombre||"—"} · Hab. ${res?.habitacion||"—"}</div>
+          </div>
+          <span class="badge ${n}">${s.cantidad} ${s.unidad||""}</span>
+        </div>`;
+      });
+    }
+    html += `</div>`;
+  } else {
+    const res = getResidente(STATE.perfil.residenteId);
+    html += `<div class="card" style="background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(99,102,241,0.06));border-color:rgba(99,102,241,0.18);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;font-size:22px;">👤</div>
+        <div>
+          <div style="font-weight:800;font-size:18px;">${res?.nombre||"—"}</div>
+          <div style="color:var(--muted2);font-size:13px;">Habitación ${res?.habitacion||"—"}</div>
+        </div>
+      </div>
+    </div>`;
+    html += `<div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="stat-card"><div style="font-size:26px;">💊</div><div class="stat-val" style="color:#60a5fa;">${miStock.length}</div><div class="stat-lbl">Medicamentos</div></div>
+      <div class="stat-card"><div style="font-size:26px;">⚠️</div><div class="stat-val" style="color:${alertas.length>0?"var(--red)":"var(--green)"};">${alertas.length}</div><div class="stat-lbl">Alertas</div></div>
+    </div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════
+// STOCK
+// ════════════════════════════════════════════════
+function renderStock() {
+  const esStaff = STATE.perfil.rol === "staff";
+  let html = `<div>`;
+
+  // Buscador
+  html += `<div class="search-wrap"><span class="ico">🔍</span>
+    <input class="inp search-inp" placeholder="Buscar medicamento..." value="${STATE.busqueda}"
+      oninput="STATE.busqueda=this.value;renderVista()" />
+  </div>`;
+
+  // Filtro residente (solo staff)
+  if (esStaff) {
+    html += `<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin-bottom:4px;">
+      <button class="res-chip ${STATE.filtroResidente==='todos'?'active':''}" onclick="STATE.filtroResidente='todos';renderVista()">Todos</button>
+      ${STATE.residentes.map(r =>
+        `<button class="res-chip ${STATE.filtroResidente===r.id?'active':''}" onclick="STATE.filtroResidente='${r.id}';renderVista()">${r.nombre}</button>`
+      ).join("")}
+    </div>`;
+  }
+
+  const lista = stockFiltrado();
+  if (lista.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">📦</div><div>Sin medicamentos</div></div>`;
+  } else {
+    lista.forEach((s, i) => {
+      const n = getNivel(s);
+      const pct = getPct(s);
+      const res = getResidente(s.residenteId);
+      html += `<div class="med-card ${esStaff?'clickable':''}" style="animation-delay:${i*30}ms" ${esStaff?`onclick="abrirModalMov('${s.id}')"`:""}>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+              <span style="font-weight:700;font-size:15px;">${s.nombre}</span>
+              ${s.dosis?`<span class="tag">${s.dosis}</span>`:""}
+              ${s.categoria?`<span class="tag">${s.categoria}</span>`:""}
+            </div>
+            ${esStaff&&res?`<div style="color:var(--muted);font-size:12px;margin-top:4px;">👤 ${res.nombre} · Hab. ${res.habitacion}</div>`:""}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:800;font-size:22px;font-family:'Syne',sans-serif;">${s.cantidad}</div>
+            <div style="color:var(--muted);font-size:11px;">${s.unidad||""}</div>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-fill" style="width:${pct}%;background:${barColor(n)};"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <div style="color:var(--muted);font-size:12px;">Mínimo: ${s.minimo} ${s.unidad||""}</div>
+          <span class="badge ${n}">${nivelLabel(n)}</span>
+        </div>
+        ${esStaff?`<div style="color:var(--blue);font-size:12px;margin-top:9px;font-weight:500;">Tocá para registrar movimiento →</div>`:""}
+      </div>`;
+    });
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════
+// CARGAR (solo staff)
+// ════════════════════════════════════════════════
+function renderCargar() {
+  const opcResidentes = STATE.residentes.map(r => `<option value="${r.id}">${r.nombre}</option>`).join("");
+  return `<div class="card">
+    <div style="font-weight:800;font-size:16px;margin-bottom:18px;">➕ Nuevo medicamento</div>
+    <div class="form-group">
+      <label class="label">Residente</label>
+      <select class="inp" id="f-residente">${opcResidentes}</select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="label">Nombre</label>
+        <input class="inp" id="f-nombre" placeholder="Ej: Enalapril" />
+      </div>
+      <div class="form-group">
+        <label class="label">Dosis</label>
+        <input class="inp" id="f-dosis" placeholder="Ej: 10mg" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="label">Cantidad inicial</label>
+        <input class="inp" id="f-cantidad" type="number" min="0" placeholder="0" />
+      </div>
+      <div class="form-group">
+        <label class="label">Stock mínimo alerta</label>
+        <input class="inp" id="f-minimo" type="number" min="0" placeholder="7" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="label">Unidad</label>
+        <select class="inp" id="f-unidad">
+          ${["comprimidos","cápsulas","ml","gotas","parches","ampollas","sobres","unidades"].map(u=>`<option>${u}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="label">Categoría</label>
+        <select class="inp" id="f-categoria">
+          ${["General","Cardiovascular","Neurológico","Digestivo","Diabetes","Analgésico","Antibiótico","Psiquiátrico","Respiratorio","Dermatológico"].map(c=>`<option>${c}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="agregarMedicamento()">Agregar medicamento</button>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// RESIDENTES (solo staff)
+// ════════════════════════════════════════════════
+function renderResidentes() {
+  let html = `<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-weight:700;font-size:16px;">Residentes (${STATE.residentes.length})</div>
+      <button class="btn-primary" style="width:auto;padding:9px 16px;" onclick="abrirModalResidente()">+ Nuevo</button>
+    </div>`;
+
+  if (STATE.residentes.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">👥</div><div>Sin residentes cargados</div></div>`;
+  } else {
+    STATE.residentes.forEach(r => {
+      const cantMeds = STATE.stock.filter(s => s.residenteId === r.id).length;
+      const bajos = STATE.stock.filter(s => s.residenteId === r.id && s.cantidad <= s.minimo).length;
+      html += `<div class="card" style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(99,102,241,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+          <div>
+            <div style="font-weight:700;font-size:15px;">${r.nombre}</div>
+            <div style="color:var(--muted);font-size:12px;">Hab. ${r.habitacion} · ${cantMeds} med${cantMeds!==1?"s":""}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${bajos>0?`<span class="badge crit">${bajos} bajo</span>`:"<span class='badge ok'>OK</span>"}
+          <button class="btn-ghost" style="padding:7px 12px;font-size:12px;" onclick="abrirModalResidente('${r.id}')">✏️</button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════
+// HISTORIAL
+// ════════════════════════════════════════════════
+function renderHistorial() {
+  const esStaff = STATE.perfil.rol === "staff";
+  const movs = STATE.movimientos.filter(m => {
+    if (!esStaff) {
+      const s = STATE.stock.find(s => s.id === m.stockId);
+      return s && s.residenteId === STATE.perfil.residenteId;
+    }
+    return true;
+  }).slice(0, 80);
+
+  let html = `<div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:12px;">${movs.length} movimientos</div>`;
+
+  if (movs.length === 0) {
+    html += `<div class="empty"><div class="empty-icon">📋</div><div>Sin movimientos registrados</div></div>`;
+  } else {
+    movs.forEach(m => {
+      const s = STATE.stock.find(s => s.id === m.stockId);
+      const res = s ? getResidente(s.residenteId) : null;
+      const esIng = m.tipo === "ingreso";
+      html += `<div class="hist-item">
+        <div class="hist-icon" style="background:${esIng?"var(--green-dim)":"var(--red-dim)"};">
+          ${esIng?"⬆":"⬇"}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s?.nombre||"—"} <span style="color:var(--muted);font-weight:400;">${s?.dosis||""}</span></div>
+          <div style="color:var(--muted);font-size:12px;">${res?.nombre||"—"} · ${formatFecha(m.fecha)} · ${m.usuario||"—"}</div>
+          ${m.nota?`<div style="color:var(--muted2);font-size:12px;margin-top:2px;">"${m.nota}"</div>`:""}
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:800;font-size:16px;color:${esIng?"var(--green)":"var(--red)"};">${esIng?"+":"-"}${m.cantidad}</div>
+          <div style="color:var(--muted);font-size:11px;">${s?.unidad||""}</div>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════
+// ACCIONES FIRESTORE
+// ════════════════════════════════════════════════
+async function agregarMedicamento() {
+  const residenteId = document.getElementById("f-residente")?.value;
+  const nombre      = document.getElementById("f-nombre")?.value.trim();
+  const dosis       = document.getElementById("f-dosis")?.value.trim();
+  const cantidad    = parseInt(document.getElementById("f-cantidad")?.value) || 0;
+  const minimo      = parseInt(document.getElementById("f-minimo")?.value) || 7;
+  const unidad      = document.getElementById("f-unidad")?.value;
+  const categoria   = document.getElementById("f-categoria")?.value;
+
+  if (!nombre || !residenteId) { toast("⚠️ Completá nombre y residente"); return; }
+
+  const { addDoc, collection, serverTimestamp } = window._fb;
+  await addDoc(collection(window._db, "stock"), {
+    residenteId, nombre, dosis, cantidad, minimo, unidad, categoria,
+    creadoEn: serverTimestamp()
+  });
+
+  // Limpiar form
+  ["f-nombre","f-dosis","f-cantidad","f-minimo"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  toast("✓ Medicamento agregado");
+}
+
+// Modal de movimiento
+function abrirModalMov(stockId) {
+  const s = STATE.stock.find(s => s.id === stockId);
+  if (!s) return;
+
+  const box = document.getElementById("modal-box");
+  box.innerHTML = `
+    <div class="modal-title">${s.nombre} <span style="color:var(--muted);font-weight:400;font-size:15px;">${s.dosis||""}</span></div>
+    <div class="modal-sub">Stock actual: ${s.cantidad} ${s.unidad||""}</div>
+
+    <div class="form-group">
+      <label class="label">Tipo de movimiento</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button id="btn-ing" class="tipo-btn ing-active" onclick="selectTipo('ingreso')">⬆ Ingreso</button>
+        <button id="btn-egr" class="tipo-btn" onclick="selectTipo('egreso')">⬇ Egreso</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="label">Cantidad</label>
+      <input class="inp" id="mov-cantidad" type="number" min="1" placeholder="0" />
+    </div>
+    <div class="form-group">
+      <label class="label">Nota (opcional)</label>
+      <input class="inp" id="mov-nota" placeholder="Ej: Entrega farmacia" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="registrarMovimiento('${stockId}')">Confirmar</button>
+    </div>`;
+
+  window._movTipo = "ingreso";
+  openModal();
+}
+
+function selectTipo(t) {
+  window._movTipo = t;
+  document.getElementById("btn-ing").className = `tipo-btn ${t==="ingreso"?"ing-active":""}`;
+  document.getElementById("btn-egr").className = `tipo-btn ${t==="egreso"?"egr-active":""}`;
+}
+
+async function registrarMovimiento(stockId) {
+  const s = STATE.stock.find(s => s.id === stockId);
+  const cantidad = parseInt(document.getElementById("mov-cantidad")?.value);
+  const nota     = document.getElementById("mov-nota")?.value.trim();
+  const tipo     = window._movTipo || "ingreso";
+
+  if (!cantidad || cantidad < 1) { toast("⚠️ Ingresá una cantidad válida"); return; }
+
+  const { addDoc, updateDoc, doc, collection, serverTimestamp } = window._fb;
+  const db = window._db;
+
+  const nuevaCant = tipo === "ingreso"
+    ? s.cantidad + cantidad
+    : Math.max(0, s.cantidad - cantidad);
+
+  await updateDoc(doc(db, "stock", stockId), { cantidad: nuevaCant });
+  await addDoc(collection(db, "movimientos"), {
+    stockId, tipo, cantidad, nota,
+    usuario: STATE.perfil.nombre,
+    fecha: serverTimestamp()
+  });
+
+  closeModal();
+  toast(`✓ ${tipo === "ingreso" ? "Ingreso" : "Egreso"} registrado`);
+}
+
+// Modal residente
+function abrirModalResidente(resId) {
+  const r = resId ? STATE.residentes.find(r => r.id === resId) : null;
+  const box = document.getElementById("modal-box");
+  box.innerHTML = `
+    <div class="modal-title">${r ? "Editar residente" : "Nuevo residente"}</div>
+    <div class="modal-sub">${r ? r.nombre : "Completá los datos del nuevo residente"}</div>
+    <div class="form-group">
+      <label class="label">Nombre completo</label>
+      <input class="inp" id="res-nombre" value="${r?.nombre||""}" placeholder="Ej: María García" />
+    </div>
+    <div class="form-group">
+      <label class="label">Habitación</label>
+      <input class="inp" id="res-hab" value="${r?.habitacion||""}" placeholder="Ej: 101" />
+    </div>
+    <div style="display:grid;grid-template-columns:${r?"1fr 1fr 1fr":"1fr 1fr"};gap:10px;margin-top:6px;">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      ${r?`<button class="btn-danger" onclick="eliminarResidente('${r.id}')">Eliminar</button>`:""}
+      <button class="btn-primary" onclick="guardarResidente(${r?`'${r.id}'`:"null"})">Guardar</button>
+    </div>`;
+  openModal();
+}
+
+async function guardarResidente(resId) {
+  const nombre = document.getElementById("res-nombre")?.value.trim();
+  const habitacion = document.getElementById("res-hab")?.value.trim();
+  if (!nombre) { toast("⚠️ Ingresá el nombre"); return; }
+
+  const { addDoc, updateDoc, doc, collection } = window._fb;
+  if (resId) {
+    await updateDoc(doc(window._db, "residentes", resId), { nombre, habitacion });
+    toast("✓ Residente actualizado");
+  } else {
+    await addDoc(collection(window._db, "residentes"), { nombre, habitacion });
+    toast("✓ Residente agregado");
+  }
+  closeModal();
+}
+
+async function eliminarResidente(resId) {
+  if (!confirm("¿Eliminar este residente? Sus medicamentos quedarán sin asignar.")) return;
+  const { deleteDoc, doc } = window._fb;
+  await deleteDoc(doc(window._db, "residentes", resId));
+  closeModal();
+  toast("Residente eliminado");
+}
+
+// ════════════════════════════════════════════════
+// MODAL UTILS
+// ════════════════════════════════════════════════
+function openModal() {
+  document.getElementById("modal-overlay").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+function closeModal() {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById("modal-overlay")) closeModal();
+}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+// ════════════════════════════════════════════════
+// SERVICE WORKER
+// ════════════════════════════════════════════════
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// Enter en login
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !document.getElementById("login-screen").classList.contains("hidden")) {
+    doLogin();
+  }
+});
+</script>
+</body>
+</html>
