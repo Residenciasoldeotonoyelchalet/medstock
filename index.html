@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MedStock – Residencia Sol de Otoño</title>
+<title>MedStock – Residencia Sol de Otoño y El Chalet</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -604,7 +604,7 @@
   <div class="login-card">
     <div class="login-logo">
       <span class="icon">🍂</span>
-      <h1>Residencia Sol de Otoño</h1>
+      <h1>Residencia Sol de Otoño y El Chalet</h1>
       <p>Sistema de gestión de medicamentos</p>
     </div>
     <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
@@ -658,7 +658,7 @@ const USERS = [
   { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
   { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
   // Familiares
-  { user: 'amelia.lopez', pass: '1234', name: 'Familiar – Amelia López', role: 'family', residentId: 1 },
+  { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
   { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
   { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
   { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
@@ -684,7 +684,7 @@ const USERS = [
 ];
 
 const RESIDENTS = [
-  { id: 1, name: 'Amelia López' },
+  { id: 1, name: 'Amelia Ápez' },
   { id: 2, name: 'María Doralinda Moreno' },
   { id: 3, name: 'Lidia Esther Gómez' },
   { id: 4, name: 'Amelia Cigala' },
@@ -710,7 +710,7 @@ const RESIDENTS = [
 ];
 
 const ROLE_LABELS = {
-  owner: 'Dueño/a',
+  owner: 'Dueño',
   manager: 'Encargada',
   nurse: 'Enfermera',
   family: 'Familiar'
@@ -724,7 +724,7 @@ const ROLE_LABELS = {
 // MEDICAMENTOS INICIALES (extraídos de planillas abril 2026)
 // =====================================================
 const INITIAL_MEDICATIONS = [
-  // 1. AMELIA LÓPEZ
+  // 1. AMELIA ÁPEZ
   {residentId:1,name:'T4 Montpellier 150mg',drug:'Levotiroxina',concentration:'150mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
   {residentId:1,name:'Diurex 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
   {residentId:1,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
