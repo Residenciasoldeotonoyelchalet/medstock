@@ -22,6 +22,8 @@
     --yellow-light: #fef9e7;
     --blue: #2c6fad;
     --blue-light: #e8f0fb;
+    --purple: #7c3aed;
+    --purple-light: #f3eeff;
     --text: #2d1f0e;
     --text-muted: #7a5c40;
     --border: #e8d8c4;
@@ -60,534 +62,187 @@
     border: 1px solid var(--border);
   }
 
-  .login-logo {
-    text-align: center;
-    margin-bottom: 32px;
-  }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .icon { font-size: 52px; display: block; margin-bottom: 12px; }
+  .login-logo h1 { font-family: 'Fraunces', serif; font-size: 26px; color: var(--brown); font-weight: 700; line-height: 1.2; }
+  .login-logo p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
 
-  .login-logo .icon {
-    font-size: 52px;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .login-logo h1 {
-    font-family: 'Fraunces', serif;
-    font-size: 26px;
-    color: var(--brown);
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .login-logo p {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
-  }
-
-  .form-group {
-    margin-bottom: 18px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--brown); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   .form-group input, .form-group select, .form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    color: var(--text);
-    background: var(--warm-white);
-    transition: border-color 0.2s;
-    outline: none;
+    width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text); background: var(--warm-white);
+    transition: border-color 0.2s; outline: none;
   }
-
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--amber);
-  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--amber); }
 
   .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 24px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
   }
-
-  .btn-primary {
-    background: var(--amber);
-    color: white;
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 10px;
-  }
-
+  .btn-primary { background: var(--amber); color: white; width: 100%; padding: 14px; font-size: 16px; border-radius: 10px; }
   .btn-primary:hover { background: var(--amber-dark); }
-
-  .btn-secondary {
-    background: var(--border);
-    color: var(--brown);
-  }
-
+  .btn-secondary { background: var(--border); color: var(--brown); }
   .btn-secondary:hover { background: #d8c4a8; }
-
-  .btn-green {
-    background: var(--green);
-    color: white;
-  }
-
+  .btn-green { background: var(--green); color: white; }
   .btn-green:hover { background: #3a6347; }
-
-  .btn-red {
-    background: var(--red);
-    color: white;
-  }
-
+  .btn-red { background: var(--red); color: white; }
   .btn-red:hover { background: #a93226; }
+  .btn-blue { background: var(--blue); color: white; }
+  .btn-blue:hover { background: #1e5a9a; }
+  .btn-purple { background: var(--purple); color: white; }
+  .btn-purple:hover { background: #6d28d9; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
 
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 13px;
-  }
-
-  .login-error {
-    background: var(--red-light);
-    color: var(--red);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    margin-bottom: 16px;
-    display: none;
-  }
+  .login-error { background: var(--red-light); color: var(--red); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; margin-bottom: 16px; display: none; }
 
   /* ====== APP SHELL ====== */
   #app { display: none; min-height: 100vh; background: var(--cream); }
 
   .topbar {
-    background: var(--brown);
-    color: white;
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    background: var(--brown); color: white; padding: 0 24px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
   }
-
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
+  .topbar-brand { display: flex; align-items: center; gap: 10px; font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
   .topbar-brand span { font-size: 22px; }
-
-  .topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-  }
-
-  .user-badge {
-    background: rgba(255,255,255,0.15);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-  }
-
-  .btn-logout {
-    background: rgba(255,255,255,0.15);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: background 0.2s;
-  }
-
+  .topbar-user { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .user-badge { background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; }
+  .btn-logout { background: rgba(255,255,255,0.15); color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: background 0.2s; }
   .btn-logout:hover { background: rgba(255,255,255,0.25); }
 
-  .nav-tabs {
-    background: white;
-    border-bottom: 2px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    gap: 4px;
-    overflow-x: auto;
-  }
-
-  .nav-tab {
-    padding: 14px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    white-space: nowrap;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
+  .nav-tabs { background: white; border-bottom: 2px solid var(--border); padding: 0 24px; display: flex; gap: 4px; overflow-x: auto; }
+  .nav-tab { padding: 14px 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
   .nav-tab:hover { color: var(--amber); }
   .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
 
   .main-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
 
   /* ====== CARDS ====== */
-  .card {
-    background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .card-title {
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--brown);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
+  .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+  .card-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--brown); display: flex; align-items: center; gap: 8px; }
   .card-body { padding: 20px 22px; }
 
   /* ====== STATS ====== */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-  }
-
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
   .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
   .stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--brown); font-family: 'Fraunces', serif; }
   .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
   /* ====== TABLE ====== */
   .table-wrapper { overflow-x: auto; }
-
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-
-  th {
-    background: var(--cream);
-    padding: 10px 14px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-  }
-
-  td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
+  th { background: var(--cream); padding: 10px 14px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--warm-white); }
 
   /* ====== BADGES ====== */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
   .badge-ok { background: var(--green-light); color: var(--green); }
   .badge-low { background: var(--yellow-light); color: var(--yellow); }
   .badge-out { background: var(--red-light); color: var(--red); }
   .badge-role { background: var(--blue-light); color: var(--blue); }
+  .badge-sos { background: #fff0f0; color: var(--red); border: 1px solid #fca5a5; }
+  .badge-prolonged { background: var(--blue-light); color: var(--blue); }
+  .badge-single { background: var(--purple-light); color: var(--purple); }
+  .badge-evolve { background: var(--yellow-light); color: var(--yellow); }
+  .badge-taken { background: var(--green-light); color: var(--green); }
+  .badge-pending { background: #f5f5f5; color: #666; }
 
   /* ====== PROGRESS BAR ====== */
-  .progress-bar {
-    background: var(--border);
-    border-radius: 10px;
-    height: 8px;
-    overflow: hidden;
-    min-width: 80px;
-  }
-
-  .progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.4s;
-  }
-
+  .progress-bar { background: var(--border); border-radius: 10px; height: 8px; overflow: hidden; min-width: 80px; }
+  .progress-fill { height: 100%; border-radius: 10px; transition: width 0.4s; }
   .fill-ok { background: var(--green); }
   .fill-low { background: var(--yellow); }
   .fill-out { background: var(--red); }
 
+  /* ====== PERCENTAGE BAR (cremas/frascos) ====== */
+  .pct-bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .pct-bar { background: var(--border); border-radius: 10px; height: 10px; overflow: hidden; min-width: 80px; }
+  .pct-fill { height: 100%; border-radius: 10px; transition: width 0.4s; }
+
   /* ====== MODAL ====== */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; padding: 20px;
-  }
-
-  .modal {
-    background: white;
-    border-radius: 20px;
-    padding: 32px;
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .modal-title {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--brown);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal { background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+  .modal-title { font-family: 'Fraunces', serif; font-size: 20px; color: var(--brown); margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
 
   /* ====== ALERTS ====== */
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-
+  .alert-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 14px; }
   .alert-low { background: var(--yellow-light); border-left: 4px solid var(--yellow); }
   .alert-out { background: var(--red-light); border-left: 4px solid var(--red); }
 
   /* ====== SEARCH ====== */
-  .search-bar {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .search-bar input {
-    width: 100%;
-    padding: 10px 16px 10px 38px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--warm-white);
-    outline: none;
-  }
-
+  .search-bar { position: relative; flex: 1; min-width: 200px; }
+  .search-bar input { width: 100%; padding: 10px 16px 10px 38px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; background: var(--warm-white); outline: none; }
   .search-bar input:focus { border-color: var(--amber); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
 
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 16px;
-  }
-
-  /* ====== RESIDENT LIST ====== */
-  .resident-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .resident-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow);
-  }
-
-  .resident-card:hover {
-    border-color: var(--amber);
-    box-shadow: 0 4px 20px rgba(212,136,58,0.15);
-    transform: translateY(-2px);
-  }
-
-  .resident-name {
-    font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 8px;
-  }
-
-  .resident-meta {
-    font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
+  /* ====== RESIDENTS ====== */
+  .resident-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .resident-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow); }
+  .resident-card:hover { border-color: var(--amber); box-shadow: 0 4px 20px rgba(212,136,58,0.15); transform: translateY(-2px); }
+  .resident-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--brown); margin-bottom: 8px; }
+  .resident-meta { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
   /* ====== MOVEMENTS ====== */
-  .movement-item {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    align-items: flex-start;
-  }
-
+  .movement-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; align-items: flex-start; }
   .movement-item:last-child { border-bottom: none; }
-
-  .movement-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
+  .movement-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
   .mov-in { background: var(--green-light); }
   .mov-out { background: var(--red-light); }
 
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text-muted);
-  }
-
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
   .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state p { font-size: 15px; }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
-  .section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 22px;
-    color: var(--brown);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .tag {
-    display: inline-block;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
+  .section-title { font-family: 'Fraunces', serif; font-size: 22px; color: var(--brown); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 
   .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--brown);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    display: none;
-    z-index: 9999;
-    animation: slideUp 0.3s ease;
-  }
+  #toast { position: fixed; bottom: 24px; right: 24px; background: var(--brown); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); display: none; z-index: 9999; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 16px;
-    padding: 4px 0;
-  }
-
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 16px; padding: 4px 0; }
   .back-btn:hover { color: var(--amber); }
+
+  /* ====== SOS TODAY PANEL ====== */
+  .sos-panel { background: #fff5f5; border: 1.5px solid #fca5a5; border-radius: var(--radius); padding: 16px 20px; margin-bottom: 20px; }
+  .sos-panel-title { font-weight: 700; color: var(--red); margin-bottom: 12px; font-size: 15px; }
+  .sos-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #fee2e2; font-size: 14px; gap: 10px; flex-wrap: wrap; }
+  .sos-item:last-child { border-bottom: none; }
+  .sos-taken { opacity: 0.5; text-decoration: line-through; }
+
+  /* ====== PRINT / PDF ====== */
+  @media print {
+    body { background: white !important; }
+    .topbar, .nav-tabs, .back-btn, .btn, button, #toast, .no-print { display: none !important; }
+    .main-content { padding: 0 !important; max-width: 100% !important; }
+    .card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; }
+    .print-header { display: block !important; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
+    .table-wrapper { overflow: visible !important; }
+  }
+
+  .print-header { display: none; text-align: center; margin-bottom: 20px; }
+  .print-header h2 { font-family: 'Fraunces', serif; font-size: 20px; color: #333; }
+  .print-header p { font-size: 13px; color: #666; margin-top: 4px; }
+
+  /* ====== TIPO TRATAMIENTO ====== */
+  .treatment-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+  .treatment-opt { flex: 1; min-width: 120px; padding: 10px 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-muted); transition: all 0.2s; background: white; }
+  .treatment-opt:hover { border-color: var(--amber); color: var(--amber); }
+  .treatment-opt.selected { border-color: var(--amber); background: #fff8f0; color: var(--amber); }
+  .treatment-opt .opt-icon { font-size: 20px; display: block; margin-bottom: 4px; }
 
   @media (max-width: 768px) {
     .main-content { padding: 16px; }
@@ -623,17 +278,13 @@
 <!-- APP -->
 <div id="app">
   <div class="topbar">
-    <div class="topbar-brand">
-      <span>🍂</span> MedStock
-    </div>
+    <div class="topbar-brand"><span>🍂</span> MedStock</div>
     <div class="topbar-user">
       <span class="user-badge" id="user-display"></span>
       <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
-
   <div class="nav-tabs" id="nav-tabs"></div>
-
   <div class="main-content" id="main-content"></div>
 </div>
 
@@ -645,19 +296,15 @@
 // =====================================================
 
 const USERS = [
-  // Dueños
   { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
   { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
-  // Encargada
   { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
-  // Enfermeras
   { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
   { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
   { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
   { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
   { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
   { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
-  // Familiares
   { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
   { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
   { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
@@ -709,210 +356,209 @@ const RESIDENTS = [
   { id: 23, name: 'Gladys Núñez' },
 ];
 
-const ROLE_LABELS = {
-  owner: 'Dueño',
-  manager: 'Encargada',
-  nurse: 'Enfermera',
-  family: 'Familiar'
-};
+const ROLE_LABELS = { owner: 'Dueño', manager: 'Encargada', nurse: 'Enfermera', family: 'Familiar' };
+
+// Tipos de presentación que usan % de envase en lugar de unidades
+const PCT_UNITS = ['crema', 'gel', 'pomada', 'ungüento', 'gotas', 'colirio', 'frasco', 'jarabe', 'suspensión', 'loción', 'spray'];
+
+function usesPct(unit) {
+  if (!unit) return false;
+  return PCT_UNITS.some(u => unit.toLowerCase().includes(u));
+}
 
 // =====================================================
-// ESTADO
-// =====================================================
-
-// =====================================================
-// MEDICAMENTOS INICIALES (extraídos de planillas abril 2026)
+// MEDICAMENTOS INICIALES
 // =====================================================
 const INITIAL_MEDICATIONS = [
   // 1. AMELIA ÁPEZ
-  {residentId:1,name:'T4 Montpellier 150mg',drug:'Levotiroxina',concentration:'150mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:1,name:'Diurex 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:1,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:1,name:'Calmador Plus',drug:'Tramadol/Paracetamol',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:1,name:'Risperin 2mg',drug:'Risperidona',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:1,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:1,name:'Lucidex 10mg',drug:'Memantina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:1,name:'Sidenar 2,5mg',drug:'Lorazepam',concentration:'2,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:1,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:1,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS / 21:00',sos:true},
-  {residentId:1,name:'Mupicil 2%',drug:'Mupirocina',concentration:'2%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 24:00',sos:false},
+  {residentId:1,name:'T4 Montpellier 150mg',drug:'Levotiroxina',concentration:'150mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Diurex 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Calmador Plus',drug:'Tramadol/Paracetamol',concentration:'',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Risperin 2mg',drug:'Risperidona',concentration:'2mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Lucidex 10mg',drug:'Memantina',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Sidenar 2,5mg',drug:'Lorazepam',concentration:'2,5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:1,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS / 21:00',sos:true,treatmentType:'evolve'},
+  {residentId:1,name:'Mupicil 2%',drug:'Mupirocina',concentration:'2%',unit:'crema',dosePerDay:3,qty:100,minDays:5,horario:'09:00 / 17:00 / 24:00',sos:false,treatmentType:'evolve',pct:80},
   // 2. MARÍA DORALINDA MORENO
-  {residentId:2,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:2,name:'Dolocox 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:2,name:'Aucic 1%',drug:'Carboximetilcelulosa',concentration:'1%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
-  {residentId:2,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:2,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:2,name:'Taxagon AD 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'22:00',sos:false},
-  {residentId:2,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
-  {residentId:2,name:'Deltisona B 20mg',drug:'Meprednisona',concentration:'20mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00 (10 días)',sos:false},
+  {residentId:2,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:2,name:'Dolocox 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:2,name:'Aucic 1%',drug:'Carboximetilcelulosa',concentration:'1%',unit:'gotas',dosePerDay:4,qty:1,minDays:3,horario:'09:00',sos:false,treatmentType:'prolonged',pct:70},
+  {residentId:2,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:2,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:2,name:'Taxagon AD 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'22:00',sos:false,treatmentType:'prolonged'},
+  {residentId:2,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
+  {residentId:2,name:'Deltisona B 20mg',drug:'Meprednisona',concentration:'20mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00 (10 días)',sos:false,treatmentType:'single'},
   // 3. LIDIA ESTHER GÓMEZ
-  {residentId:3,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:3,name:'Nebilet 5mg',drug:'Nebivolol',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:3,name:'Niten 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:3,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (días pares)',sos:false},
-  {residentId:3,name:'Tiarix 20mg',drug:'Paroxetina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:3,name:'Dolofrix',drug:'Codeína/Paracetamol',concentration:'',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:3,name:'Furadantina MC 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:3,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:3,name:'Nebilet 5mg',drug:'Nebivolol',concentration:'5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:3,name:'Niten 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:3,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.5,qty:12,minDays:7,horario:'09:00 (días pares)',sos:false,treatmentType:'prolonged'},
+  {residentId:3,name:'Tiarix 20mg',drug:'Paroxetina',concentration:'20mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:3,name:'Dolofrix',drug:'Codeína/Paracetamol',concentration:'',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:3,name:'Furadantina MC 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
   // 4. AMELIA CIGALA
-  {residentId:4,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:4,name:'T4 Montpellier 125mg',drug:'Levotiroxina',concentration:'125mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:4,name:'Clonagin 1mg',drug:'Clonazepam',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:4,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
-  {residentId:4,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:4,name:'Neumoterol 200',drug:'Budesonide',concentration:'200mcg',unit:'puffs',qty:1,minQty:1,horario:'SOS',sos:true},
-  {residentId:4,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (días pares)',sos:false},
-  {residentId:4,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
+  {residentId:4,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'T4 Montpellier 125mg',drug:'Levotiroxina',concentration:'125mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'Clonagin 1mg',drug:'Clonazepam',concentration:'1mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'12:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'Neumoterol 200',drug:'Budesonide',concentration:'200mcg',unit:'puffs',dosePerDay:1,qty:1,minDays:5,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:4,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.5,qty:12,minDays:7,horario:'09:00 (días pares)',sos:false,treatmentType:'prolonged'},
+  {residentId:4,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
   // 5. ROSA ANDRACA
-  {residentId:5,name:'Losacor 100mg',drug:'Losartán',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:5,name:'Diondel 100mg',drug:'Flecainida',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:5,name:'Levotiroxina 50mg',drug:'Levotiroxina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:5,name:'Biatrix XR 50',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:5,name:'Pelmec 5',drug:'Amlodipina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:5,name:'Controllip 160mg',drug:'Fenofibrato',concentration:'160mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:5,name:'Anemidox Ultra',drug:'Hierro',concentration:'',unit:'comprimidos',qty:12,minQty:3,horario:'09:00 / 21:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:5,name:'Micopirox',drug:'Ciclopirox 8%',concentration:'8%',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 (días impares)',sos:false},
-  {residentId:5,name:'Endoclar',drug:'Donepecilo',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
+  {residentId:5,name:'Losacor 100mg',drug:'Losartán',concentration:'100mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Diondel 100mg',drug:'Flecainida',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Levotiroxina 50mg',drug:'Levotiroxina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Biatrix XR 50',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Pelmec 5',drug:'Amlodipina',concentration:'5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Controllip 160mg',drug:'Fenofibrato',concentration:'160mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Anemidox Ultra',drug:'Hierro',concentration:'',unit:'comprimidos',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 / 21:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:5,name:'Micopirox',drug:'Ciclopirox 8%',concentration:'8%',unit:'crema',dosePerDay:1,qty:1,minDays:5,horario:'09:00 (días impares)',sos:false,treatmentType:'evolve',pct:60},
+  {residentId:5,name:'Endoclar',drug:'Donepecilo',concentration:'',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
   // 6. EMILIA GIRÓN
-  {residentId:6,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:6,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:6,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:6,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:6,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:6,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:6,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:6,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
   // 8. INÉS RIVERA
-  {residentId:8,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:8,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:8,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:8,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
+  {residentId:8,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:8,name:'Xumer 120mg',drug:'Etoricoxib',concentration:'120mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:8,name:'Milcanor 500mg',drug:'Diosmina',concentration:'500mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:8,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
   // 9. OLGA MARINELLI
-  {residentId:9,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:9,name:'Merital 20mg',drug:'Memantina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:9,name:'Dropstar',drug:'Hialuronato de sodio',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
-  {residentId:9,name:'Ibupirac Flex 600',drug:'Clorzoxazona/Ibuprofeno',concentration:'600mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:9,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:9,name:'Xumer 90mg',drug:'Etoricoxib',concentration:'90mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:9,name:'Indomet crema',drug:'Indometacina',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 24:00',sos:false},
+  {residentId:9,name:'Paxon 50mg',drug:'Losartán',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:9,name:'Merital 20mg',drug:'Memantina',concentration:'20mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:9,name:'Dropstar',drug:'Hialuronato de sodio',concentration:'',unit:'gotas',dosePerDay:2,qty:1,minDays:3,horario:'09:00',sos:false,treatmentType:'prolonged',pct:75},
+  {residentId:9,name:'Ibupirac Flex 600',drug:'Clorzoxazona/Ibuprofeno',concentration:'600mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:9,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:9,name:'Xumer 90mg',drug:'Etoricoxib',concentration:'90mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:9,name:'Indomet crema',drug:'Indometacina',concentration:'',unit:'crema',dosePerDay:3,qty:1,minDays:5,horario:'09:00 / 17:00 / 24:00',sos:false,treatmentType:'evolve',pct:50},
   // 10. ESTHER MORENO
-  {residentId:10,name:'Improval 500mg',drug:'Divalproato de sodio',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
-  {residentId:10,name:'Risperin 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:10,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:10,name:'Losacor D 100mg',drug:'Losartán/Hidroclorotiazida',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:10,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:10,name:'Nicardil 10mg',drug:'Bisoprolol',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:10,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:10,name:'Furadantina 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',qty:21,minQty:5,horario:'09:00 / 15:00 / 21:00',sos:false},
-  {residentId:10,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:10,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:10,name:'Herapina Gel',drug:'Heparina gel',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 21:00',sos:false},
+  {residentId:10,name:'Improval 500mg',drug:'Divalproato de sodio',concentration:'500mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'12:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Risperin 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'T4 112mg',drug:'Levotiroxina',concentration:'112mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Losacor D 100mg',drug:'Losartán/Hidroclorotiazida',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Nicardil 10mg',drug:'Bisoprolol',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Furadantina 100mg',drug:'Nitrofurantoína',concentration:'100mg',unit:'comprimidos',dosePerDay:3,qty:21,minDays:5,horario:'09:00 / 15:00 / 21:00',sos:false,treatmentType:'single'},
+  {residentId:10,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:10,name:'Terbenol Duo',drug:'Diosmina/Hesperidina',concentration:'',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:10,name:'Herapina Gel',drug:'Heparina gel',concentration:'',unit:'gel',dosePerDay:2,qty:1,minDays:5,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged',pct:80},
   // 11. CARLOS QUIROGA
-  {residentId:11,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
-  {residentId:11,name:'Parkinel 250/25',drug:'Levodopa/Carbidopa',concentration:'250/25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 12:00 / 17:00',sos:false},
-  {residentId:11,name:'Quetiazic 50mg XR',drug:'Quetiapina XR',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:11,name:'Alplax 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 17:00 / 21:00',sos:false},
-  {residentId:11,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
-  {residentId:11,name:'Treg 20mg',drug:'Omeprazol',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:11,name:'Fecofar 40mg',drug:'Furosemida',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:11,name:'Lactulon 65gr',drug:'Lactulosa',concentration:'',unit:'ml',qty:300,minQty:50,horario:'12:00',sos:false},
-  {residentId:11,name:'Diosmin 500mg',drug:'Diosmina/Hesperidina',concentration:'500mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 17:00 / 23:00',sos:false},
-  {residentId:11,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:11,name:'Procto Ikatral',drug:'Lidocaína/Hidrocortisona',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'SOS',sos:true},
+  {residentId:11,name:'Atenix 50mg',drug:'Sertralina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'12:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Parkinel 250/25',drug:'Levodopa/Carbidopa',concentration:'250/25mg',unit:'comprimidos',dosePerDay:3,qty:30,minDays:10,horario:'09:00 / 12:00 / 17:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Quetiazic 50mg XR',drug:'Quetiapina XR',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Alplax 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',dosePerDay:3,qty:30,minDays:10,horario:'09:00 / 17:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'12:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Treg 20mg',drug:'Omeprazol',concentration:'20mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Fecofar 40mg',drug:'Furosemida',concentration:'40mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Lactulon 65gr',drug:'Lactulosa',concentration:'',unit:'frasco',dosePerDay:1,qty:300,minDays:5,horario:'12:00',sos:false,treatmentType:'prolonged',pct:90},
+  {residentId:11,name:'Diosmin 500mg',drug:'Diosmina/Hesperidina',concentration:'500mg',unit:'comprimidos',dosePerDay:3,qty:30,minDays:10,horario:'09:00 / 17:00 / 23:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:11,name:'Procto Ikatral',drug:'Lidocaína/Hidrocortisona',concentration:'',unit:'crema',dosePerDay:1,qty:1,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve',pct:70},
   // 12. MARIO RIVERO
-  {residentId:12,name:'Clonagin 0,25',drug:'Clonazepam',concentration:'0,25mg',unit:'gotas',qty:30,minQty:5,horario:'09:00 / 17:00 / 21:00',sos:false},
-  {residentId:12,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:12,name:'Sarval 80/125',drug:'Valsartán/Hidroclorotiazida',concentration:'80/125mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:12,name:'Ataraxone 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
-  {residentId:12,name:'Tansiloprost 0,4',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:12,name:'Cortipyren B40',drug:'Meprednisona',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:12,name:'Acemuk',drug:'Acetilcisteína',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
-  {residentId:12,name:'Dermaex crema',drug:'Clobetasol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 17:00 / 21:00',sos:false},
-  {residentId:12,name:'Eucerin',drug:'Crema hidratante',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 21:00',sos:false},
+  {residentId:12,name:'Clonagin 0,25',drug:'Clonazepam',concentration:'0,25mg',unit:'gotas',dosePerDay:3,qty:30,minDays:10,horario:'09:00 / 17:00 / 21:00',sos:false,treatmentType:'prolonged',pct:100},
+  {residentId:12,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:12,name:'Sarval 80/125',drug:'Valsartán/Hidroclorotiazida',concentration:'80/125mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:12,name:'Ataraxone 25mg',drug:'Hidroclorotiazida',concentration:'25mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'12:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:12,name:'Tansiloprost 0,4',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:12,name:'Cortipyren B40',drug:'Meprednisona',concentration:'40mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:12,name:'Acemuk',drug:'Acetilcisteína',concentration:'',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
+  {residentId:12,name:'Dermaex crema',drug:'Clobetasol',concentration:'',unit:'crema',dosePerDay:3,qty:1,minDays:5,horario:'09:00 / 17:00 / 21:00',sos:false,treatmentType:'evolve',pct:65},
+  {residentId:12,name:'Eucerin',drug:'Crema hidratante',concentration:'',unit:'crema',dosePerDay:2,qty:1,minDays:5,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged',pct:50},
   // 13. ANTONIO DE LA VEGA
-  {residentId:13,name:'Aspirina Prevent 100',drug:'Ácido acetilsalicílico',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:13,name:'Tansiloprost 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
-  {residentId:13,name:'Clonagin 0,5mg',drug:'Clonazepam',concentration:'0,5mg',unit:'gotas',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:13,name:'Quetiazic XR 50mg',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:13,name:'Clopilep 75mg',drug:'Clopidogrel',concentration:'75mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:13,name:'Rovastal 10mg',drug:'Rosuvastatina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:13,name:'Zomarist Met',drug:'Vildagliptina/Metformina',concentration:'50/500mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
-  {residentId:13,name:'Crema de Bismuto',drug:'Hidróxido de bismuto',concentration:'',unit:'ml',qty:100,minQty:20,horario:'SOS',sos:true},
+  {residentId:13,name:'Aspirina Prevent 100',drug:'Ácido acetilsalicílico',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Tansiloprost 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'17:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Clonagin 0,5mg',drug:'Clonazepam',concentration:'0,5mg',unit:'gotas',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve',pct:80},
+  {residentId:13,name:'Quetiazic XR 50mg',drug:'Quetiapina',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Clopilep 75mg',drug:'Clopidogrel',concentration:'75mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Rovastal 10mg',drug:'Rosuvastatina',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Zomarist Met',drug:'Vildagliptina/Metformina',concentration:'50/500mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'12:00',sos:false,treatmentType:'prolonged'},
+  {residentId:13,name:'Crema de Bismuto',drug:'Hidróxido de bismuto',concentration:'',unit:'crema',dosePerDay:1,qty:1,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve',pct:60},
   // 14. MIREYA OLIVARES
-  {residentId:14,name:'Carvedil 6,25mg',drug:'Carvedilol',concentration:'6,25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:14,name:'Lotrial 10mg',drug:'Enalapril',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
-  {residentId:14,name:'Valcote 250mg',drug:'Divalproato de sodio',concentration:'250mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:14,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:14,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:14,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:14,name:'Unesia crema',drug:'Bifonazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00',sos:false},
+  {residentId:14,name:'Carvedil 6,25mg',drug:'Carvedilol',concentration:'6,25mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Lotrial 10mg',drug:'Enalapril',concentration:'10mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Valcote 250mg',drug:'Divalproato de sodio',concentration:'250mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Midax 5mg',drug:'Olanzapina',concentration:'5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Barex',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Biatrix 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:14,name:'Unesia crema',drug:'Bifonazol',concentration:'',unit:'crema',dosePerDay:1,qty:1,minDays:5,horario:'09:00',sos:false,treatmentType:'evolve',pct:75},
   // 15. ROSA OCHE
-  {residentId:15,name:'Somit 5mg',drug:'Zolpidem',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:15,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:15,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:15,name:'Ataraxone 50mg',drug:'Hidroclorotiazida',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:15,name:'Somit 5mg',drug:'Zolpidem',concentration:'5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:15,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:15,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:15,name:'Ataraxone 50mg',drug:'Hidroclorotiazida',concentration:'50mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
   // 16. SUSANA SERIGNANI
-  {residentId:16,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:16,name:'T4 100mg',drug:'Levotiroxina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:16,name:'Insulina Insular',drug:'Insulina regular',concentration:'',unit:'unidades',qty:30,minQty:10,horario:'09:00',sos:false},
-  {residentId:16,name:'Insulina Novo Rapid',drug:'Insulina aspártica',concentration:'',unit:'unidades',qty:10,minQty:5,horario:'SOS',sos:true},
-  {residentId:16,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'ml',qty:1,minQty:1,horario:'12:00 (día 27)',sos:false},
-  {residentId:16,name:'Risperidona 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 20:00',sos:false},
-  {residentId:16,name:'Trazodona 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:16,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:16,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:16,name:'T4 100mg',drug:'Levotiroxina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:16,name:'Insulina Insular',drug:'Insulina regular',concentration:'',unit:'unidades',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:16,name:'Insulina Novo Rapid',drug:'Insulina aspártica',concentration:'',unit:'unidades',dosePerDay:1,qty:10,minDays:5,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:16,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'frasco',dosePerDay:0.03,qty:1,minDays:5,horario:'12:00 (día 27)',sos:false,treatmentType:'prolonged',pct:100},
+  {residentId:16,name:'Risperidona 1mg',drug:'Risperidona',concentration:'1mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'08:00 / 20:00',sos:false,treatmentType:'prolonged'},
+  {residentId:16,name:'Trazodona 50mg',drug:'Trazodona',concentration:'50mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:16,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
   // 17. MANUEL RICAVARREN
-  {residentId:17,name:'Apixaban 5mg',drug:'Apixabán',concentration:'5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:17,name:'Rosuvastatina 40mg',drug:'Rosuvastatina',concentration:'40mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:17,name:'Paracetamol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:17,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:17,name:'Tranquinal 0,5mg',drug:'Alprazolam',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:17,name:'Meridian 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:17,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:17,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:17,name:'Apixaban 5mg',drug:'Apixabán',concentration:'5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Rosuvastatina 40mg',drug:'Rosuvastatina',concentration:'40mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Paracetamol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:17,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Tranquinal 0,5mg',drug:'Alprazolam',concentration:'0,5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Meridian 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Terbenol Duo',drug:'Diosmina',concentration:'',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:17,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
   // 18. CARMEN NARVÁEZ
-  {residentId:18,name:'Neuroplus 20',drug:'Memantina',concentration:'20mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
-  {residentId:18,name:'Tranquinal 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:18,name:'Remexal 10mg',drug:'Rivaroxabán',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
-  {residentId:18,name:'Optive gotas',drug:'Carboximetilcelulosa sódica',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'09:00 / 12:00 / 17:00 / 21:00',sos:false},
-  {residentId:18,name:'Acrylarm Gel',drug:'Ácido poliacrílico',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'14:00 / 21:00',sos:false},
-  {residentId:18,name:'Ataraxone 25mg',drug:'Hidroxicina',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00 / 21:00',sos:false},
+  {residentId:18,name:'Neuroplus 20',drug:'Memantina',concentration:'20mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'17:00',sos:false,treatmentType:'prolonged'},
+  {residentId:18,name:'Tranquinal 2mg',drug:'Alprazolam',concentration:'2mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:18,name:'Remexal 10mg',drug:'Rivaroxabán',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'12:00',sos:false,treatmentType:'prolonged'},
+  {residentId:18,name:'Optive gotas',drug:'Carboximetilcelulosa sódica',concentration:'',unit:'gotas',dosePerDay:4,qty:1,minDays:3,horario:'09:00 / 12:00 / 17:00 / 21:00',sos:false,treatmentType:'prolonged',pct:80},
+  {residentId:18,name:'Acrylarm Gel',drug:'Ácido poliacrílico',concentration:'',unit:'gel',dosePerDay:2,qty:1,minDays:3,horario:'14:00 / 21:00',sos:false,treatmentType:'prolonged',pct:70},
+  {residentId:18,name:'Ataraxone 25mg',drug:'Hidroxicina',concentration:'25mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
   // 19. FRANCISCO CARA
-  {residentId:19,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:19,name:'Macril crema',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'21:00 (uñas del pie)',sos:false},
-  {residentId:19,name:'Sucralmax',drug:'Sucralfato',concentration:'',unit:'ml',qty:300,minQty:50,horario:'09:00 / 21:00',sos:false},
-  {residentId:19,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00 / 21:00',sos:false},
-  {residentId:19,name:'Quetiapina 25mg',drug:'Quetiapina',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:19,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'ml',qty:1,minQty:1,horario:'09:00 (día 27)',sos:false},
-  {residentId:19,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
-  {residentId:19,name:'Alernix 24',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:19,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:19,name:'Macril crema',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'crema',dosePerDay:1,qty:1,minDays:5,horario:'21:00 (uñas del pie)',sos:false,treatmentType:'evolve',pct:60},
+  {residentId:19,name:'Sucralmax',drug:'Sucralfato',concentration:'',unit:'frasco',dosePerDay:2,qty:300,minDays:5,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged',pct:90},
+  {residentId:19,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'12:00 / 21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:19,name:'Quetiapina 25mg',drug:'Quetiapina',concentration:'25mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:19,name:'Osteodyn',drug:'Vitamina D',concentration:'',unit:'frasco',dosePerDay:0.03,qty:1,minDays:5,horario:'09:00 (día 27)',sos:false,treatmentType:'prolonged',pct:100},
+  {residentId:19,name:'Acemuk 600',drug:'N-Acetilcisteína',concentration:'600mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
+  {residentId:19,name:'Alernix 24',drug:'Cetirizina',concentration:'',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
   // 20. JOSÉ COLLADO
-  {residentId:20,name:'Enantyum 25mg',drug:'Dexketoprofeno',concentration:'25mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:20,name:'Dilatrand 12,5mg',drug:'Carvedilol',concentration:'12,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'17:00',sos:false},
-  {residentId:20,name:'Tranquinal 1mg',drug:'Alprazolam',concentration:'1mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:20,name:'Anaflex Plus',drug:'Diclofenac',concentration:'',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:20,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:20,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',qty:10,minQty:2,horario:'09:00 / 21:00',sos:false},
+  {residentId:20,name:'Enantyum 25mg',drug:'Dexketoprofeno',concentration:'25mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:20,name:'Dilatrand 12,5mg',drug:'Carvedilol',concentration:'12,5mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'17:00',sos:false,treatmentType:'prolonged'},
+  {residentId:20,name:'Tranquinal 1mg',drug:'Alprazolam',concentration:'1mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:20,name:'Anaflex Plus',drug:'Diclofenac',concentration:'',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:20,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:20,name:'Cetirizina',drug:'Cetirizina',concentration:'',unit:'comprimidos',dosePerDay:2,qty:10,minDays:5,horario:'09:00 / 21:00',sos:false,treatmentType:'prolonged'},
   // 21. NELSON TELLO
-  {residentId:21,name:'Clonagin 2mg',drug:'Clonazepam',concentration:'2mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:21,name:'Madopar 250mg',drug:'Levodopa',concentration:'250mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:21,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:21,name:'DBI AP 850',drug:'Metformina',concentration:'850mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:21,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',qty:10,minQty:2,horario:'09:00',sos:false},
+  {residentId:21,name:'Clonagin 2mg',drug:'Clonazepam',concentration:'2mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:21,name:'Madopar 250mg',drug:'Levodopa',concentration:'250mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:21,name:'Atenix 100mg',drug:'Sertralina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:21,name:'DBI AP 850',drug:'Metformina',concentration:'850mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:21,name:'Acemuk 600',drug:'Acetilcisteína',concentration:'600mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:5,horario:'09:00',sos:false,treatmentType:'single'},
   // 22. LINARES FRANCISCO
-  {residentId:22,name:'Rostrum 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:22,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 20:00',sos:false},
-  {residentId:22,name:'Tamsulosina 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',qty:30,minQty:5,horario:'09:00',sos:false},
-  {residentId:22,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:22,name:'Fenitoína 100mg',drug:'Fenitoína sódica',concentration:'100mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00 / 16:00 / 22:00',sos:false},
+  {residentId:22,name:'Rostrum 100mg',drug:'Quetiapina',concentration:'100mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:22,name:'Risperin 0,5mg',drug:'Risperidona',concentration:'0,5mg',unit:'comprimidos',dosePerDay:2,qty:30,minDays:10,horario:'08:00 / 20:00',sos:false,treatmentType:'prolonged'},
+  {residentId:22,name:'Tamsulosina 0,4mg',drug:'Tamsulosina',concentration:'0,4mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'09:00',sos:false,treatmentType:'prolonged'},
+  {residentId:22,name:'Barex-S',drug:'Polietilenglicol',concentration:'',unit:'sobres',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:22,name:'Fenitoína 100mg',drug:'Fenitoína sódica',concentration:'100mg',unit:'comprimidos',dosePerDay:3,qty:30,minDays:10,horario:'08:00 / 16:00 / 22:00',sos:false,treatmentType:'prolonged'},
   // 23. GLADYS NÚÑEZ
-  {residentId:23,name:'Sarval D 160/25',drug:'Valsartán/Hidroclorotiazida',concentration:'160/25mg',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:23,name:'T4 75mg',drug:'Levotiroxina',concentration:'75mg',unit:'comprimidos',qty:30,minQty:5,horario:'08:00',sos:false},
-  {residentId:23,name:'Pelmec 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'12:00',sos:false},
-  {residentId:23,name:'Calcimax Forte',drug:'Citrato de calcio',concentration:'',unit:'comprimidos',qty:12,minQty:3,horario:'09:00 (Lun/Mier/Vier)',sos:false},
-  {residentId:23,name:'Dormilan 10mg',drug:'Zolpidem',concentration:'10mg',unit:'comprimidos',qty:30,minQty:5,horario:'21:00',sos:false},
-  {residentId:23,name:'Rentop 150',drug:'Risedronato',concentration:'150mg',unit:'comprimidos',qty:1,minQty:1,horario:'1ro de cada mes',sos:false},
-  {residentId:23,name:'Gadoferol CB 100.000',drug:'Colecalciferol',concentration:'100.000 UI',unit:'comprimidos',qty:1,minQty:1,horario:'10:00 (mensual)',sos:false},
-  {residentId:23,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',qty:10,minQty:3,horario:'SOS',sos:true},
-  {residentId:23,name:'Factor Dérmico',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'aplicaciones',qty:1,minQty:1,horario:'08:00 / 16:00 / 22:00',sos:false},
+  {residentId:23,name:'Sarval D 160/25',drug:'Valsartán/Hidroclorotiazida',concentration:'160/25mg',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:23,name:'T4 75mg',drug:'Levotiroxina',concentration:'75mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'08:00',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Pelmec 10mg',drug:'Amlodipina',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'12:00',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Calcimax Forte',drug:'Citrato de calcio',concentration:'',unit:'comprimidos',dosePerDay:0.4,qty:12,minDays:7,horario:'09:00 (Lun/Mier/Vier)',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Dormilan 10mg',drug:'Zolpidem',concentration:'10mg',unit:'comprimidos',dosePerDay:1,qty:30,minDays:10,horario:'21:00',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Rentop 150',drug:'Risedronato',concentration:'150mg',unit:'comprimidos',dosePerDay:0.03,qty:1,minDays:5,horario:'1ro de cada mes',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Gadoferol CB 100.000',drug:'Colecalciferol',concentration:'100.000 UI',unit:'comprimidos',dosePerDay:0.03,qty:1,minDays:5,horario:'10:00 (mensual)',sos:false,treatmentType:'prolonged'},
+  {residentId:23,name:'Tafirol 1g',drug:'Paracetamol',concentration:'1g',unit:'comprimidos',dosePerDay:1,qty:10,minDays:3,horario:'SOS',sos:true,treatmentType:'evolve'},
+  {residentId:23,name:'Factor Dérmico',drug:'Betametasona/Gentamicina/Miconazol',concentration:'',unit:'crema',dosePerDay:3,qty:1,minDays:5,horario:'08:00 / 16:00 / 22:00',sos:false,treatmentType:'prolonged',pct:70},
 ];
 
 function loadInitialMeds() {
-  if (localStorage.getItem('medstock_initialized')) return;
+  if (localStorage.getItem('medstock_initialized2')) return;
   const ts = Date.now();
   const meds = INITIAL_MEDICATIONS.map((m, i) => ({
     id: ts + i,
@@ -921,17 +567,21 @@ function loadInitialMeds() {
     drug: m.drug,
     concentration: m.concentration,
     unit: m.unit,
+    dosePerDay: m.dosePerDay || 1,
     qty: m.qty,
-    minQty: m.minQty,
+    minDays: m.minDays || 7,
     horario: m.horario || '',
     sos: m.sos || false,
-    expiry: '',
+    treatmentType: m.treatmentType || 'prolonged',
+    pct: m.pct !== undefined ? m.pct : (usesPct(m.unit) ? 100 : null),
     obs: '',
     addedBy: 'Sistema',
     addedDate: '11/04/2026'
   }));
   localStorage.setItem('medstock_meds', JSON.stringify(meds));
-  localStorage.setItem('medstock_initialized', '1');
+  localStorage.setItem('medstock_initialized2', '1');
+  // Clear old init flag to re-run with new schema
+  localStorage.removeItem('medstock_initialized');
 }
 loadInitialMeds();
 
@@ -939,9 +589,50 @@ let currentUser = null;
 let currentTab = 'home';
 let medications = JSON.parse(localStorage.getItem('medstock_meds') || '[]');
 let movements = JSON.parse(localStorage.getItem('medstock_movs') || '[]');
+// sosLog: { date, medId, taken: bool }
+let sosLog = JSON.parse(localStorage.getItem('medstock_soslog') || '[]');
 
 function saveMeds() { localStorage.setItem('medstock_meds', JSON.stringify(medications)); }
 function saveMovs() { localStorage.setItem('medstock_movs', JSON.stringify(movements)); }
+function saveSosLog() { localStorage.setItem('medstock_soslog', JSON.stringify(sosLog)); }
+
+// =====================================================
+// STATUS: now by DAYS remaining
+// =====================================================
+
+function getDaysRemaining(m) {
+  if (usesPct(m.unit)) {
+    // For pct-based meds, just return pct as "days equivalent" conceptually
+    return (m.pct !== null && m.pct !== undefined) ? m.pct : 100;
+  }
+  if (!m.dosePerDay || m.dosePerDay <= 0) return m.qty > 0 ? 999 : 0;
+  return Math.floor(m.qty / m.dosePerDay);
+}
+
+function getStatus(m) {
+  if (usesPct(m.unit)) {
+    const pct = m.pct !== null && m.pct !== undefined ? m.pct : 100;
+    if (pct <= 0) return 'out';
+    if (pct <= 25) return 'low';
+    return 'ok';
+  }
+  if (m.qty <= 0) return 'out';
+  const days = getDaysRemaining(m);
+  const minDays = m.minDays || 7;
+  if (days <= 0) return 'out';
+  if (days <= minDays) return 'low';
+  return 'ok';
+}
+
+function getStockLabel(m) {
+  if (usesPct(m.unit)) {
+    const pct = m.pct !== null && m.pct !== undefined ? m.pct : 100;
+    return `${pct}% del envase`;
+  }
+  const days = getDaysRemaining(m);
+  if (days === 999) return `${m.qty} ${m.unit}`;
+  return `${m.qty} ${m.unit} (~${days} días)`;
+}
 
 // =====================================================
 // AUTH
@@ -951,10 +642,7 @@ function doLogin() {
   const u = document.getElementById('login-user').value.trim().toLowerCase();
   const p = document.getElementById('login-pass').value;
   const found = USERS.find(x => x.user === u && x.pass === p);
-  if (!found) {
-    document.getElementById('login-error').style.display = 'block';
-    return;
-  }
+  if (!found) { document.getElementById('login-error').style.display = 'block'; return; }
   currentUser = found;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -1020,7 +708,6 @@ function renderTab(tab) {
 // =====================================================
 
 function renderHome(c) {
-  const alerts = getAlerts();
   const totalMeds = medications.length;
   const lowCount = medications.filter(m => getStatus(m) === 'low').length;
   const outCount = medications.filter(m => getStatus(m) === 'out').length;
@@ -1031,56 +718,35 @@ function renderHome(c) {
     c.innerHTML = `
       <h2 class="section-title">🍂 Bienvenida/o</h2>
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">💊</div>
-          <div class="stat-value">${myMeds.length}</div>
-          <div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">⚠️</div>
-          <div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div>
-          <div class="stat-label">Stock bajo</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🚨</div>
-          <div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div>
-          <div class="stat-label">Sin stock</div>
-        </div>
+        <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
       </div>
       ${renderAlertsSection(myMeds)}
     `;
     return;
   }
 
+  // SOS pending today for staff
+  const todayStr = today();
+  const sosMeds = medications.filter(m => m.sos);
+  const sosPending = sosMeds.filter(m => {
+    const log = sosLog.find(l => l.medId === m.id && l.date === todayStr);
+    return !log || !log.taken;
+  });
+
   c.innerHTML = `
     <h2 class="section-title">🍂 Panel general</h2>
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-value">${RESIDENTS.length}</div>
-        <div class="stat-label">Residentes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">💊</div>
-        <div class="stat-value">${totalMeds}</div>
-        <div class="stat-label">Medicamentos cargados</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">⚠️</div>
-        <div class="stat-value" style="color:var(--yellow)">${lowCount}</div>
-        <div class="stat-label">Stock bajo</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🚨</div>
-        <div class="stat-value" style="color:var(--red)">${outCount}</div>
-        <div class="stat-label">Sin stock</div>
-      </div>
+      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${RESIDENTS.length}</div><div class="stat-label">Residentes</div></div>
+      <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${totalMeds}</div><div class="stat-label">Medicamentos cargados</div></div>
+      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${lowCount}</div><div class="stat-label">Stock bajo</div></div>
+      <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${outCount}</div><div class="stat-label">Sin stock</div></div>
     </div>
+    ${sosMeds.length > 0 ? renderSosPanel(sosMeds, todayStr) : ''}
     ${renderAlertsSection(medications)}
     <div class="card" style="margin-top:20px">
-      <div class="card-header">
-        <div class="card-title">📋 Últimos movimientos</div>
-      </div>
+      <div class="card-header"><div class="card-title">📋 Últimos movimientos</div></div>
       <div class="card-body">
         ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
           movements.slice(-8).reverse().map(mov => {
@@ -1092,11 +758,62 @@ function renderHome(c) {
                 <span style="color:var(--text-muted);font-size:13px">${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit} · ${mov.by} · ${mov.date}</span>
               </div>
             </div>`;
-          }).join('')
-        }
+          }).join('')}
       </div>
     </div>
   `;
+}
+
+function renderSosPanel(sosMeds, todayStr) {
+  return `<div class="sos-panel no-print">
+    <div class="sos-panel-title">🆘 Medicamentos SOS — Seguimiento de hoy (${todayStr})</div>
+    ${sosMeds.map(m => {
+      const res = RESIDENTS.find(r => r.id === m.residentId);
+      const log = sosLog.find(l => l.medId === m.id && l.date === todayStr);
+      const taken = log && log.taken;
+      return `<div class="sos-item ${taken ? 'sos-taken' : ''}">
+        <div>
+          <strong>${m.name}</strong> — ${res ? res.name : ''}<br>
+          <span style="font-size:12px;color:var(--text-muted)">${m.horario} · Stock: ${getStockLabel(m)}</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <span class="badge ${taken ? 'badge-taken' : 'badge-pending'}">${taken ? '✅ Tomado' : '⏳ Pendiente'}</span>
+          ${canEdit() && !taken ? `<button class="btn btn-green btn-sm" onclick="markSosTaken(${m.id})">Marcar tomado</button>` : ''}
+          ${canEdit() && taken ? `<button class="btn btn-secondary btn-sm" onclick="unmarkSosTaken(${m.id})">Desmarcar</button>` : ''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function markSosTaken(medId) {
+  const todayStr = today();
+  const med = medications.find(m => m.id === medId);
+  if (!med) return;
+  // Descuenta stock
+  if (!usesPct(med.unit)) {
+    if (med.qty <= 0) { showToast('Sin stock disponible'); return; }
+    med.qty -= 1;
+    saveMeds();
+    movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type: 'out', qty: 1, unit: med.unit, by: currentUser.name, date: todayStr, note: 'SOS tomado' });
+    saveMovs();
+  }
+  // Registra como tomado
+  const existing = sosLog.findIndex(l => l.medId === medId && l.date === todayStr);
+  if (existing >= 0) sosLog[existing].taken = true;
+  else sosLog.push({ medId, date: todayStr, taken: true });
+  saveSosLog();
+  showToast('Marcado como tomado ✅');
+  renderTab('home');
+}
+
+function unmarkSosTaken(medId) {
+  const todayStr = today();
+  const existing = sosLog.findIndex(l => l.medId === medId && l.date === todayStr);
+  if (existing >= 0) sosLog[existing].taken = false;
+  saveSosLog();
+  showToast('Desmarcado');
+  renderTab('home');
 }
 
 function renderAlertsSection(meds) {
@@ -1112,20 +829,12 @@ function renderAlertsSection(meds) {
           <span>${st === 'out' ? '🚨' : '⚠️'}</span>
           <div>
             <strong>${m.name}</strong> ${m.drug ? `(${m.drug})` : ''} — ${res ? res.name : ''}<br>
-            <span style="font-size:13px">${st === 'out' ? 'Sin stock' : `Stock bajo: ${m.qty} ${m.unit} restantes`}</span>
+            <span style="font-size:13px">${st === 'out' ? 'Sin stock' : `Stock bajo: ${getStockLabel(m)}`}</span>
           </div>
         </div>`;
       }).join('')}
     </div>
   </div>`;
-}
-
-function getAlerts() { return medications.filter(m => getStatus(m) !== 'ok'); }
-
-function getStatus(m) {
-  if (m.qty <= 0) return 'out';
-  if (m.minQty && m.qty <= m.minQty) return 'low';
-  return 'ok';
 }
 
 // =====================================================
@@ -1159,15 +868,31 @@ function renderResidents(c) {
   `;
 }
 
+function treatmentLabel(type) {
+  if (type === 'prolonged') return '<span class="badge badge-prolonged">♾️ Prolongado</span>';
+  if (type === 'single') return '<span class="badge badge-single">1️⃣ Única toma</span>';
+  if (type === 'evolve') return '<span class="badge badge-evolve">🔄 Según evolución</span>';
+  return '';
+}
+
 function showResident(id) {
   const res = RESIDENTS.find(r => r.id === id);
   const meds = medications.filter(m => m.residentId === id);
+  const isFamily = currentUser.role === 'family';
   const c = document.getElementById('main-content');
+
   c.innerHTML = `
-    <div class="back-btn" onclick="renderTab('residents')">← Volver a residentes</div>
-    <h2 class="section-title">👤 ${res.name}</h2>
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
+    <div class="print-header">
+      <h2>🍂 Residencia Sol de Otoño y El Chalet</h2>
+      <p>Planilla de medicamentos — ${res.name} — Impreso: ${today()}</p>
+    </div>
+    ${!isFamily ? '<div class="back-btn no-print" onclick="renderTab(\'residents\')">← Volver a residentes</div>' : ''}
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap" class="no-print">
+        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
+        <button class="btn btn-blue btn-sm" onclick="printResident()">🖨️ Exportar PDF</button>
+      </div>
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">💊 Medicamentos</div></div>
@@ -1175,35 +900,53 @@ function showResident(id) {
         ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
           `<table>
             <thead><tr>
-              <th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
+              <th>Medicamento</th><th>Droga</th><th>Conc.</th><th>Horario</th><th>Tipo trat.</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th class="no-print">Acciones</th>' : ''}
             </tr></thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
-              const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
+              let stockCell = '';
+              if (usesPct(m.unit)) {
+                const pct = m.pct !== null && m.pct !== undefined ? m.pct : 100;
+                const fillClass = pct > 50 ? 'fill-ok' : pct > 25 ? 'fill-low' : 'fill-out';
+                stockCell = `<div class="pct-bar-wrap">
+                  <div class="pct-bar"><div class="pct-fill ${fillClass}" style="width:${pct}%"></div></div>
+                  <span style="font-size:13px;white-space:nowrap">${pct}%</span>
+                </div>`;
+              } else {
+                const days = getDaysRemaining(m);
+                const pct = m.minDays ? Math.min(100, Math.round((days / (m.minDays * 3)) * 100)) : 50;
+                stockCell = `<div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:13px;white-space:nowrap">${m.qty} ${m.unit}<br><small style="color:var(--text-muted)">~${days} días</small></span>
+                  <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
+                </div>`;
+              }
               return `<tr>
-                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-low" style="font-size:10px">SOS</span>' : ''}</td>
+                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-sos" style="font-size:10px">SOS</span>' : ''}</td>
                 <td>${m.drug || '—'}</td>
                 <td>${m.concentration || '—'}</td>
                 <td style="font-size:13px;color:var(--text-muted)">${m.horario || '—'}</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span>${m.qty} ${m.unit}</span>
-                    <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
-                  </div>
-                </td>
+                <td>${treatmentLabel(m.treatmentType)}</td>
+                <td>${stockCell}</td>
                 <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                ${canEdit() ? `<td class="no-print" style="white-space:nowrap">
+                  <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    <button class="btn btn-secondary btn-sm" onclick="openEditMed(${m.id})" title="Editar">✏️</button>
+                    ${!m.sos ? `<button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">-</button>` : 
+                    `<button class="btn btn-purple btn-sm" onclick="markSosTaken(${m.id})">SOS ✓</button>`}
+                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                  </div>
                 </td>` : ''}
               </tr>`;
             }).join('')}</tbody>
-          </table>`
-        }
+          </table>`}
       </div>
     </div>
   `;
+}
+
+function printResident() {
+  window.print();
 }
 
 // =====================================================
@@ -1212,7 +955,6 @@ function showResident(id) {
 
 function renderMyResident(c) {
   showResident(currentUser.residentId);
-  // Remove back button for family
   setTimeout(() => {
     const bb = document.querySelector('.back-btn');
     if (bb) bb.remove();
@@ -1246,28 +988,30 @@ function renderMedications(c) {
         ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
           `<table>
             <thead><tr>
-              <th>Residente</th><th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Vencimiento</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
+              <th>Residente</th><th>Medicamento</th><th>Droga</th><th>Conc.</th><th>Tipo</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}
             </tr></thead>
             <tbody>${list.map(m => {
               const res = RESIDENTS.find(r => r.id === m.residentId);
               const st = getStatus(m);
               return `<tr>
                 <td>${res ? res.name : '—'}</td>
-                <td><strong>${m.name}</strong></td>
+                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-sos" style="font-size:10px">SOS</span>' : ''}</td>
                 <td>${m.drug || '—'}</td>
                 <td>${m.concentration || '—'}</td>
-                <td>${m.qty} ${m.unit}</td>
-                <td>${m.expiry || '—'}</td>
+                <td>${treatmentLabel(m.treatmentType)}</td>
+                <td style="font-size:13px">${getStockLabel(m)}</td>
                 <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                ${canEdit() ? `<td>
+                  <div style="display:flex;gap:4px;flex-wrap:wrap">
+                    <button class="btn btn-secondary btn-sm" onclick="openEditMed(${m.id})">✏️</button>
+                    <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">-</button>
+                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                  </div>
                 </td>` : ''}
               </tr>`;
             }).join('')}</tbody>
-          </table>`
-        }
+          </table>`}
       </div>
     </div>
   `;
@@ -1291,20 +1035,18 @@ function renderMovements(c) {
                 <strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
                 <span style="color:var(--text-muted);font-size:13px">
                   ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
-                  ${mov.note ? `· ${mov.note}` : ''}
-                  · <strong>${mov.by}</strong> · ${mov.date}
+                  ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
                 </span>
               </div>
             </div>`;
-          }).join('')
-        }
+          }).join('')}
       </div>
     </div>
   `;
 }
 
 // =====================================================
-// USERS (admin only)
+// USERS
 // =====================================================
 
 function renderUsers(c) {
@@ -1317,11 +1059,7 @@ function renderUsers(c) {
       <div class="table-wrapper">
         <table>
           <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th></tr></thead>
-          <tbody>${staff.map(u => `<tr>
-            <td>${u.name}</td>
-            <td><code>${u.user}</code></td>
-            <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
-          </tr>`).join('')}</tbody>
+          <tbody>${staff.map(u => `<tr><td>${u.name}</td><td><code>${u.user}</code></td><td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td></tr>`).join('')}</tbody>
         </table>
       </div>
     </div>
@@ -1332,11 +1070,7 @@ function renderUsers(c) {
           <thead><tr><th>Residente</th><th>Usuario familiar</th><th>Contraseña inicial</th></tr></thead>
           <tbody>${family.map(u => {
             const res = RESIDENTS.find(r => r.id === u.residentId);
-            return `<tr>
-              <td>${res ? res.name : '—'}</td>
-              <td><code>${u.user}</code></td>
-              <td><code>1234</code></td>
-            </tr>`;
+            return `<tr><td>${res ? res.name : '—'}</td><td><code>${u.user}</code></td><td><code>1234</code></td></tr>`;
           }).join('')}</tbody>
         </table>
       </div>
@@ -1345,102 +1079,177 @@ function renderUsers(c) {
 }
 
 // =====================================================
-// MODALS: ADD MED
+// MODAL: ADD MED
 // =====================================================
 
 function openAddMed(residentId) {
-  showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
-    <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-        <select id="m-unit">
-          <option>comprimidos</option><option>cápsulas</option><option>ml</option><option>mg</option><option>gotas</option><option>parches</option><option>unidades</option>
-        </select>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo (alerta)</label><input id="m-min" type="number" min="0" value="5"></div>
-    </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
-    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMed(${residentId})">Guardar</button>
-    </div>
-  `);
+  showModal(buildMedForm(null, residentId, false));
 }
 
 function openAddMedGeneral() {
-  showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
-    <div class="form-group"><label>Residente</label>
-      <select id="m-res">
-        ${RESIDENTS.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}
-      </select>
+  showModal(buildMedForm(null, null, true));
+}
+
+function openEditMed(medId) {
+  const med = medications.find(m => m.id === medId);
+  if (!med) return;
+  showModal(buildMedForm(med, med.residentId, false));
+}
+
+function buildMedForm(med, residentId, showResidentSelector) {
+  const isEdit = !!med;
+  const isP = med ? usesPct(med.unit) : false;
+
+  const UNIT_OPTIONS = ['comprimidos','cápsulas','sobres','ml','gotas','unidades','puffs','parches','crema','gel','pomada','frasco','jarabe','loción','spray','aplicaciones'];
+
+  const unitVal = med ? med.unit : 'comprimidos';
+  const isPctUnit = usesPct(unitVal);
+
+  return `
+    <div class="modal-title">${isEdit ? '✏️ Editar medicamento' : '💊 Agregar medicamento'}</div>
+    ${showResidentSelector ? `<div class="form-group"><label>Residente</label>
+      <select id="m-res">${RESIDENTS.map(r => `<option value="${r.id}" ${residentId===r.id?'selected':''}>${r.name}</option>`).join('')}</select>
+    </div>` : `<input type="hidden" id="m-res" value="${residentId}">`}
+    
+    <div class="grid-2">
+      <div class="form-group"><label>Nombre comercial *</label><input id="m-name" type="text" placeholder="Ej: Losartan" value="${med ? med.name : ''}"></div>
+      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico" value="${med ? med.drug : ''}"></div>
     </div>
     <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-        <select id="m-unit">
-          <option>comprimidos</option><option>cápsulas</option><option>ml</option><option>mg</option><option>gotas</option><option>parches</option><option>unidades</option>
+      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg" value="${med ? med.concentration : ''}"></div>
+      <div class="form-group"><label>Presentación / Unidad</label>
+        <select id="m-unit" onchange="onUnitChange(this.value)">
+          ${UNIT_OPTIONS.map(u => `<option ${unitVal===u?'selected':''}>${u}</option>`).join('')}
         </select>
       </div>
     </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo</label><input id="m-min" type="number" min="0" value="5"></div>
+
+    <div id="qty-section">
+      <div class="grid-2" id="qty-row">
+        <div class="form-group"><label id="qty-label">Cantidad actual</label><input id="m-qty" type="number" min="0" value="${med ? (usesPct(med.unit) ? (med.pct||100) : med.qty) : 0}"></div>
+        <div class="form-group"><label>Dosis por día</label><input id="m-dose" type="number" min="0.1" step="0.1" value="${med ? (med.dosePerDay||1) : 1}" placeholder="Ej: 2"></div>
+      </div>
+      <div class="form-group"><label id="min-label">Stock mínimo (en días — alerta)</label><input id="m-min" type="number" min="1" value="${med ? (med.minDays||7) : 7}"></div>
     </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
+
+    <div id="pct-section" style="display:${isPctUnit?'block':'none'}">
+      <div class="form-group">
+        <label>% restante del envase</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" id="m-pct" min="0" max="100" step="5" value="${med && med.pct!=null ? med.pct : 100}" oninput="document.getElementById('pct-val').textContent=this.value+'%'" style="flex:1">
+          <span id="pct-val" style="font-weight:700;color:var(--amber);min-width:40px">${med && med.pct!=null ? med.pct : 100}%</span>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:4px">Indicá cuánto queda del envase (crema, frasco, gotas, etc.)</p>
+      </div>
+    </div>
+
+    <div class="form-group"><label>Horario de administración</label><input id="m-horario" type="text" placeholder="Ej: 09:00 / 21:00" value="${med ? med.horario : ''}"></div>
+    
+    <div class="form-group">
+      <label>¿Es medicación SOS (a demanda)?</label>
+      <div style="display:flex;gap:16px;margin-top:6px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal">
+          <input type="radio" name="m-sos" value="0" ${!med || !med.sos ? 'checked' : ''}> No (horario fijo)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:normal">
+          <input type="radio" name="m-sos" value="1" ${med && med.sos ? 'checked' : ''}> Sí (SOS / a demanda)
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Tipo de tratamiento</label>
+      <div class="treatment-selector" id="treatment-selector">
+        <div class="treatment-opt ${(!med || med.treatmentType==='prolonged') ? 'selected' : ''}" onclick="selectTreatment('prolonged', this)">
+          <span class="opt-icon">♾️</span>Tratamiento prolongado
+        </div>
+        <div class="treatment-opt ${med && med.treatmentType==='single' ? 'selected' : ''}" onclick="selectTreatment('single', this)">
+          <span class="opt-icon">1️⃣</span>Única toma / curso
+        </div>
+        <div class="treatment-opt ${med && med.treatmentType==='evolve' ? 'selected' : ''}" onclick="selectTreatment('evolve', this)">
+          <span class="opt-icon">🔄</span>Según evolución
+        </div>
+      </div>
+      <input type="hidden" id="m-treatment" value="${med ? (med.treatmentType||'prolonged') : 'prolonged'}">
+    </div>
+
+    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional" value="${med ? (med.obs||'') : ''}"></div>
+    
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
+      <button class="btn btn-primary" onclick="${isEdit ? `saveEditMed(${med.id})` : `saveMedNew()`}">${isEdit ? 'Guardar cambios' : 'Agregar'}</button>
     </div>
-  `);
+  `;
 }
 
-function saveMed(residentId) {
+function onUnitChange(val) {
+  const isPct = usesPct(val);
+  document.getElementById('pct-section').style.display = isPct ? 'block' : 'none';
+  const qtyLabel = document.getElementById('qty-label');
+  if (qtyLabel) qtyLabel.textContent = isPct ? '(no aplica para envases)' : 'Cantidad actual';
+}
+
+function selectTreatment(val, el) {
+  document.querySelectorAll('.treatment-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('m-treatment').value = val;
+}
+
+function collectMedFormData() {
+  const resId = parseInt(document.getElementById('m-res').value);
   const name = document.getElementById('m-name').value.trim();
-  if (!name) { showToast('El nombre es obligatorio'); return; }
-  const med = {
-    id: Date.now(),
-    residentId,
+  if (!name) { showToast('El nombre es obligatorio'); return null; }
+  const unit = document.getElementById('m-unit').value;
+  const isPct = usesPct(unit);
+  const dosePerDay = parseFloat(document.getElementById('m-dose').value) || 1;
+  const minDays = parseInt(document.getElementById('m-min').value) || 7;
+  const pct = isPct ? parseInt(document.getElementById('m-pct').value) : null;
+  const qty = isPct ? Math.round((parseInt(document.getElementById('m-pct').value)||100)) : (parseInt(document.getElementById('m-qty').value)||0);
+  const sos = document.querySelector('input[name="m-sos"]:checked')?.value === '1';
+
+  return {
+    residentId: resId,
     name,
     drug: document.getElementById('m-drug').value.trim(),
     concentration: document.getElementById('m-conc').value.trim(),
-    unit: document.getElementById('m-unit').value,
-    qty: parseInt(document.getElementById('m-qty').value) || 0,
-    minQty: parseInt(document.getElementById('m-min').value) || 0,
-    expiry: document.getElementById('m-exp').value || '',
-    obs: document.getElementById('m-obs') ? document.getElementById('m-obs').value : '',
-    addedBy: currentUser.name,
-    addedDate: today()
+    unit,
+    dosePerDay,
+    qty,
+    minDays,
+    pct,
+    horario: document.getElementById('m-horario').value.trim(),
+    sos,
+    treatmentType: document.getElementById('m-treatment').value || 'prolonged',
+    obs: document.getElementById('m-obs').value.trim(),
   };
+}
+
+function saveMedNew() {
+  const data = collectMedFormData();
+  if (!data) return;
+  const med = { id: Date.now(), addedBy: currentUser.name, addedDate: today(), ...data };
   medications.push(med);
   saveMeds();
-  // Register movement
-  if (med.qty > 0) {
-    movements.push({ id: Date.now()+1, medId: med.id, medName: med.name, residentId, type: 'in', qty: med.qty, unit: med.unit, by: currentUser.name, date: today(), note: 'Stock inicial' });
+  if (!usesPct(med.unit) && med.qty > 0) {
+    movements.push({ id: Date.now()+1, medId: med.id, medName: med.name, residentId: med.residentId, type: 'in', qty: med.qty, unit: med.unit, by: currentUser.name, date: today(), note: 'Stock inicial' });
     saveMovs();
   }
   closeModal();
   showToast('Medicamento agregado ✅');
-  showResident(residentId);
+  showResident(med.residentId);
 }
 
-function saveMedGeneral() {
-  const residentId = parseInt(document.getElementById('m-res').value);
-  document.getElementById('m-obs') || document.createElement('input');
-  saveMed(residentId);
+function saveEditMed(medId) {
+  const data = collectMedFormData();
+  if (!data) return;
+  const idx = medications.findIndex(m => m.id === medId);
+  if (idx < 0) return;
+  const old = medications[idx];
+  medications[idx] = { ...old, ...data };
+  saveMeds();
+  closeModal();
+  showToast('Medicamento actualizado ✅');
+  showResident(medications[idx].residentId);
 }
 
 function deleteMed(id) {
@@ -1460,26 +1269,51 @@ function deleteMed(id) {
 function openMovement(medId, type) {
   const med = medications.find(m => m.id === medId);
   if (!med) return;
+  const isPct = usesPct(med.unit);
   showModal(`
     <div class="modal-title">${type === 'in' ? '⬆️ Entrada de stock' : '⬇️ Salida de stock'}</div>
     <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">
-      <strong>${med.name}</strong> — Stock actual: ${med.qty} ${med.unit}
+      <strong>${med.name}</strong> — Stock actual: ${getStockLabel(med)}
     </p>
-    <div class="form-group"><label>Cantidad</label><input id="mov-qty" type="number" min="1" value="1"></div>
+    ${isPct ? `
+      <div class="form-group">
+        <label>Nuevo % del envase</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="range" id="mov-pct" min="0" max="100" step="5" value="${med.pct||100}" oninput="document.getElementById('pct-display').textContent=this.value+'%'" style="flex:1">
+          <span id="pct-display" style="font-weight:700;color:var(--amber);min-width:40px">${med.pct||100}%</span>
+        </div>
+      </div>
+    ` : `
+      <div class="form-group"><label>Cantidad (${med.unit})</label><input id="mov-qty" type="number" min="1" value="1"></div>
+    `}
     <div class="form-group"><label>Observación (opcional)</label><input id="mov-note" type="text" placeholder="${type === 'in' ? 'Ej: Compra farmacia' : 'Ej: Administrado'}"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn ${type === 'in' ? 'btn-green' : 'btn-red'}" onclick="saveMovement(${medId}, '${type}')">Confirmar</button>
+      <button class="btn ${type === 'in' ? 'btn-green' : 'btn-red'}" onclick="saveMovement(${medId}, '${type}', ${isPct})">Confirmar</button>
     </div>
   `);
 }
 
-function saveMovement(medId, type) {
-  const qty = parseInt(document.getElementById('mov-qty').value) || 0;
-  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
+function saveMovement(medId, type, isPct) {
   const note = document.getElementById('mov-note').value.trim();
   const med = medications.find(m => m.id === medId);
   if (!med) return;
+
+  if (isPct) {
+    const newPct = parseInt(document.getElementById('mov-pct').value) || 0;
+    const oldPct = med.pct || 100;
+    med.pct = newPct;
+    saveMeds();
+    movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type: newPct >= oldPct ? 'in' : 'out', qty: Math.abs(newPct - oldPct), unit: '%', by: currentUser.name, date: today(), note: note || `Envase actualizado a ${newPct}%` });
+    saveMovs();
+    closeModal();
+    showToast(`Envase actualizado a ${newPct}% ✅`);
+    showResident(med.residentId);
+    return;
+  }
+
+  const qty = parseInt(document.getElementById('mov-qty').value) || 0;
+  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
   if (type === 'out' && med.qty < qty) { showToast('No hay suficiente stock'); return; }
   med.qty = type === 'in' ? med.qty + qty : med.qty - qty;
   saveMeds();
