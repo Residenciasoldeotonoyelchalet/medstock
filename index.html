@@ -4671,7 +4671,9 @@ function showToast(msg) {
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-
+window.db = db;
+window.addDoc = addDoc;
+window.collection = collection;
   async function testFirebase() {
     const snapshot = await getDocs(collection(db, "meds"));
     const data = snapshot.docs.map(doc => doc.data());
