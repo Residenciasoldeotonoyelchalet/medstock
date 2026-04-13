@@ -1534,6 +1534,29 @@ function showToast(msg) {
 <script type="module">
   // EL CÓDIGO QUE TE DI
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
+    authDomain: "medstock-29e24.firebaseapp.com",
+    projectId: "medstock-29e24",
+    storageBucket: "medstock-29e24.firebasestorage.app",
+    messagingSenderId: "276664612131",
+    appId: "1:276664612131:web:68ec5aa0d95b4e47850896"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  async function testFirebase() {
+    const snapshot = await getDocs(collection(db, "meds"));
+    const data = snapshot.docs.map(doc => doc.data());
+    console.log("DATOS FIREBASE:", data);
+  }
+
+  testFirebase();
+</script>
 </body>
 </html>
