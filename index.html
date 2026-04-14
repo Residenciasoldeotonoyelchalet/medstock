@@ -595,6 +595,91 @@
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
     .modal { padding: 24px 20px; }
   }
+
+  /* ====== PRINT ====== */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    /* Ocultar TODO excepto la planilla */
+    body > *:not(#print-area) { display: none !important; }
+    #print-area { display: block !important; }
+
+    #print-area {
+      font-family: 'DM Sans', sans-serif;
+      color: #2d1f0e;
+      padding: 0;
+      margin: 0;
+    }
+
+    .print-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #5c3d1e;
+    }
+
+    .print-header .print-logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #5c3d1e;
+      font-family: 'Fraunces', serif;
+    }
+
+    .print-header .print-meta {
+      font-size: 11px;
+      color: #7a5c40;
+      text-align: right;
+    }
+
+    .print-resident-name {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #5c3d1e;
+      margin-bottom: 16px;
+    }
+
+    .print-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .print-table th {
+      background: #faf7f2 !important;
+      color: #7a5c40;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 10px;
+      border-bottom: 2px solid #5c3d1e;
+      text-align: left;
+    }
+
+    .print-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #e8d8c4;
+      vertical-align: middle;
+    }
+
+    .print-table tr:last-child td { border-bottom: none; }
+
+    .print-table .status-ok   { color: #4a7c59; font-weight: 700; }
+    .print-table .status-low  { color: #e6a817; font-weight: 700; }
+    .print-table .status-out  { color: #c0392b; font-weight: 700; }
+
+    .print-footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #e8d8c4;
+      font-size: 10px;
+      color: #7a5c40;
+      text-align: center;
+    }
+  }
 </style>
 </head>
 <body>
@@ -638,6 +723,9 @@
 </div>
 
 <div id="toast"></div>
+
+<!-- ÁREA DE IMPRESIÓN — oculta en pantalla, visible al imprimir -->
+<div id="print-area" style="display:none"></div>
 
 <script>
 // =====================================================
@@ -942,7 +1030,7 @@ function showResident(id) {
       <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
-        <button class="btn btn-secondary btn-sm" onclick="window.print()">📥 Descargar Planilla PDF</button>
+        <button class="btn btn-secondary btn-sm" onclick="printResident(${id})">📥 Descargar Planilla PDF</button>
       </div>
     </div>
 
@@ -1383,6 +1471,72 @@ function closeModal() {
 
 function today() {
   return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+// =====================================================
+// IMPRIMIR PLANILLA PDF — solo medicamentos del residente
+// =====================================================
+function printResident(id) {
+  const res = RESIDENTS.find(r => r.id === id);
+  const meds = medications.filter(m => m.residentId === id);
+  const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const horaHoy  = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+  const filas = meds.map(m => {
+    const st = getStatus(m);
+    const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose).toFixed(1) : '—';
+    const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
+    const statusLabel = st === 'ok' ? 'OK' : st === 'low' ? 'Stock bajo' : 'Sin stock';
+    const statusClass = 'status-' + st;
+    return `
+      <tr>
+        <td>
+          <strong>${m.name}</strong><br>
+          <span style="font-size:10px;color:#7a5c40">${m.drug || ''}${m.conc ? ' · ' + m.conc : ''}</span>
+          ${m.sos ? '<br><span style="font-size:10px;color:#e6a817;font-weight:700">SOS</span>' : ''}
+          ${m.obs ? '<br><span style="font-size:10px;color:#7a5c40;font-style:italic">' + m.obs + '</span>' : ''}
+        </td>
+        <td>${m.dailyDose || 0} ${m.unit}</td>
+        <td>${treatLabel}</td>
+        <td>${m.qty} ${m.unit}</td>
+        <td>${diasRestantes} días</td>
+        <td class="${statusClass}">${statusLabel}</td>
+      </tr>`;
+  }).join('');
+
+  const html = `
+    <div class="print-header">
+      <div class="print-logo">🍂 MedStock — Residencia Sol de Otoño y El Chalet</div>
+      <div class="print-meta">
+        Planilla de medicamentos<br>
+        ${fechaHoy} · ${horaHoy}
+      </div>
+    </div>
+    <div class="print-resident-name">👤 ${res.name}</div>
+    ${meds.length === 0
+      ? '<p style="color:#7a5c40;font-size:13px">Sin medicamentos cargados.</p>'
+      : `<table class="print-table">
+          <thead>
+            <tr>
+              <th>Medicamento</th>
+              <th>Dosis/Día</th>
+              <th>Tratamiento</th>
+              <th>Stock</th>
+              <th>Días restantes</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>${filas}</tbody>
+        </table>`
+    }
+    <div class="print-footer">
+      Generado por MedStock · ${fechaHoy} · ${horaHoy}
+    </div>
+  `;
+
+  const area = document.getElementById('print-area');
+  area.innerHTML = html;
+  window.print();
 }
 
 function showToast(msg) {
