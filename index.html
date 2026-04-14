@@ -1047,23 +1047,29 @@ function debeTomarsHoy(med) {
 }
 
 // Devuelve cuántos días de calendario dura el stock
-function calcDiasCalendario(med) {
-  if (!med.dailyDose || med.dailyDose <= 0) return 0;
-  // diasPorToma = cuántos días de calendario pasan entre cada toma
-  // unidadesPorDia = cuántas unidades se consumen por día de calendario
-  let unidadesPorDia;
+// Descuento diario real = dosis por toma × nº de horarios (mínimo 1)
+function getDosisdiaria(med) {
+  const tomasAlDia = (med.horarios && med.horarios.length > 0) ? med.horarios.length : 1;
+  return (med.dailyDose || 0) * tomasAlDia;
+}
 
+function calcDiasCalendario(med) {
+  const dosisdiaria = getDosisdiaria(med); // dosis por toma × horarios
+  if (dosisdiaria <= 0) return 0;
+
+  // unidadesPorDia = lo que consume por día de calendario según frecuencia
+  let unidadesPorDia;
   if (!med.frecuencia || med.frecuencia === 'diario') {
-    unidadesPorDia = med.dailyDose; // toma todos los días
+    unidadesPorDia = dosisdiaria;
   } else if (med.frecuencia === 'alternos') {
-    unidadesPorDia = med.dailyDose / 2; // toma cada 2 días
+    unidadesPorDia = dosisdiaria / 2;
   } else if (med.frecuencia === 'especificos') {
     const diasSemana = (med.diasSemana || []).length || 1;
-    unidadesPorDia = (med.dailyDose * diasSemana) / 7; // X días por semana
+    unidadesPorDia = (dosisdiaria * diasSemana) / 7;
   } else if (med.frecuencia === 'cada_x_dias') {
-    unidadesPorDia = med.dailyDose / (med.cadaXDias || 1);
+    unidadesPorDia = dosisdiaria / (med.cadaXDias || 1);
   } else {
-    unidadesPorDia = med.dailyDose;
+    unidadesPorDia = dosisdiaria;
   }
 
   if (unidadesPorDia <= 0) return 0;
@@ -1098,7 +1104,7 @@ function checkDailyDiscount() {
     // Verificar si hoy corresponde tomar según frecuencia
     if (!debeTomarsHoy(med)) return;
 
-    const descuento = Math.min(med.dailyDose, med.qty);
+    const descuento = Math.min(getDosisdiaria(med), med.qty);
     med.qty = Math.max(0, med.qty - descuento);
 
     movements.push({
@@ -1296,7 +1302,7 @@ function getStatus(m) {
     if (m.qty <= 20) return 'low';
     return 'ok';
   }
-  if (m.dailyDose > 0) {
+  if (getDosisdiaria(m) > 0) {
     const diasCalendario = calcDiasCalendario(m);
     if (diasCalendario <= minDays) return 'low';
   } else {
@@ -1413,7 +1419,10 @@ function showResident(id) {
                     : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
                 <td style="font-size:11px">${frecuenciaLabel(m)}</td>
-                <td>${m.dailyDose || 0} ${m.unit}</td>
+                <td>
+                  ${m.dailyDose || 0} ${m.unit}/toma
+                  ${(m.horarios && m.horarios.length > 1) ? `<br><small style="color:var(--text-muted);font-size:10px">Total: ${getDosisdiaria(m)} ${m.unit}/día</small>` : ''}
+                </td>
                 <td style="font-size:12px">${treatmentLabel}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
@@ -1462,7 +1471,7 @@ function registerTake(mid) {
     medName: med.name,
     residentId: med.residentId,
     type: 'out',
-    qty: med.dailyDose,
+    qty: dosisHoy,
     unit: med.unit,
     date: new Date().toLocaleString(),
     by: currentUser.name,
@@ -1810,7 +1819,7 @@ function openAddMed(residentId, medId = null) {
 
     <div class="grid-2">
       <div class="form-group">
-        <label>Dosis diaria total</label>
+        <label>Dosis por toma</label>
         <div style="display:flex;gap:8px">
           <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 0.5 ? 'active' : ''}" onclick="selectDosis(0.5, this)">½</button>
           <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 1   ? 'active' : ''}" onclick="selectDosis(1,   this)">1</button>
@@ -1916,7 +1925,7 @@ function openAddMedGeneral() {
     </div>
     <div class="grid-2">
       <div class="form-group">
-        <label>Dosis diaria total</label>
+        <label>Dosis por toma</label>
         <div style="display:flex;gap:8px">
           <button type="button" class="dosis-btn" onclick="selectDosis(0.5, this)">½</button>
           <button type="button" class="dosis-btn active" onclick="selectDosis(1, this)">1</button>
