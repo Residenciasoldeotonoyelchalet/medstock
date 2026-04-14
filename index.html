@@ -598,86 +598,126 @@
 
   /* ====== PRINT ====== */
   @media print {
+    @page { margin: 18mm 16mm; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-    /* Ocultar TODO excepto la planilla */
     body > *:not(#print-area) { display: none !important; }
-    #print-area { display: block !important; }
+    #print-area { display: block !important; font-family: 'DM Sans', sans-serif; color: #1a1a1a; }
 
-    #print-area {
-      font-family: 'DM Sans', sans-serif;
-      color: #2d1f0e;
-      padding: 0;
-      margin: 0;
-    }
-
+    /* ENCABEZADO */
     .print-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
-      border-bottom: 2px solid #5c3d1e;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 3px solid #5c3d1e;
     }
-
-    .print-header .print-logo {
-      font-size: 18px;
+    .print-header-left .print-institution {
+      font-size: 13px;
       font-weight: 700;
       color: #5c3d1e;
-      font-family: 'Fraunces', serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-
-    .print-header .print-meta {
-      font-size: 11px;
+    .print-header-left .print-subtitle {
+      font-size: 10px;
       color: #7a5c40;
+      margin-top: 2px;
+    }
+    .print-header-right {
       text-align: right;
+      font-size: 10px;
+      color: #7a5c40;
+      line-height: 1.6;
     }
 
-    .print-resident-name {
-      font-family: 'Fraunces', serif;
-      font-size: 22px;
+    /* NOMBRE RESIDENTE */
+    .print-resident-block {
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: #faf7f2 !important;
+      border-left: 4px solid #5c3d1e;
+      border-radius: 4px;
+    }
+    .print-resident-block .print-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7a5c40;
+      margin-bottom: 3px;
+    }
+    .print-resident-block .print-name {
+      font-size: 20px;
       font-weight: 700;
-      color: #5c3d1e;
-      margin-bottom: 16px;
+      color: #2d1f0e;
+      font-family: 'Fraunces', serif;
     }
 
+    /* TABLA */
     .print-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 11px;
+      margin-top: 4px;
     }
-
+    .print-table thead tr {
+      background: #5c3d1e !important;
+    }
     .print-table th {
-      background: #faf7f2 !important;
-      color: #7a5c40;
-      font-size: 10px;
+      background: #5c3d1e !important;
+      color: #fff !important;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 8px 10px;
-      border-bottom: 2px solid #5c3d1e;
+      letter-spacing: 0.6px;
+      padding: 9px 10px;
       text-align: left;
+      border: none;
     }
-
+    .print-table tbody tr:nth-child(even) td {
+      background: #faf7f2 !important;
+    }
     .print-table td {
       padding: 9px 10px;
       border-bottom: 1px solid #e8d8c4;
       vertical-align: middle;
+      color: #1a1a1a;
+    }
+    .print-table tr:last-child td { border-bottom: none; }
+    .print-table .med-name { font-weight: 700; font-size: 12px; }
+    .print-table .med-sub  { font-size: 9px; color: #7a5c40; display: block; margin-top: 1px; }
+    .print-table .sos-tag  { font-size: 9px; color: #b07800; font-weight: 700; background: #fef3cd; padding: 1px 5px; border-radius: 3px; }
+
+    .status-ok  { color: #2d6a3f !important; font-weight: 700; }
+    .status-low { color: #946200 !important; font-weight: 700; }
+    .status-out { color: #c0392b !important; font-weight: 700; }
+
+    /* FIRMA */
+    .print-firma {
+      display: flex;
+      gap: 40px;
+      margin-top: 40px;
+      padding-top: 0;
+    }
+    .print-firma-box {
+      flex: 1;
+      border-top: 1px solid #aaa;
+      padding-top: 6px;
+      font-size: 9px;
+      color: #7a5c40;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .print-table tr:last-child td { border-bottom: none; }
-
-    .print-table .status-ok   { color: #4a7c59; font-weight: 700; }
-    .print-table .status-low  { color: #e6a817; font-weight: 700; }
-    .print-table .status-out  { color: #c0392b; font-weight: 700; }
-
+    /* PIE */
     .print-footer {
       margin-top: 24px;
-      padding-top: 10px;
-      border-top: 1px solid #e8d8c4;
-      font-size: 10px;
-      color: #7a5c40;
+      font-size: 9px;
+      color: #bbb;
       text-align: center;
+      border-top: 1px solid #e8d8c4;
+      padding-top: 8px;
     }
   }
 </style>
@@ -1045,6 +1085,7 @@ function showResident(id) {
             <thead>
               <tr>
                 <th>Medicamento</th>
+                <th>Horarios</th>
                 <th>Dosis/Día</th>
                 <th>Tratamiento</th>
                 <th>Stock</th>
@@ -1064,6 +1105,11 @@ function showResident(id) {
                   <small style="color:var(--text-muted)">${m.drug || ''} ${m.conc ? '(' + m.conc + ')' : ''}</small>
                   ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
                   ${m.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${m.obs}</small>` : ''}
+                </td>
+                <td style="font-size:13px">
+                  ${(m.horarios && m.horarios.length > 0)
+                    ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h}</span>`).join('')
+                    : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
                 <td>${m.dailyDose || 0} ${m.unit}</td>
                 <td style="font-size:12px">${treatmentLabel}</td>
@@ -1300,6 +1346,18 @@ function openAddMed(residentId, medId = null) {
       <label for="m-sos" style="margin:0; text-transform:none; font-size:14px; letter-spacing:0; cursor:pointer;">Es SOS (no descontar stock automáticamente)</label>
     </div>
 
+    <div class="form-group">
+      <label>Horarios de toma</label>
+      <div id="horarios-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+        ${(med?.horarios || []).map((h,i) => `
+          <div style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">
+            <input type="time" value="${h}" style="border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:90px;" onchange="updateHorario(this,${i})">
+            <span style="cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1" onclick="removeHorario(${i})">×</span>
+          </div>`).join('')}
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
+    </div>
+
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
 
     <div class="modal-actions">
@@ -1355,6 +1413,11 @@ function openAddMedGeneral() {
       <input type="checkbox" id="m-sos" style="width:auto; margin:0;">
       <label for="m-sos" style="margin:0; text-transform:none; font-size:14px; letter-spacing:0; cursor:pointer;">Es SOS (no descontar stock automáticamente)</label>
     </div>
+    <div class="form-group">
+      <label>Horarios de toma</label>
+      <div id="horarios-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
+    </div>
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -1380,7 +1443,8 @@ function saveMed(residentId, medId = null) {
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
-    obs: document.getElementById('m-obs').value
+    obs: document.getElementById('m-obs').value,
+    horarios: Array.from(document.querySelectorAll('#horarios-container input[type=time]')).map(i => i.value).filter(Boolean)
   };
 
   if (medId) {
@@ -1475,58 +1539,70 @@ function today() {
 function printResident(id) {
   const res = RESIDENTS.find(r => r.id === id);
   const meds = medications.filter(m => m.residentId === id);
-  const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const horaHoy  = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const filas = meds.map(m => {
+  const filas = meds.map((m, i) => {
     const st = getStatus(m);
-    const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose).toFixed(1) : '—';
+    const diasRestantes = m.dailyDose > 0 ? Math.floor(m.qty / m.dailyDose) + ' días' : '—';
     const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
-    const statusLabel = st === 'ok' ? 'OK' : st === 'low' ? 'Stock bajo' : 'Sin stock';
-    const statusClass = 'status-' + st;
+    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
     return `
       <tr>
         <td>
-          <strong>${m.name}</strong><br>
-          <span style="font-size:10px;color:#7a5c40">${m.drug || ''}${m.conc ? ' · ' + m.conc : ''}</span>
-          ${m.sos ? '<br><span style="font-size:10px;color:#e6a817;font-weight:700">SOS</span>' : ''}
-          ${m.obs ? '<br><span style="font-size:10px;color:#7a5c40;font-style:italic">' + m.obs + '</span>' : ''}
+          <span class="med-name">${m.name}</span>
+          ${(m.drug || m.conc) ? `<span class="med-sub">${[m.drug, m.conc].filter(Boolean).join(' · ')}</span>` : ''}
+          ${m.sos ? ' <span class="sos-tag">SOS</span>' : ''}
+          ${m.obs ? `<span class="med-sub" style="font-style:italic">${m.obs}</span>` : ''}
         </td>
-        <td>${m.dailyDose || 0} ${m.unit}</td>
+        <td>${(m.horarios && m.horarios.length > 0) ? m.horarios.join(' / ') : '—'}</td>
+        <td>${m.dailyDose || '—'} ${m.dailyDose ? m.unit : ''}</td>
         <td>${treatLabel}</td>
         <td>${m.qty} ${m.unit}</td>
-        <td>${diasRestantes} días</td>
-        <td class="${statusClass}">${statusLabel}</td>
+        <td class="${'status-' + st}">${statusLabel}</td>
       </tr>`;
   }).join('');
 
   const html = `
     <div class="print-header">
-      <div class="print-logo">🍂 MedStock — Residencia Sol de Otoño y El Chalet</div>
-      <div class="print-meta">
-        Planilla de medicamentos<br>
-        ${fechaHoy} · ${horaHoy}
+      <div class="print-header-left">
+        <div class="print-institution">Residencia Sol de Otoño y El Chalet</div>
+        <div class="print-subtitle">Planilla de medicamentos activos</div>
+      </div>
+      <div class="print-header-right">
+        Fecha: ${fechaHoy}
       </div>
     </div>
-    <div class="print-resident-name">👤 ${res.name}</div>
+
+    <div class="print-resident-block">
+      <div class="print-label">Residente</div>
+      <div class="print-name">${res.name}</div>
+    </div>
+
     ${meds.length === 0
-      ? '<p style="color:#7a5c40;font-size:13px">Sin medicamentos cargados.</p>'
+      ? '<p style="color:#7a5c40;font-size:13px;padding:12px 0">Sin medicamentos cargados.</p>'
       : `<table class="print-table">
           <thead>
             <tr>
               <th>Medicamento</th>
-              <th>Dosis/Día</th>
+              <th>Horarios</th>
+              <th>Dosis / día</th>
               <th>Tratamiento</th>
-              <th>Stock</th>
-              <th>Días restantes</th>
+              <th>Stock actual</th>
               <th>Estado</th>
             </tr>
           </thead>
           <tbody>${filas}</tbody>
         </table>`
     }
+
+    <div class="print-firma">
+      <div class="print-firma-box">Firma médico / profesional</div>
+      <div class="print-firma-box">Sello</div>
+      <div class="print-firma-box">Fecha</div>
+    </div>
+
     <div class="print-footer">
-      Generado por MedStock · ${fechaHoy} · ${horaHoy}
+      Residencia Sol de Otoño y El Chalet · MedStock · ${fechaHoy}
     </div>
   `;
 
@@ -1534,6 +1610,26 @@ function printResident(id) {
   area.innerHTML = html;
   window.print();
 }
+
+// ─── Helpers horarios dinámicos ───
+function addHorario() {
+  const container = document.getElementById('horarios-container');
+  if (!container) return;
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:4px 8px;';
+  div.innerHTML = `<input type="time" style="border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:90px;">
+    <span style="cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1" onclick="this.parentElement.remove()">×</span>`;
+  container.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function removeHorario(idx) {
+  const container = document.getElementById('horarios-container');
+  if (container && container.children[idx]) container.children[idx].remove();
+}
+
+function updateHorario(input, idx) { /* valor se lee directo del input */ }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
