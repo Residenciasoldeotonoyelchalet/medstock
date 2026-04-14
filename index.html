@@ -915,7 +915,7 @@ function showResident(id) {
       <div class="table-wrapper">
         ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
           `<table>
-            <thead><tr><th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <thead><tr><th>Medicamento</th><th>Droga</th><th>Concentrarion</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
               const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
@@ -1063,8 +1063,18 @@ function openAddMed(residentId) {
     <div class="grid-2">
       <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
       <div class="form-group"><label>Unidad</label>
-        <select id="m-unit"><option>comprimidos</option><option>cápsulas</option><option>ml</option><option>mg</option><option>gotas</option><option>parches</option><option>unidades</option><option>aplicaciones</option></select>
-      </div>
+       <select id="m-unit">
+  <option>comprimidos</option>
+  <option>cápsulas</option>
+  <option>ml</option>
+  <option>mg</option>
+  <option>gotas</option>
+  <option>parches</option>
+  <option>unidades</option>
+  <option>aplicaciones</option>
+  <option>sobres</option>
+  <option>%</option>
+</select>
     </div>
     <div class="grid-2">
       <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
