@@ -917,7 +917,14 @@ function showResident(id) {
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
+  ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
+  <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">Dar</button>
+  
+  <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})">⚙️</button>
+
+  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')">+ Stock</button>
+  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+</td>` : ''}
     </div>
 
     <div class="card">
