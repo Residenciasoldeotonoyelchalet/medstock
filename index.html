@@ -865,7 +865,11 @@ function renderAlertsSection(meds) {
 
 function getStatus(m) {
   if (m.qty <= 0) return 'out';
-  if (m.minQty && m.qty <= m.minQty) return 'low';
+  // Si tiene dosis diaria, calculamos cuántos días le quedan de remedio
+  if (m.dailyDose > 0) {
+    const diasRestantes = m.qty / m.dailyDose;
+    if (diasRestantes <= (m.minDays || 7)) return 'low';
+  }
   return 'ok';
 }
 
@@ -1053,40 +1057,67 @@ function renderUsers(c) {
 // MODALS: ADD MED
 // =====================================================
 
-function openAddMed(residentId) {
+function openAddMed(residentId, medId = null) {
+  // Si pasamos un medId, buscamos el medicamento para editarlo
+  const med = medId ? medications.find(m => m.id === medId) : null;
+
   showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
+    <div class="modal-title">💊 ${med ? 'Editar' : 'Agregar'} medicamento</div>
+    
     <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
+      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" value="${med?.name || ''}" placeholder="Ej: Losartan"></div>
+      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" value="${med?.drug || ''}" placeholder="Ej: Losartán potásico"></div>
     </div>
+
     <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-       <select id="m-unit">
-  <option>comprimidos</option>
-  <option>cápsulas</option>
-  <option>%</option>
-  <option>sobres</option>
-  <option>gotas</option>
-  <option>parches</option>
-  <option>unidades</option>
-  <option>aplicaciones</option>
-</select>
+      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" value="${med?.conc || ''}" placeholder="Ej: 50mg"></div>
+      <div class="form-group">
+        <label>Unidad</label>
+        <select id="m-unit">
+          <option ${med?.unit === 'comprimidos' ? 'selected' : ''}>comprimidos</option>
+          <option ${med?.unit === 'cápsulas' ? 'selected' : ''}>cápsulas</option>
+          <option ${med?.unit === '%' ? 'selected' : ''}>%</option>
+          <option ${med?.unit === 'sobres' ? 'selected' : ''}>sobres</option>
+          <option ${med?.unit === 'gotas' ? 'selected' : ''}>gotas</option>
+          <option ${med?.unit === 'parches' ? 'selected' : ''}>parches</option>
+          <option ${med?.unit === 'unidades' ? 'selected' : ''}>unidades</option>
+          <option ${med?.unit === 'aplicaciones' ? 'selected' : ''}>aplicaciones</option>
+        </select>
+      </div>
     </div>
+
+    <div class="form-group">
+      <label>Tipo de tratamiento</label>
+      <select id="m-treatment">
+        <option value="prolongado" ${med?.treatment === 'prolongado' ? 'selected' : ''}>Tratamiento prolongado</option>
+        <option value="unica" ${med?.treatment === 'unica' ? 'selected' : ''}>Única toma</option>
+        <option value="evolucion" ${med?.treatment === 'evolucion' ? 'selected' : ''}>Esperar evolución</option>
+      </select>
+    </div>
+
     <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo (alerta)</label><input id="m-min" type="number" min="0" value="5"></div>
+      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="number" min="0" value="${med?.dailyDose || 1}"></div>
+      <div class="form-group"><label>Stock Actual</label><input id="m-qty" type="number" min="0" value="${med?.qty || 0}"></div>
     </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
-    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
+
+    <div class="form-group">
+      <label>Avisar cuando falten (días de stock)</label>
+      <input id="m-min-days" type="number" min="0" value="${med?.minDays || 7}">
+    </div>
+
+    <div class="form-group" style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto;"> 
+      <label style="margin:0;">Es SOS (No descontar stock automáticamente)</label>
+    </div>
+
+    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
+
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMed(${residentId})">Guardar</button>
+      <button class="btn btn-primary" onclick="saveMed(${residentId}, ${medId})">Guardar</button>
     </div>
   `);
 }
-
 function openAddMedGeneral() {
   showModal(`
     <div class="modal-title">💊 Agregar medicamento</div>
@@ -1115,32 +1146,32 @@ function openAddMedGeneral() {
   `);
 }
 
-function saveMed(residentId) {
-  const name = document.getElementById('m-name').value.trim();
-  if (!name) { showToast('El nombre es obligatorio'); return; }
-  const med = {
-    id: Date.now(),
+function saveMed(residentId, medId = null) {
+  const newMed = {
+    id: medId || Date.now(), // Si editamos, mantenemos el ID. Si es nuevo, creamos uno.
     residentId,
-    name,
-    drug: document.getElementById('m-drug').value.trim(),
-    concentration: document.getElementById('m-conc').value.trim(),
+    name: document.getElementById('m-name').value,
+    drug: document.getElementById('m-drug').value,
+    conc: document.getElementById('m-conc').value,
     unit: document.getElementById('m-unit').value,
-    qty: parseInt(document.getElementById('m-qty').value) || 0,
-    minQty: parseInt(document.getElementById('m-min').value) || 0,
-    expiry: document.getElementById('m-exp').value || '',
-    obs: document.getElementById('m-obs') ? document.getElementById('m-obs').value : '',
-    addedBy: currentUser.name,
-    addedDate: today()
+    treatment: document.getElementById('m-treatment').value,
+    dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
+    qty: parseFloat(document.getElementById('m-qty').value) || 0,
+    minDays: parseInt(document.getElementById('m-min-days').value) || 7,
+    sos: document.getElementById('m-sos').checked,
+    obs: document.getElementById('m-obs').value
   };
-  medications.push(med);
-  saveMeds();
-  if (med.qty > 0) {
-    movements.push({ id: Date.now()+1, medId: med.id, medName: med.name, residentId, type: 'in', qty: med.qty, unit: med.unit, by: currentUser.name, date: today(), note: 'Stock inicial' });
-    saveMovs();
+
+  if (medId) {
+    // Reemplazamos el viejo por el editado
+    medications = medications.map(m => m.id === medId ? newMed : m);
+  } else {
+    medications.push(newMed);
   }
+
+  saveData(); // Guardar en localStorage
   closeModal();
-  showToast('Medicamento agregado ✅');
-  showResident(residentId);
+  renderResidentDetail(residentId); // Refrescar la vista
 }
 
 function saveMedGeneral() {
