@@ -1,1479 +1,305 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MedStock – Residencia Sol de Otoño y El Chalet</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --cream: #faf7f2;
-    --warm-white: #fff9f2;
-    --amber: #d4883a;
-    --amber-light: #f0b060;
-    --amber-dark: #a05e20;
-    --brown: #5c3d1e;
-    --brown-light: #8a6040;
-    --green: #4a7c59;
-    --green-light: #e8f4ec;
-    --red: #c0392b;
-    --red-light: #fdecea;
-    --yellow: #e6a817;
-    --yellow-light: #fef9e7;
-    --blue: #2c6fad;
-    --blue-light: #e8f0fb;
-    --text: #2d1f0e;
-    --text-muted: #7a5c40;
-    --border: #e8d8c4;
-    --shadow: 0 2px 16px rgba(92,61,30,0.10);
-    --shadow-lg: 0 8px 40px rgba(92,61,30,0.16);
-    --radius: 14px;
-    --radius-sm: 8px;
-  }
-
-  /* --- AQUÍ PODÉS DEJAR TUS ESTILOS NORMALES SI LOS TENÍAS ABAJO --- */
-
-  @media print {
-    nav, .topbar, .back-btn, .btn, .no-print, .search-bar, .nav-tabs, #login-screen {
-      display: none !important;
-    }
-    body { 
-      background: white !important; 
-      color: black !important;
-      padding: 0 !important;
-    }
-    .main-content { 
-      margin: 0 !important; 
-      padding: 0 !important; 
-    }
-    .card { 
-      border: 1px solid #eee !important; 
-      box-shadow: none !important;
-      margin: 0 !important;
-    }
-    table {
-      width: 100% !important;
-      border-collapse: collapse !important;
-    }
-    th, td {
-      border: 1px solid #eee !important;
-      padding: 8px !important;
-      color: black !important;
-      font-size: 12px !important;
-    }
-    .section-title {
-      display: block !important;
-      text-align: center !important;
-      margin-bottom: 20px !important;
-    }
-  }
-</style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ====== LOGIN ====== */
-  #login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #fdf3e3 0%, #f5e6d0 50%, #eeddc0 100%);
-    padding: 20px;
-  }
-
-  .login-card {
-    background: white;
-    border-radius: 24px;
-    padding: 48px 40px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border);
-  }
-
-  .login-logo {
-    text-align: center;
-    margin-bottom: 32px;
-  }
-
-  .login-logo .icon {
-    font-size: 52px;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .login-logo h1 {
-    font-family: 'Fraunces', serif;
-    font-size: 26px;
-    color: var(--brown);
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .login-logo p {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
-  }
-
-  .form-group {
-    margin-bottom: 18px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    color: var(--text);
-    background: var(--warm-white);
-    transition: border-color 0.2s;
-    outline: none;
-  }
-
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--amber);
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: var(--amber);
-    color: white;
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 10px;
-  }
-
-  .btn-primary:hover { background: var(--amber-dark); }
-
-  .btn-secondary {
-    background: var(--border);
-    color: var(--brown);
-  }
-
-  .btn-secondary:hover { background: #d8c4a8; }
-
-  .btn-green {
-    background: var(--green);
-    color: white;
-  }
-
-  .btn-green:hover { background: #3a6347; }
-
-  .btn-red {
-    background: var(--red);
-    color: white;
-  }
-
-  .btn-red:hover { background: #a93226; }
-
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 13px;
-  }
-
-  .login-error {
-    background: var(--red-light);
-    color: var(--red);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  /* ====== APP SHELL ====== */
-  #app { display: none; min-height: 100vh; background: var(--cream); }
-
-  .topbar {
-    background: var(--brown);
-    color: white;
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-  }
-
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .topbar-brand span { font-size: 22px; }
-
-  .topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-  }
-
-  .user-badge {
-    background: rgba(255,255,255,0.15);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-  }
-
-  .btn-logout {
-    background: rgba(255,255,255,0.15);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: background 0.2s;
-  }
-
-  .btn-logout:hover { background: rgba(255,255,255,0.25); }
-
-  .nav-tabs {
-    background: white;
-    border-bottom: 2px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    gap: 4px;
-    overflow-x: auto;
-  }
-
-  .nav-tab {
-    padding: 14px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    white-space: nowrap;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .nav-tab:hover { color: var(--amber); }
-  .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
-
-  .main-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
-
-  /* ====== CARDS ====== */
-  .card {
-    background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .card-title {
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--brown);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-body { padding: 20px 22px; }
-
-  /* ====== STATS ====== */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-  }
-
-  .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
-  .stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--brown); font-family: 'Fraunces', serif; }
-  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-
-  /* ====== TABLE ====== */
-  .table-wrapper { overflow-x: auto; }
-
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-
-  th {
-    background: var(--cream);
-    padding: 10px 14px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-  }
-
-  td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--warm-white); }
-
-  /* ====== BADGES ====== */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .badge-ok { background: var(--green-light); color: var(--green); }
-  .badge-low { background: var(--yellow-light); color: var(--yellow); }
-  .badge-out { background: var(--red-light); color: var(--red); }
-  .badge-role { background: var(--blue-light); color: var(--blue); }
-
-  /* ====== PROGRESS BAR ====== */
-  .progress-bar {
-    background: var(--border);
-    border-radius: 10px;
-    height: 8px;
-    overflow: hidden;
-    min-width: 80px;
-  }
-
-  .progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.4s;
-  }
-
-  .fill-ok { background: var(--green); }
-  .fill-low { background: var(--yellow); }
-  .fill-out { background: var(--red); }
-
-  /* ====== MODAL ====== */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; padding: 20px;
-  }
-
-  .modal {
-    background: white;
-    border-radius: 20px;
-    padding: 32px;
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .modal-title {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--brown);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
-
-  /* ====== ALERTS ====== */
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-
-  .alert-low { background: var(--yellow-light); border-left: 4px solid var(--yellow); }
-  .alert-out { background: var(--red-light); border-left: 4px solid var(--red); }
-
-  /* ====== SEARCH ====== */
-  .search-bar {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .search-bar input {
-    width: 100%;
-    padding: 10px 16px 10px 38px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--warm-white);
-    outline: none;
-  }
-
-  .search-bar input:focus { border-color: var(--amber); }
-
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 16px;
-  }
-
-  /* ====== RESIDENT LIST ====== */
-  .resident-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .resident-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow);
-  }
-
-  .resident-card:hover {
-    border-color: var(--amber);
-    box-shadow: 0 4px 20px rgba(212,136,58,0.15);
-    transform: translateY(-2px);
-  }
-
-  .resident-name {
-    font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 8px;
-  }
-
-  .resident-meta {
-    font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  /* ====== MOVEMENTS ====== */
-  .movement-item {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    align-items: flex-start;
-  }
-
-  .movement-item:last-child { border-bottom: none; }
-
-  .movement-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  .mov-in { background: var(--green-light); }
-  .mov-out { background: var(--red-light); }
-
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text-muted);
-  }
-
-  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
-
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 22px;
-    color: var(--brown);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .tag {
-    display: inline-block;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--brown);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    display: none;
-    z-index: 9999;
-    animation: slideUp 0.3s ease;
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 16px;
-    padding: 4px 0;
-  }
-
-  .back-btn:hover { color: var(--amber); }
-
-  @media (max-width: 768px) {
-    .main-content { padding: 16px; }
-    .login-card { padding: 32px 24px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .modal { padding: 24px 20px; }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedStock - Residencia Sol de Otoño y El Chalet</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #faf7f2; --warm-white: #fff9f2; --amber: #d4883a; --amber-light: #f0b060;
+            --amber-dark: #a05e20; --brown: #5c3d1e; --brown-light: #8a6040; --green: #4a7c59;
+            --green-light: #e8f4ec; --red: #c0392b; --red-light: #fdecea; --yellow: #e6a817;
+            --yellow-light: #fef9e7; --blue: #2c6fad; --blue-light: #e8f0fb; --text: #2d1f0e;
+            --text-muted: #7a5c40; --border: #e8d8c4; --shadow: 0 2px 16px rgba(92,61,30,0.10);
+            --shadow-lg: 0 8px 40px rgba(92,61,30,0.16); --radius: 14px; --radius-sm: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background-color: var(--cream); color: var(--text); line-height: 1.5; overflow-x: hidden; }
+        
+        /* Layout */
+        .topbar { background: white; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .logo { font-family: 'Fraunces', serif; font-size: 20px; color: var(--brown); display: flex; align-items: center; gap: 8px; font-weight: 700; }
+        nav { background: white; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; gap: 20px; overflow-x: auto; }
+        .nav-item { padding: 14px 4px; color: var(--text-muted); text-decoration: none; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+        .nav-item.active { color: var(--amber); border-bottom-color: var(--amber); }
+        .main-content { padding: 24px; max-width: 1200px; margin: 0 auto; min-height: calc(100vh - 120px); }
+
+        /* UI Elements */
+        .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+        .card-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--warm-white); }
+        .card-title { font-family: 'Fraunces', serif; font-size: 18px; color: var(--brown); font-weight: 700; }
+        .btn { padding: 10px 18px; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--amber); color: white; }
+        .btn-secondary { background: var(--blue-light); color: var(--blue); }
+        .btn-green { background: var(--green); color: white; }
+        .btn-red { background: var(--red-light); color: var(--red); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        /* Table */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 14px 20px; font-size: 12px; text-transform: uppercase; color: var(--text-muted); background: var(--warm-white); border-bottom: 1px solid var(--border); }
+        td { padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+        .modal { background: white; border-radius: 20px; padding: 32px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; margin-bottom: 6px; font-weight: 600; color: var(--text-muted); }
+        input, select { width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); font-family: inherit; font-size: 14px; }
+        
+        /* Resident Cards */
+        .resident-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .resident-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow); }
+        .resident-card:hover { border-color: var(--amber); transform: translateY(-2px); }
+        
+        /* Alerts & Badges */
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-ok { background: var(--green-light); color: var(--green); }
+        .badge-low { background: var(--red-light); color: var(--red); }
+        .progress-bar { height: 6px; background: #eee; border-radius: 3px; width: 60px; overflow: hidden; }
+        .progress-fill { height: 100%; }
+        .fill-ok { background: var(--green); }
+        .fill-low { background: var(--red); }
+
+        /* Login */
+        #login-screen { position: fixed; inset: 0; background: var(--cream); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+        .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; text-align: center; }
+
+        @media print {
+            nav, .topbar, .back-btn, .btn, .no-print, .search-bar, .modal-overlay { display: none !important; }
+            body { background: white !important; }
+            .main-content { padding: 0 !important; }
+            .card { border: 1px solid #eee !important; box-shadow: none !important; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <span class="icon">🍂</span>
-      <h1>Residencia Sol de Otoño y El Chalet</h1>
-      <p>Sistema de gestión de medicamentos</p>
+    <div class="login-card">
+        <h1 style="font-family:'Fraunces'; margin-bottom:10px;">Sol de Otoño</h1>
+        <p style="color:var(--text-muted); margin-bottom:20px;">Gestión de Medicamentos</p>
+        <div class="form-group"><input type="text" id="login-user" placeholder="Usuario"></div>
+        <div class="form-group"><input type="password" id="login-pass" placeholder="Contraseña"></div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="doLogin()">Ingresar</button>
     </div>
-    <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
-    <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••">
-    </div>
-    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
-  </div>
 </div>
 
-<!-- APP -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-brand">
-      <span>🍂</span> MedStock
+<div id="app" style="display:none;">
+    <div class="topbar">
+        <div class="logo">🍂 Sol de Otoño</div>
+        <div id="user-info" style="font-size:13px; font-weight:600;"></div>
+        <button class="btn btn-red btn-sm" onclick="logout()">Salir</button>
     </div>
-    <div class="topbar-user">
-      <span class="user-badge" id="user-display"></span>
-      <button class="btn-logout" onclick="doLogout()">Salir</button>
-    </div>
-  </div>
-
-  <div class="nav-tabs" id="nav-tabs"></div>
-
-  <div class="main-content" id="main-content"></div>
+    <nav>
+        <div class="nav-item active" onclick="renderTab('residents')">👥 Residentes</div>
+        <div class="nav-item" onclick="renderTab('stock')">📦 Stock Global</div>
+    </nav>
+    <div id="main-content" class="main-content"></div>
 </div>
 
-<div id="toast"></div>
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div id="modal-content" class="modal"></div>
+</div>
 
 <script>
-// =====================================================
-// DATOS
-// =====================================================
-
-const USERS = [
-  { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
-  { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
-  { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
-  { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
-  { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
-  { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
-  { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
-  { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
-  { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
-  { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
-  { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
-  { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
-  { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
-  { user: 'rosa.andraca', pass: '1234', name: 'Familiar – Rosa Andraca', role: 'family', residentId: 5 },
-  { user: 'emilia.giron', pass: '1234', name: 'Familiar – Emilia Girón', role: 'family', residentId: 6 },
-  { user: 'susana.bustos', pass: '1234', name: 'Familiar – Susana Bustos', role: 'family', residentId: 7 },
-  { user: 'ines.rivera', pass: '1234', name: 'Familiar – Inés Rivera', role: 'family', residentId: 8 },
-  { user: 'olga.marinelli', pass: '1234', name: 'Familiar – Olga Marinelli', role: 'family', residentId: 9 },
-  { user: 'esther.moreno', pass: '1234', name: 'Familiar – Esther Moreno', role: 'family', residentId: 10 },
-  { user: 'carlos.quiroga', pass: '1234', name: 'Familiar – Carlos Quiroga', role: 'family', residentId: 11 },
-  { user: 'mario.rivero', pass: '1234', name: 'Familiar – Mario Rivero', role: 'family', residentId: 12 },
-  { user: 'antonio.delavega', pass: '1234', name: 'Familiar – Antonio de la Vega', role: 'family', residentId: 13 },
-  { user: 'mireya.olivares', pass: '1234', name: 'Familiar – Mireya Olivares', role: 'family', residentId: 14 },
-  { user: 'rosa.oche', pass: '1234', name: 'Familiar – Rosa Oche', role: 'family', residentId: 15 },
-  { user: 'susana.serignani', pass: '1234', name: 'Familiar – Susana Serignani', role: 'family', residentId: 16 },
-  { user: 'manuel.ricavarren', pass: '1234', name: 'Familiar – Manuel Ricavarren', role: 'family', residentId: 17 },
-  { user: 'carmen.narvaez', pass: '1234', name: 'Familiar – Carmen Narváez', role: 'family', residentId: 18 },
-  { user: 'francisco.cara', pass: '1234', name: 'Familiar – Francisco Cara', role: 'family', residentId: 19 },
-  { user: 'jose.collado', pass: '1234', name: 'Familiar – José Collado', role: 'family', residentId: 20 },
-  { user: 'nelson.tello', pass: '1234', name: 'Familiar – Nelson Tello', role: 'family', residentId: 21 },
-  { user: 'linares.francisco', pass: '1234', name: 'Familiar – Linares Francisco', role: 'family', residentId: 22 },
-  { user: 'gladys.nunez', pass: '1234', name: 'Familiar – Gladys Núñez', role: 'family', residentId: 23 },
-];
-
-const RESIDENTS = [
-  { id: 1, name: 'Amelia Ápez' },
-  { id: 2, name: 'María Doralinda Moreno' },
-  { id: 3, name: 'Lidia Esther Gómez' },
-  { id: 4, name: 'Amelia Cigala' },
-  { id: 5, name: 'Rosa Andraca' },
-  { id: 6, name: 'Emilia Girón' },
-  { id: 7, name: 'Susana Bustos' },
-  { id: 8, name: 'Inés Rivera' },
-  { id: 9, name: 'Olga Marinelli' },
-  { id: 10, name: 'Esther Moreno' },
-  { id: 11, name: 'Carlos Quiroga' },
-  { id: 12, name: 'Mario Rivero' },
-  { id: 13, name: 'Antonio de la Vega' },
-  { id: 14, name: 'Mireya Olivares' },
-  { id: 15, name: 'Rosa Oche' },
-  { id: 16, name: 'Susana Serignani' },
-  { id: 17, name: 'Manuel Ricavarren' },
-  { id: 18, name: 'Carmen Narváez' },
-  { id: 19, name: 'Francisco Cara' },
-  { id: 20, name: 'José Collado' },
-  { id: 21, name: 'Nelson Tello' },
-  { id: 22, name: 'Linares Francisco' },
-  { id: 23, name: 'Gladys Núñez' },
-];
-
-const ROLE_LABELS = { owner: 'Dueño', manager: 'Encargada', nurse: 'Enfermera', family: 'Familiar' };
-
-// =====================================================
-// ESTADO — ahora viene de Firestore
-// =====================================================
-let currentUser = null;
-let currentTab = 'home';
-let medications = [];
-let movements = [];
-
-// saveMeds y saveMovs ahora son async y usan Firestore
-// Se definen abajo en el bloque module, pero las llamamos como window.saveMeds / window.saveMovs
-
-function saveMeds() { if (window._saveMeds) window._saveMeds(); }
-function saveMovs() { if (window._saveMovs) window._saveMovs(); }
-
-// =====================================================
-// AUTH
-// =====================================================
-
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim().toLowerCase();
-  const p = document.getElementById('login-pass').value;
-  const found = USERS.find(x => x.user === u && x.pass === p);
-  if (!found) {
-    document.getElementById('login-error').style.display = 'block';
-    return;
-  }
-  currentUser = found;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
-  buildNav();
-  renderTab('home');
-}
-
-document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
-}
-
-function canEdit() { return ['owner','manager','nurse'].includes(currentUser.role); }
-function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
-
-// =====================================================
-// NAV
-// =====================================================
-
-function buildNav() {
-  const tabs = document.getElementById('nav-tabs');
-  let items = [];
-  if (currentUser.role === 'family') {
-    items = [
-      { id: 'home', label: '🏠 Inicio' },
-      { id: 'my-resident', label: '👤 Mi familiar' },
+    // --- DATOS ---
+    const RESIDENTS = [
+        { id: 1, name: "Maria Garcia" }, { id: 2, name: "Juan Perez" },
+        { id: 3, name: "Ana Lopez" }, { id: 4, name: "Pedro Gomez" },
+        { id: 5, name: "Luisa Rodriguez" }, { id: 6, name: "Carlos Sanchez" }
     ];
-  } else {
-    items = [
-      { id: 'home', label: '🏠 Inicio' },
-      { id: 'residents', label: '👥 Residentes' },
-      { id: 'medications', label: '💊 Medicamentos' },
-      { id: 'movements', label: '📋 Movimientos' },
-    ];
-    if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
-  }
-  tabs.innerHTML = items.map(t =>
-    `<div class="nav-tab ${t.id === currentTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
-  ).join('');
-}
 
-function renderTab(tab) {
-  currentTab = tab;
-  buildNav();
-  const c = document.getElementById('main-content');
-  if (tab === 'home') renderHome(c);
-  else if (tab === 'residents') renderResidents(c);
-  else if (tab === 'my-resident') renderMyResident(c);
-  else if (tab === 'medications') renderMedications(c);
-  else if (tab === 'movements') renderMovements(c);
-  else if (tab === 'users') renderUsers(c);
-}
+    let medications = JSON.parse(localStorage.getItem('meds_v2')) || [];
+    let currentUser = null;
 
-// =====================================================
-// HOME
-// =====================================================
-
-function renderHome(c) {
-  const totalMeds = medications.length;
-  const lowCount = medications.filter(m => getStatus(m) === 'low').length;
-  const outCount = medications.filter(m => getStatus(m) === 'out').length;
-
-  if (currentUser.role === 'family') {
-    const res = RESIDENTS.find(r => r.id === currentUser.residentId);
-    const myMeds = medications.filter(m => m.residentId === currentUser.residentId);
-    c.innerHTML = `
-      <h2 class="section-title">🍂 Bienvenida/o</h2>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
-        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
-        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
-      </div>
-      ${renderAlertsSection(myMeds)}
-    `;
-    return;
-  }
-
-  c.innerHTML = `
-    <h2 class="section-title">🍂 Panel general</h2>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${RESIDENTS.length}</div><div class="stat-label">Residentes</div></div>
-      <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${totalMeds}</div><div class="stat-label">Medicamentos cargados</div></div>
-      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${lowCount}</div><div class="stat-label">Stock bajo</div></div>
-      <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${outCount}</div><div class="stat-label">Sin stock</div></div>
-    </div>
-    ${renderAlertsSection(medications)}
-    <div class="card" style="margin-top:20px">
-      <div class="card-header"><div class="card-title">📋 Últimos movimientos</div></div>
-      <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice(-8).reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit} · ${mov.by} · ${mov.date}</span></div>
-            </div>`;
-          }).join('')
+    // --- AUTENTICACIÓN ---
+    function doLogin() {
+        const u = document.getElementById('login-user').value;
+        const p = document.getElementById('login-pass').value;
+        if ((u === 'admin' && p === '1234') || (u === 'enfermeria' && p === '1234')) {
+            currentUser = { name: u, role: u === 'admin' ? 'admin' : 'staff' };
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('user-info').innerText = "Hola, " + u;
+            renderTab('residents');
+        } else {
+            alert("Credenciales incorrectas");
         }
-      </div>
-    </div>
-  `;
-}
+    }
 
-function renderAlertsSection(meds) {
-  const alerts = meds.filter(m => getStatus(m) !== 'ok');
-  if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
-  return `<div class="card">
-    <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
-    <div class="card-body">
-      ${alerts.map(m => {
-        const res = RESIDENTS.find(r => r.id === m.residentId);
-        const st = getStatus(m);
-        return `<div class="alert-item ${st === 'out' ? 'alert-out' : 'alert-low'}">
-          <span>${st === 'out' ? '🚨' : '⚠️'}</span>
-          <div><strong>${m.name}</strong> ${m.drug ? `(${m.drug})` : ''} — ${res ? res.name : ''}<br>
-          <span style="font-size:13px">${st === 'out' ? 'Sin stock' : `Stock bajo: ${m.qty} ${m.unit} restantes`}</span></div>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
-}
+    function logout() { location.reload(); }
 
-function getStatus(m) {
-  if (m.qty <= 0) return 'out';
-  // Si tiene dosis diaria, calculamos cuántos días le quedan de remedio
-  if (m.dailyDose > 0) {
-    const diasRestantes = m.qty / m.dailyDose;
-    if (diasRestantes <= (m.minDays || 7)) return 'low';
-  }
-  return 'ok';
-}
+    function canEdit() { return currentUser && currentUser.role === 'admin'; }
 
-// =====================================================
-// RESIDENTS
-// =====================================================
+    // --- NAVEGACIÓN ---
+    function renderTab(tab) {
+        const c = document.getElementById('main-content');
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        if (tab === 'residents') {
+            document.querySelectorAll('.nav-item')[0].classList.add('active');
+            renderResidents(c);
+        } else {
+            document.querySelectorAll('.nav-item')[1].classList.add('active');
+            c.innerHTML = '<h2>Próximamente: Stock Global</h2>';
+        }
+    }
 
-function renderResidents(c) {
-  // 1. Usamos una variable global temporal para el filtro si no existe
-  if (window._resSearch === undefined) window._resSearch = '';
-  
-  const searchTerm = window._resSearch.toLowerCase();
-  const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(searchTerm));
+    // --- VISTA RESIDENTES (CON BÚSQUEDA FLUIDA) ---
+    function renderResidents(c) {
+        if (!window._resSearch) window._resSearch = '';
+        const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(window._resSearch.toLowerCase()));
 
-  c.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">👥 Residentes</h2>
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="res-search-input" placeholder="Buscar residente..." value="${window._resSearch}">
-      </div>
-    </div>
-    <div class="resident-grid">
-      ${list.map(r => {
-        const meds = medications.filter(m => m.residentId === r.id);
-        const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
-        return `
-          <div class="resident-card" onclick="verDetalleResidente(${r.id})" style="cursor:pointer">
-            <div class="resident-name">👤 ${r.name}</div>
-            <div class="resident-meta">
-              <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
-              ${alerts > 0 ? `<span class="badge badge-low">⚠️ ${alerts} alerta${alerts !== 1 ? 's' : ''}</span>` : '<span class="badge badge-ok">✅ OK</span>'}
+        c.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 class="card-title">Listado de Residentes</h2>
+                <input type="text" id="res-search" placeholder="Buscar..." value="${window._resSearch}" style="width:200px;">
             </div>
-          </div>`;
-      }).join('')}
-    </div>
-  `;
+            <div class="resident-grid">
+                ${list.map(r => `
+                    <div class="resident-card" onclick="showResident(${r.id})">
+                        <div style="font-weight:700;">👤 ${r.name}</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
+                            ${medications.filter(m => m.residentId === r.id).length} Medicamentos
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
 
-  // --- SOLUCIÓN BÚSQUEDA ---
-  const input = document.getElementById('res-search-input');
-  input.focus(); 
-  // Esto pone el cursor al final
-  input.setSelectionRange(input.value.length, input.value.length);
+        const input = document.getElementById('res-search');
+        input.focus();
+        input.setSelectionRange(input.value.length, input.value.length);
+        input.oninput = (e) => {
+            window._resSearch = e.target.value;
+            renderResidents(c);
+        };
+    }
 
-  input.oninput = function() {
-    window._resSearch = this.value;
-    renderResidents(c); // Recarga solo esta parte sin perder el foco
-  };
-}
+    // --- DETALLE RESIDENTE ---
+    function showResident(id) {
+        const res = RESIDENTS.find(r => r.id === id);
+        const meds = medications.filter(m => m.residentId === id);
+        const c = document.getElementById('main-content');
 
-// --- SOLUCIÓN INGRESO (Función Puente) ---
-function verDetalleResidente(id) {
-  // Cambiamos el estado de la pestaña actual para que el sistema sepa que estamos "adentro"
-  window.currentTab = 'resident-detail'; 
-  
-  // Llamamos a la función que YA TENÉS en tu código para mostrar los datos
-  // En tu archivo se llama "showResident"
-  showResident(id);
-}
+        c.innerHTML = `
+            <div style="margin-bottom:20px; cursor:pointer; color:var(--amber);" onclick="renderTab('residents')">← Volver</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 class="card-title">Planilla de ${res.name}</h2>
+                <button class="btn btn-secondary btn-sm" onclick="window.print()">📥 PDF</button>
+            </div>
+            
+            <button class="btn btn-primary btn-sm" style="margin-bottom:15px;" onclick="openAddMed(${id})">+ Agregar Medicamento</button>
 
-function showResident(id) {
-  const res = RESIDENTS.find(r => r.id === id);
-  const meds = medications.filter(m => m.residentId === id);
-  const c = document.getElementById('main-content');
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Medicamento</th>
+                            <th>Dosis/Día</th>
+                            <th>Stock</th>
+                            <th>Estado</th>
+                            <th class="no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${meds.map(m => {
+                            const st = getStatus(m);
+                            return `
+                            <tr>
+                                <td><strong>${m.name}</strong><br><small>${m.drug || ''}</small></td>
+                                <td>${m.dailyDose} ${m.unit}</td>
+                                <td>${m.qty} ${m.unit}</td>
+                                <td><span class="badge badge-${st}">${st === 'ok' ? 'OK' : 'BAJO'}</span></td>
+                                <td class="no-print">
+                                    <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">Dar</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})">⚙️</button>
+                                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
 
-  // Marcamos que estamos en el detalle para que la búsqueda o refrescos no nos saquen de aquí
-  window.currentTab = 'resident-detail';
+    // --- GESTIÓN DE MEDICAMENTOS ---
+    function openAddMed(resId, medId = null) {
+        const med = medId ? medications.find(m => m.id === medId) : null;
+        showModal(`
+            <h3 style="margin-bottom:20px;">${med ? 'Editar' : 'Agregar'} Medicamento</h3>
+            <div class="form-group"><label>Nombre</label><input id="m-name" value="${med?.name || ''}"></div>
+            <div class="form-group"><label>Droga</label><input id="m-drug" value="${med?.drug || ''}"></div>
+            <div class="form-group"><label>Dosis diaria</label><input id="m-daily" type="number" value="${med?.dailyDose || 1}"></div>
+            <div class="form-group"><label>Stock Inicial</label><input id="m-qty" type="number" value="${med?.qty || 0}"></div>
+            <div class="form-group">
+                <label>Unidad</label>
+                <select id="m-unit">
+                    <option ${med?.unit === 'comprimidos' ? 'selected' : ''}>comprimidos</option>
+                    <option ${med?.unit === 'gotas' ? 'selected' : ''}>gotas</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn btn-primary" onclick="saveMed(${resId}, ${medId})">Guardar</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+            </div>
+        `);
+    }
 
-  c.innerHTML = `
-    <div class="back-btn" onclick="renderTab('residents')">← Volver a residentes</div>
-    
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-      <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
-      <button class="btn btn-secondary btn-sm" onclick="window.print()">📥 Descargar Planilla PDF</button>
-    </div>
+    function saveMed(resId, medId) {
+        const newMed = {
+            id: medId || Date.now(),
+            residentId: resId,
+            name: document.getElementById('m-name').value,
+            drug: document.getElementById('m-drug').value,
+            dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
+            qty: parseFloat(document.getElementById('m-qty').value) || 0,
+            unit: document.getElementById('m-unit').value
+        };
 
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
-    </div>
+        if (medId) medications = medications.map(m => m.id === medId ? newMed : m);
+        else medications.push(newMed);
 
-    <div class="card printable-area">
-      <div class="card-header"><div class="card-title">💊 Medicamentos Actuales</div></div>
-      <div class="table-wrapper">
-        ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
-          `<table>
-            <thead>
-              <tr>
-                <th>Medicamento</th>
-                <th>Dosis/Día</th>
-                <th>Tratamiento</th>
-                <th>Stock</th>
-                <th>Estado</th>
-                ${canEdit() ? '<th class="no-print">Acciones</th>' : ''}
-              </tr>
-            </thead>
-            <tbody>${meds.map(m => {
-              const st = getStatus(m);
-              const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose) : 0;
-              const pct = Math.min(100, Math.round((diasRestantes / 15) * 100));
-              
-              return `<tr>
-                <td>
-                  <strong>${m.name}</strong><br>
-                  <small style="color:var(--text-muted)">${m.drug || ''} (${m.conc || ''})</small>
-                  ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
-                </td>
-                <td>${m.dailyDose || 0} ${m.unit}</td>
-                <td style="font-size:12px; text-transform:capitalize">${m.treatment || 'prolongado'}</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span>${m.qty} ${m.unit}</span>
-                    <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
-                  </div>
-                  <small style="color:var(--text-muted); font-size:10px">${diasRestantes.toFixed(1)} días restantes</small>
-                </td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                
-                ${canEdit() ? `
-                <td class="no-print" style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})" title="Dar dosis">Dar</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})" title="Editar">⚙️</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')" title="Cargar Stock">+ Stock</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
-                </td>` : ''}
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`
+        localStorage.setItem('meds_v2', JSON.stringify(medications));
+        closeModal();
+        showResident(resId);
+    }
+
+    function registerTake(mid) {
+        const m = medications.find(x => x.id === mid);
+        if (m.qty >= m.dailyDose) {
+            m.qty -= m.dailyDose;
+            localStorage.setItem('meds_v2', JSON.stringify(medications));
+            showResident(m.residentId);
+        } else {
+            alert("¡Sin stock!");
         }
-      </div>
-    </div>
-  `;
-}
-// ESTA FUNCIÓN ES LA QUE HACE QUE EL BOTÓN "DAR" DESCUENTE STOCK
-function registerTake(mid) {
-  const med = medications.find(m => m.id === mid);
-  if (!med) return;
+    }
 
-  if (med.qty < med.dailyDose) {
-    alert("⚠️ No hay stock suficiente para la dosis de hoy (" + med.dailyDose + " " + med.unit + ")");
-    return;
-  }
-
-  // Descontar la dosis del stock actual
-  med.qty = Math.max(0, med.qty - med.dailyDose);
-  
-  // Guardamos el movimiento
-  movements.push({
-    id: Date.now(),
-    medId: mid,
-    type: 'out',
-    qty: med.dailyDose,
-    date: new Date().toLocaleString(),
-    user: currentUser.name,
-    note: 'Toma diaria registrada por enfermería'
-  });
-
-  saveData();
-  showResident(med.residentId); // Refrescar la tabla
-  
-  // Mensaje flotante de éxito
-  const t = document.getElementById('toast');
-  if(t) {
-    t.textContent = "✅ Toma de " + med.name + " registrada";
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2000);
-  }
-}
-
-function renderMyResident(c) {
-  showResident(currentUser.residentId);
-  setTimeout(() => { const bb = document.querySelector('.back-btn'); if (bb) bb.remove(); }, 0);
-}
-
-function renderMedications(c) {
-  const search = (c._medSearch || '').toLowerCase();
-  const list = search ? medications.filter(m => {
-    const res = RESIDENTS.find(r => r.id === m.residentId);
-    return m.name.toLowerCase().includes(search) || (m.drug||'').toLowerCase().includes(search) || (res && res.name.toLowerCase().includes(search));
-  }) : medications;
-  c.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">💊 Todos los medicamentos</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar">
-          <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Buscar..." value="${c._medSearch||''}" oninput="document.getElementById('main-content')._medSearch=this.value;renderTab('medications')">
-        </div>
-        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMedGeneral()">+ Agregar medicamento</button>` : ''}
-      </div>
-    </div>
-    <div class="card">
-      <div class="table-wrapper">
-        ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
-          `<table>
-            <thead><tr><th>Residente</th><th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Vencimiento</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
-            <tbody>${list.map(m => {
-              const res = RESIDENTS.find(r => r.id === m.residentId);
-              const st = getStatus(m);
-              return `<tr>
-                <td>${res ? res.name : '—'}</td>
-                <td><strong>${m.name}</strong></td>
-                <td>${m.drug || '—'}</td>
-                <td>${m.concentration || '—'}</td>
-                <td>${m.qty} ${m.unit}</td>
-                <td>${m.expiry || '—'}</td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
-                </td>` : ''}
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`
+    function deleteMed(id) {
+        if (confirm("¿Borrar?")) {
+            const rid = medications.find(m => m.id === id).residentId;
+            medications = medications.filter(m => m.id !== id);
+            localStorage.setItem('meds_v2', JSON.stringify(medications));
+            showResident(rid);
         }
-      </div>
-    </div>
-  `;
-}
+    }
 
-function renderMovements(c) {
-  c.innerHTML = `
-    <h2 class="section-title">📋 Historial de movimientos</h2>
-    <div class="card">
-      <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice().reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">
-                ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
-                ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
-              </span></div>
-            </div>`;
-          }).join('')
-        }
-      </div>
-    </div>
-  `;
-}
+    function getStatus(m) {
+        return m.qty < (m.dailyDose * 7) ? 'low' : 'ok';
+    }
 
-function renderUsers(c) {
-  const staff = USERS.filter(u => u.role !== 'family');
-  const family = USERS.filter(u => u.role === 'family');
-  c.innerHTML = `
-    <h2 class="section-title">⚙️ Usuarios del sistema</h2>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th></tr></thead>
-          <tbody>${staff.map(u => `<tr><td>${u.name}</td><td><code>${u.user}</code></td><td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td></tr>`).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Residente</th><th>Usuario familiar</th><th>Contraseña inicial</th></tr></thead>
-          <tbody>${family.map(u => {
-            const res = RESIDENTS.find(r => r.id === u.residentId);
-            return `<tr><td>${res ? res.name : '—'}</td><td><code>${u.user}</code></td><td><code>1234</code></td></tr>`;
-          }).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-// =====================================================
-// MODALS: ADD MED
-// =====================================================
-
-function openAddMed(residentId, medId = null) {
-  // Si pasamos un medId, buscamos el medicamento para editarlo
-  const med = medId ? medications.find(m => m.id === medId) : null;
-
-  showModal(`
-    <div class="modal-title">💊 ${med ? 'Editar' : '+ Agregar medicamento'} medicamento</div>
-    
-    <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" value="${med?.name || ''}" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" value="${med?.drug || ''}" placeholder="Ej: Losartán potásico"></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" value="${med?.conc || ''}" placeholder="Ej: 50mg"></div>
-      <div class="form-group">
-        <label>Unidad</label>
-        <select id="m-unit">
-          <option ${med?.unit === 'comprimidos' ? 'selected' : ''}>comprimidos</option>
-          <option ${med?.unit === 'cápsulas' ? 'selected' : ''}>cápsulas</option>
-          <option ${med?.unit === '%' ? 'selected' : ''}>%</option>
-          <option ${med?.unit === 'sobres' ? 'selected' : ''}>sobres</option>
-          <option ${med?.unit === 'gotas' ? 'selected' : ''}>gotas</option>
-          <option ${med?.unit === 'parches' ? 'selected' : ''}>parches</option>
-          <option ${med?.unit === 'unidades' ? 'selected' : ''}>unidades</option>
-          <option ${med?.unit === 'aplicaciones' ? 'selected' : ''}>aplicaciones</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Tipo de tratamiento</label>
-      <select id="m-treatment">
-        <option value="prolongado" ${med?.treatment === 'prolongado' ? 'selected' : ''}>Tratamiento prolongado</option>
-        <option value="unica" ${med?.treatment === 'unica' ? 'selected' : ''}>Única toma</option>
-        <option value="evolucion" ${med?.treatment === 'evolucion' ? 'selected' : ''}>Esperar evolución</option>
-      </select>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="number" min="0" value="${med?.dailyDose || 1}"></div>
-      <div class="form-group"><label>Stock Actual</label><input id="m-qty" type="number" min="0" value="${med?.qty || 0}"></div>
-    </div>
-
-    <div class="form-group">
-      <label>Avisar cuando falten (días de stock)</label>
-      <input id="m-min-days" type="number" min="0" value="${med?.minDays || 7}">
-    </div>
-
-    <div class="form-group" style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto;"> 
-      <label style="margin:0;">Es SOS (No descontar stock automáticamente)</label>
-    </div>
-
-    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
-
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMed(${residentId}, ${medId})">Guardar</button>
-    </div>
-  `);
-}
-function openAddMedGeneral() {
-  showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
-    <div class="form-group"><label>Residente</label>
-      <select id="m-res">${RESIDENTS.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}</select>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-        <select id="m-unit"><option>comprimidos</option><option>cápsulas</option><option>sobres</option><option>%</option><option>gotas</option><option>parches</option><option>unidades</option><option>aplicaciones</option></select>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo</label><input id="m-min" type="number" min="0" value="5"></div>
-    </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
-    </div>
-  `);
-}
-
-function saveMed(residentId, medId = null) {
-  const newMed = {
-    id: medId || Date.now(), // Si editamos, mantenemos el ID. Si es nuevo, creamos uno.
-    residentId,
-    name: document.getElementById('m-name').value,
-    drug: document.getElementById('m-drug').value,
-    conc: document.getElementById('m-conc').value,
-    unit: document.getElementById('m-unit').value,
-    treatment: document.getElementById('m-treatment').value,
-    dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
-    qty: parseFloat(document.getElementById('m-qty').value) || 0,
-    minDays: parseInt(document.getElementById('m-min-days').value) || 7,
-    sos: document.getElementById('m-sos').checked,
-    obs: document.getElementById('m-obs').value
-  };
-
-  if (medId) {
-    // Reemplazamos el viejo por el editado
-    medications = medications.map(m => m.id === medId ? newMed : m);
-  } else {
-    medications.push(newMed);
-  }
-
-  saveData(); // Guardar en localStorage
-  closeModal();
-  renderResidentDetail(residentId); // Refrescar la vista
-}
-
-function saveMedGeneral() {
-  const residentId = parseInt(document.getElementById('m-res').value);
-  saveMed(residentId);
-}
-
-function deleteMed(id) {
-  if (!confirm('¿Eliminar este medicamento?')) return;
-  const med = medications.find(m => m.id === id);
-  const rid = med ? med.residentId : null;
-  medications = medications.filter(m => m.id !== id);
-  saveMeds();
-  showToast('Medicamento eliminado');
-  if (rid) showResident(rid); else renderTab('medications');
-}
-
-// =====================================================
-// MODALS: MOVEMENT
-// =====================================================
-
-function openMovement(medId, type) {
-  const med = medications.find(m => m.id === medId);
-  if (!med) return;
-  showModal(`
-    <div class="modal-title">${type === 'in' ? '⬆️ Entrada de stock' : '⬇️ Salida de stock'}</div>
-    <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px"><strong>${med.name}</strong> — Stock actual: ${med.qty} ${med.unit}</p>
-    <div class="form-group"><label>Cantidad</label><input id="mov-qty" type="number" min="1" value="1"></div>
-    <div class="form-group"><label>Observación (opcional)</label><input id="mov-note" type="text" placeholder="${type === 'in' ? 'Ej: Compra farmacia' : 'Ej: Administrado'}"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn ${type === 'in' ? 'btn-green' : 'btn-red'}" onclick="saveMovement(${medId}, '${type}')">Confirmar</button>
-    </div>
-  `);
-}
-
-function saveMovement(medId, type) {
-  const qty = parseInt(document.getElementById('mov-qty').value) || 0;
-  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
-  const note = document.getElementById('mov-note').value.trim();
-  const med = medications.find(m => m.id === medId);
-  if (!med) return;
-  if (type === 'out' && med.qty < qty) { showToast('No hay suficiente stock'); return; }
-  med.qty = type === 'in' ? med.qty + qty : med.qty - qty;
-  saveMeds();
-  movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type, qty, unit: med.unit, by: currentUser.name, date: today(), note });
-  saveMovs();
-  closeModal();
-  showToast(type === 'in' ? `+${qty} ${med.unit} agregados ✅` : `-${qty} ${med.unit} registrados ✅`);
-  showResident(med.residentId);
-}
-
-// =====================================================
-// MODAL HELPERS
-// =====================================================
-
-function showModal(html) {
-  let ov = document.getElementById('modal-overlay');
-  if (!ov) {
-    ov = document.createElement('div');
-    ov.id = 'modal-overlay';
-    ov.className = 'modal-overlay';
-    ov.innerHTML = `<div class="modal" id="modal-box"></div>`;
-    ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
-    document.body.appendChild(ov);
-  }
-  document.getElementById('modal-box').innerHTML = html;
-  ov.style.display = 'flex';
-}
-
-function closeModal() {
-  const ov = document.getElementById('modal-overlay');
-  if (ov) ov.style.display = 'none';
-}
-
-// =====================================================
-// UTILS
-// =====================================================
-
-function today() {
-  return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3000);
-}
+    // --- MODAL UTILS ---
+    function showModal(html) {
+        document.getElementById('modal-content').innerHTML = html;
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 </script>
 
-<!-- PANTALLA DE CARGA -->
-<div id="loading-screen" style="position:fixed;inset:0;background:#faf7f2;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px">
-  <div style="font-size:48px">🍂</div>
-  <div style="font-family:'Fraunces',serif;font-size:22px;color:#5c3d1e">Cargando MedStock...</div>
-  <div style="width:200px;height:4px;background:#e8d8c4;border-radius:4px;overflow:hidden">
-    <div id="loading-bar" style="height:100%;background:#d4883a;width:0%;transition:width 0.4s"></div>
-  </div>
-</div>
-
-<!-- FIREBASE + SINCRONIZACIÓN EN TIEMPO REAL -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
-  authDomain: "medstock-29e24.firebaseapp.com",
-  projectId: "medstock-29e24",
-  storageBucket: "medstock-29e24.firebasestorage.app",
-  messagingSenderId: "276664612131",
-  appId: "1:276664612131:web:68ec5aa0d95b4e47850896"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let medsLoaded = false;
-let movsLoaded = false;
-const bar = document.getElementById('loading-bar');
-
-function checkReady() {
-  if (medsLoaded && movsLoaded) {
-    bar.style.width = '100%';
-    setTimeout(() => {
-      document.getElementById('loading-screen').style.display = 'none';
-    }, 400);
-  }
-}
-
-// Sincronización en tiempo real — meds
-onSnapshot(collection(db, 'meds'), snapshot => {
-  medications = snapshot.docs.map(d => d.data());
-  if (!medsLoaded) { medsLoaded = true; bar.style.width = '50%'; checkReady(); }
-  // Si ya está logueado, refrescar la vista
-  if (window.currentUser) renderTab(window.currentTab || 'home');
-});
-
-// Sincronización en tiempo real — movimientos
-onSnapshot(collection(db, 'movimientos'), snapshot => {
-  movements = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id);
-  if (!movsLoaded) { movsLoaded = true; checkReady(); }
-  if (window.currentUser) renderTab(window.currentTab || 'home');
-});
-
-// saveMeds: guarda/actualiza medicamentos en Firestore
-window._saveMeds = async function() {
-  for (const med of medications) {
-    try {
-      await setDoc(doc(db, 'meds', String(med.id)), med);
-    } catch(e) { console.error('Error guardando med:', e); }
-  }
-};
-
-// saveMovs: guarda movimientos nuevos en Firestore
-window._saveMovs = async function() {
-  const last = movements[movements.length - 1];
-  if (last) {
-    try {
-      await setDoc(doc(db, 'movimientos', String(last.id)), last);
-    } catch(e) { console.error('Error guardando movimiento:', e); }
-  }
-};
-
-// deleteMed: elimina de Firestore
-window.deleteMed = async function(id) {
-  if (!confirm('¿Eliminar este medicamento?')) return;
-  const med = medications.find(m => m.id === id);
-  const rid = med ? med.residentId : null;
-  try {
-    await deleteDoc(doc(db, 'meds', String(id)));
-    showToast('Medicamento eliminado');
-  } catch(e) { showToast('Error al eliminar'); }
-  if (rid) showResident(rid); else renderTab('medications');
-};
-
-</script>
 </body>
 </html>
