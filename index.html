@@ -968,7 +968,7 @@ function renderMedications(c) {
           <span class="search-icon">🔍</span>
           <input type="text" placeholder="Buscar..." value="${c._medSearch||''}" oninput="document.getElementById('main-content')._medSearch=this.value;renderTab('medications')">
         </div>
-        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMedGeneral()">+ Agregar</button>` : ''}
+        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMedGeneral()">+ Agregar medicamento</button>` : ''}
       </div>
     </div>
     <div class="card">
@@ -1062,7 +1062,7 @@ function openAddMed(residentId, medId = null) {
   const med = medId ? medications.find(m => m.id === medId) : null;
 
   showModal(`
-    <div class="modal-title">💊 ${med ? 'Editar' : 'Agregar'} medicamento</div>
+    <div class="modal-title">💊 ${med ? 'Editar' : '+ Agregar medicamento'} medicamento</div>
     
     <div class="grid-2">
       <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" value="${med?.name || ''}" placeholder="Ej: Losartan"></div>
