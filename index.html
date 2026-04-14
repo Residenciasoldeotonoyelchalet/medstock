@@ -355,6 +355,26 @@
   .badge-low { background: var(--yellow-light); color: var(--yellow); }
   .badge-out { background: var(--red-light); color: var(--red); }
   .badge-role { background: var(--blue-light); color: var(--blue); }
+  .badge-unica      { background: #e8f0fb; color: #2c6fad; }
+  .badge-evaluar    { background: #f0e8fb; color: #6b2cad; }
+  .badge-finalizado { background: #ececec; color: #888; }
+
+  .dosis-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--warm-white);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .dosis-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .dosis-btn.active { background: var(--amber); border-color: var(--amber); color: white; }
   .badge-unica { background: #e8f0fb; color: #2c6fad; }
   .badge-evaluar { background: #f0e8fb; color: #6b2cad; }
 
@@ -998,6 +1018,68 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if (e.k
 // Guardar usuarios en Firestore
 function saveUsers() { if (window._saveUsers) window._saveUsers(); }
 
+// ── HELPERS DE FRECUENCIA ──
+function debeTomarsHoy(med) {
+  if (!med.frecuencia || med.frecuencia === 'diario') return true;
+  const hoy = new Date();
+  const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
+  const diaHoy = diasSemana[hoy.getDay()];
+  if (med.frecuencia === 'alternos') {
+    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
+    const diffDias = Math.floor((hoy - inicio) / (1000*60*60*24));
+    return diffDias % 2 === 0;
+  }
+  if (med.frecuencia === 'especificos') return (med.diasSemana || []).includes(diaHoy);
+  if (med.frecuencia === 'cada_x_dias') {
+    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
+    const diffDias = Math.floor((hoy - inicio) / (1000*60*60*24));
+    return diffDias % (med.cadaXDias || 1) === 0;
+  }
+  return true;
+}
+
+function getDosisdiaria(med) {
+  if (med.horarios && med.horarios.length > 0) {
+    if (typeof med.horarios[0] === 'object')
+      return med.horarios.reduce((sum, h) => sum + (parseFloat(h.dosis) || med.dailyDose || 0), 0);
+    return (med.dailyDose || 0) * med.horarios.length;
+  }
+  return med.dailyDose || 0;
+}
+
+function getHorasArray(med) {
+  if (!med.horarios || med.horarios.length === 0) return [];
+  if (typeof med.horarios[0] === 'object') return med.horarios.map(h => h.hora);
+  return med.horarios;
+}
+
+function calcDiasCalendario(med) {
+  const dosisdiaria = getDosisdiaria(med);
+  if (dosisdiaria <= 0) return 0;
+  let unidadesPorDia;
+  if (!med.frecuencia || med.frecuencia === 'diario') unidadesPorDia = dosisdiaria;
+  else if (med.frecuencia === 'alternos') unidadesPorDia = dosisdiaria / 2;
+  else if (med.frecuencia === 'especificos') {
+    const dias = (med.diasSemana || []).length || 1;
+    unidadesPorDia = (dosisdiaria * dias) / 7;
+  } else if (med.frecuencia === 'cada_x_dias') unidadesPorDia = dosisdiaria / (med.cadaXDias || 1);
+  else unidadesPorDia = dosisdiaria;
+  if (unidadesPorDia <= 0) return 0;
+  return Math.floor(med.qty / unidadesPorDia);
+}
+
+function frecuenciaLabel(med) {
+  if (med.sos) return 'Según necesidad';
+  if (!med.frecuencia || med.frecuencia === 'diario') return 'Todos los días';
+  if (med.frecuencia === 'alternos') return 'Días alternos';
+  if (med.frecuencia === 'cada_x_dias') return `Cada ${med.cadaXDias || '?'} días`;
+  if (med.frecuencia === 'especificos') {
+    const labels = {lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};
+    return (med.diasSemana || []).map(d => labels[d] || d).join(', ');
+  }
+  return '';
+}
+
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
 function checkDailyDiscount() {
   const today = new Date().toISOString().slice(0, 10); // "2026-04-14"
@@ -1006,13 +1088,14 @@ function checkDailyDiscount() {
 
   let huboDescuento = false;
   medications.forEach(med => {
-    // Solo prolongado, con dosis definida, sin SOS
     if (med.treatment !== 'prolongado') return;
     if (med.sos) return;
     if (!med.dailyDose || med.dailyDose <= 0) return;
     if (med.qty <= 0) return;
+    if (getStatus(med) === 'finalizado') return;
+    if (!debeTomarsHoy(med)) return;
 
-    const descuento = Math.min(med.dailyDose, med.qty);
+    const descuento = Math.min(getDosisdiaria(med), med.qty);
     med.qty = Math.max(0, med.qty - descuento);
 
     movements.push({
@@ -1181,7 +1264,7 @@ function renderHome(c) {
 }
 
 function renderAlertsSection(meds) {
-  const alerts = meds.filter(m => getStatus(m) !== 'ok');
+  const alerts = meds.filter(m => getStatus(m) !== 'ok' && getStatus(m) !== 'finalizado');
   if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
   return `<div class="card">
     <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
@@ -1290,6 +1373,7 @@ function showResident(id) {
               <tr>
                 <th>Medicamento</th>
                 <th>Horarios</th>
+                <th>Frecuencia</th>
                 <th>Dosis/Día</th>
                 <th>Tratamiento</th>
                 <th>Stock</th>
@@ -1299,50 +1383,55 @@ function showResident(id) {
             </thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
-              const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose) : 0;
-              const pct = Math.min(100, Math.round((diasRestantes / 15) * 100));
+              const esPorcentaje = m.unit === '%';
+              const diasRestantes = (!esPorcentaje && getDosisdiaria(m) > 0) ? calcDiasCalendario(m) : 0;
+              const pct = esPorcentaje ? m.qty : Math.min(100, Math.round((diasRestantes / 30) * 100));
               const treatmentLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
               const treatBadge = m.treatment === 'unica'
-                ? '<span class="badge badge-unica" style="font-size:9px;padding:2px 6px" title="Este medicamento es de única toma, no se vuelve a comprar">💊 Única toma</span>'
+                ? '<span class="badge badge-unica" style="font-size:9px;padding:2px 6px">💊 Única toma</span>'
                 : m.treatment === 'evolucion'
-                ? '<span class="badge badge-evaluar" style="font-size:9px;padding:2px 6px" title="Se reevaluará con el médico antes de volver a comprarse">🔬 A evaluar</span>'
+                ? '<span class="badge badge-evaluar" style="font-size:9px;padding:2px 6px">🔬 A evaluar</span>'
                 : '';
-              
+
               return `<tr>
                 <td>
                   <strong>${m.name}</strong> ${treatBadge}<br>
                   <small style="color:var(--text-muted)">${m.drug || ''} ${m.conc ? '(' + m.conc + ')' : ''}</small>
-                  ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
+                  ${m.sos ? ' <span class="badge badge-low" style="font-size:9px;padding:2px 4px">SOS</span>' : ''}
                   ${m.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${m.obs}</small>` : ''}
+                  ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
-                <td style="font-size:13px">
+                <td style="font-size:12px">
                   ${getHorasArray(m).length > 0
                     ? (typeof m.horarios[0] === 'object'
-                        ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h.hora}<br><span style="font-size:10px;opacity:0.8">${h.dosis}${m.unit}</span></span>`).join('')
-                        : m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h}</span>`).join('')
+                        ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
+                        : m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h}</span>`).join('')
                       )
                     : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
-                <td>${m.dailyDose || 0} ${m.unit}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${frecuenciaLabel(m)}</td>
+                <td><strong>${getDosisdiaria(m)}</strong> ${m.unit}/día</td>
                 <td style="font-size:12px">${treatmentLabel}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span>${m.qty} ${m.unit}</span>
                     <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
                   </div>
-                  <small style="color:var(--text-muted); font-size:10px">${Math.floor(diasRestantes)} días restantes</small>
+                  ${!esPorcentaje && diasRestantes > 0 ? `<small style="color:var(--text-muted);font-size:10px">${diasRestantes} días</small>` : ''}
                 </td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                
+                <td><span class="badge badge-${st}">
+                  ${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : st === 'out' ? '🚨 Sin stock' : '🏁 Finalizado'}
+                </span></td>
+
                 ${canEdit() ? `
                 <td>
                   <div style="display:flex;gap:6px;flex-wrap:wrap">
-                    <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})" title="Marcar toma diaria">✅ Dar</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')" title="Cargar stock">+ Stock</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')" title="Registrar salida">- Salida</button>
+                    <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">✅ Dar</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')">+ Stock</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
                     ${canFullEdit() ? `
-                      <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})" title="Editar medicamento">✏️ Editar</button>
-                      <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})" title="Eliminar">🗑</button>
+                      <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})">✏️</button>
+                      <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
                     ` : ''}
                   </div>
                 </td>` : ''}
@@ -1686,10 +1775,37 @@ function openAddMed(residentId, medId = null) {
       </select>
     </div>
 
-    <div class="grid-2">
-      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="text" inputmode="decimal" value="${med?.dailyDose ?? 1}" placeholder="Ej: 1, 0,5, 1,5"></div>
-      <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="${med?.qty ?? 0}"></div>
+    <div class="form-group">
+      <label>Frecuencia</label>
+      <select id="m-frecuencia" onchange="toggleFrecuencia()">
+        <option value="diario"      ${(!med?.frecuencia || med?.frecuencia==='diario')      ? 'selected':''}>Todos los días</option>
+        <option value="alternos"    ${med?.frecuencia==='alternos'    ? 'selected':''}>Días alternos</option>
+        <option value="especificos" ${med?.frecuencia==='especificos' ? 'selected':''}>Días específicos</option>
+        <option value="cada_x_dias" ${med?.frecuencia==='cada_x_dias' ? 'selected':''}>Cada X días</option>
+      </select>
     </div>
+
+    <div id="freq-dias-semana" style="display:${med?.frecuencia==='especificos'?'block':'none'}">
+      <div class="form-group"><label>Días de la semana</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${['lun','mar','mie','jue','vie','sab','dom'].map(d => {
+            const labels={lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};
+            const checked=(med?.diasSemana||[]).includes(d)?'checked':'';
+            return `<label style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600">
+              <input type="checkbox" name="dia-semana" value="${d}" ${checked} style="width:auto;margin:0"> ${labels[d]}</label>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div id="freq-cada-x" style="display:${med?.frecuencia==='cada_x_dias'?'block':'none'}">
+      <div class="form-group"><label>Cada cuántos días</label>
+        <input id="m-cada-x" type="number" min="2" max="30" value="${med?.cadaXDias||2}">
+      </div>
+    </div>
+
+    <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="${med?.qty ?? 0}"></div>
+    <input type="hidden" id="m-daily" value="1">
 
     <div class="form-group">
       <label>Avisar cuando falten (días de stock)</label>
@@ -1768,10 +1884,22 @@ function openAddMedGeneral() {
         <option value="evolucion">Esperar evolución</option>
       </select>
     </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Dosis al día</label><input id="m-daily" type="text" inputmode="decimal" value="1" placeholder="Ej: 1, 0,5, 1,5"></div>
-      <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="0"></div>
+    <div class="form-group"><label>Frecuencia</label>
+      <select id="m-frecuencia" onchange="toggleFrecuencia()">
+        <option value="diario">Todos los días</option>
+        <option value="alternos">Días alternos</option>
+        <option value="especificos">Días específicos</option>
+        <option value="cada_x_dias">Cada X días</option>
+      </select>
     </div>
+    <div id="freq-dias-semana" style="display:none"><div class="form-group"><label>Días de la semana</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${['lun','mar','mie','jue','vie','sab','dom'].map(d=>{const labels={lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};return`<label style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" name="dia-semana" value="${d}" style="width:auto;margin:0"> ${labels[d]}</label>`;}).join('')}
+      </div></div></div>
+    <div id="freq-cada-x" style="display:none"><div class="form-group"><label>Cada cuántos días</label>
+      <input id="m-cada-x" type="number" min="2" max="30" value="2"></div></div>
+    <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="0"></div>
+    <input type="hidden" id="m-daily" value="1">
     <div class="form-group">
       <label>Avisar cuando falten (días de stock)</label>
       <input id="m-min-days" type="number" min="0" value="7">
@@ -1781,11 +1909,16 @@ function openAddMedGeneral() {
       <label for="m-sos" style="margin:0; text-transform:none; font-size:14px; letter-spacing:0; cursor:pointer;">Es SOS (no descontar stock automáticamente)</label>
     </div>
     <div class="form-group">
-      <label>Horarios de toma</label>
-      <div id="horarios-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
+      <label>Horarios y dosis por toma</label>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Agregá cada toma con su horario y dosis</div>
+      <div id="horarios-container" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()">+ Agregar toma</button>
     </div>
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
+    <div class="form-group">
+      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input id="m-fecha-fin" type="date" style="max-width:200px">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
@@ -1811,7 +1944,15 @@ function saveMed(residentId, medId = null) {
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
     obs: document.getElementById('m-obs').value,
-    horarios: Array.from(document.querySelectorAll('#horarios-container input[type=time]')).map(i => i.value).filter(Boolean)
+    horarios: Array.from(document.querySelectorAll('#horarios-container .horario-row')).map(row => ({
+      hora: row.querySelector('input[type=time]')?.value || '',
+      dosis: parseFloat(row.querySelector('.dosis-valor')?.value) || 1
+    })).filter(h => h.hora),
+    frecuencia: document.getElementById('m-frecuencia')?.value || 'diario',
+    diasSemana: Array.from(document.querySelectorAll('input[name=dia-semana]:checked')).map(i => i.value),
+    cadaXDias: parseInt(document.getElementById('m-cada-x')?.value) || 2,
+    fechaInicio: (medId ? (medications.find(m => m.id === medId)?.fechaInicio) : null) || new Date().toISOString().slice(0,10),
+    fechaFin: document.getElementById('m-fecha-fin')?.value || ''
   };
 
   if (medId) {
