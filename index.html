@@ -772,7 +772,7 @@
 // DATOS
 // =====================================================
 
-const USERS = [
+let USERS = [
   { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
   { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
   { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
@@ -874,6 +874,9 @@ function doLogin() {
 }
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// Guardar usuarios en Firestore
+function saveUsers() { if (window._saveUsers) window._saveUsers(); }
 
 function doLogout() {
   currentUser = null;
@@ -1263,32 +1266,175 @@ function renderMovements(c) {
 }
 
 function renderUsers(c) {
-  const staff = USERS.filter(u => u.role !== 'family');
+  const staff  = USERS.filter(u => u.role !== 'family');
   const family = USERS.filter(u => u.role === 'family');
+  const isOwner = currentUser.role === 'owner';
+
   c.innerHTML = `
-    <h2 class="section-title">⚙️ Usuarios del sistema</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">⚙️ Usuarios del sistema</h2>
+      ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
+    </div>
+
+    <!-- PERSONAL -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th></tr></thead>
-          <tbody>${staff.map(u => `<tr><td>${u.name}</td><td><code>${u.user}</code></td><td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td></tr>`).join('')}</tbody>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
+          <tbody>${staff.map(u => `
+            <tr>
+              <td>${u.name}</td>
+              <td><code>${u.user}</code></td>
+              <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
+              <td><code>${u.pass}</code></td>
+              ${isOwner ? `<td style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
+                ${u.user !== currentUser.user ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
+              </td>` : ''}
+            </tr>`).join('')}
+          </tbody>
         </table>
       </div>
     </div>
+
+    <!-- FAMILIARES -->
     <div class="card">
       <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Residente</th><th>Usuario familiar</th><th>Contraseña inicial</th></tr></thead>
+          <thead><tr><th>Residente</th><th>Usuario</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
           <tbody>${family.map(u => {
             const res = RESIDENTS.find(r => r.id === u.residentId);
-            return `<tr><td>${res ? res.name : '—'}</td><td><code>${u.user}</code></td><td><code>1234</code></td></tr>`;
-          }).join('')}</tbody>
+            return `<tr>
+              <td>${res ? res.name : '—'}</td>
+              <td><code>${u.user}</code></td>
+              <td><code>${u.pass}</code></td>
+              ${isOwner ? `<td style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
+                <button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>
+              </td>` : ''}
+            </tr>`;
+          }).join('')}
+          </tbody>
         </table>
       </div>
     </div>
   `;
+}
+
+// ─── Modal usuario ───
+function openUserModal(username = null) {
+  const u = username ? USERS.find(x => x.user === username) : null;
+  const isFamily = u?.role === 'family';
+
+  showModal(`
+    <div class="modal-title">👤 ${u ? 'Editar usuario' : 'Nuevo usuario'}</div>
+
+    <div class="grid-2">
+      <div class="form-group"><label>Nombre completo</label>
+        <input id="u-name" type="text" value="${u?.name || ''}" placeholder="Ej: Josefina Varona">
+      </div>
+      <div class="form-group"><label>Rol</label>
+        <select id="u-role" onchange="toggleFamilyField()">
+          <option value="owner"    ${u?.role === 'owner'   ? 'selected' : ''}>Dueño/a</option>
+          <option value="manager"  ${u?.role === 'manager' ? 'selected' : ''}>Encargada</option>
+          <option value="nurse"    ${u?.role === 'nurse'   ? 'selected' : ''}>Enfermera</option>
+          <option value="family"   ${u?.role === 'family'  ? 'selected' : ''}>Familiar</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="family-field" style="display:${isFamily ? 'block' : 'none'}">
+      <div class="form-group"><label>Residente asociado</label>
+        <select id="u-resident">
+          ${RESIDENTS.map(r => `<option value="${r.id}" ${u?.residentId === r.id ? 'selected' : ''}>${r.name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group"><label>Usuario (para iniciar sesión)</label>
+        <input id="u-user" type="text" value="${u?.user || ''}" placeholder="Ej: josefina.varona" ${u ? '' : ''}>
+      </div>
+      <div class="form-group"><label>Contraseña</label>
+        <input id="u-pass" type="text" value="${u?.pass || ''}" placeholder="${u ? 'Dejar igual o cambiar' : 'Nueva contraseña'}">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser('${username || ''}')">Guardar</button>
+    </div>
+  `);
+}
+
+function toggleFamilyField() {
+  const role = document.getElementById('u-role').value;
+  const field = document.getElementById('family-field');
+  if (field) field.style.display = role === 'family' ? 'block' : 'none';
+}
+
+function saveUser(originalUsername) {
+  const name = document.getElementById('u-name').value.trim();
+  const role = document.getElementById('u-role').value;
+  const username = document.getElementById('u-user').value.trim().toLowerCase();
+  const pass = document.getElementById('u-pass').value.trim();
+
+  if (!name || !username) { showToast('Completá nombre y usuario'); return; }
+  if (!pass && !originalUsername) { showToast('Ingresá una contraseña'); return; }
+
+  // Verificar que el username no esté en uso por otro usuario
+  const duplicate = USERS.find(u => u.user === username && u.user !== originalUsername);
+  if (duplicate) { showToast('Ese nombre de usuario ya existe'); return; }
+
+  const residentId = role === 'family' ? parseInt(document.getElementById('u-resident').value) : undefined;
+
+  if (originalUsername) {
+    // Editar existente
+    const idx = USERS.findIndex(u => u.user === originalUsername);
+    if (idx !== -1) {
+      USERS[idx] = {
+        ...USERS[idx],
+        name,
+        role,
+        user: username,
+        pass: pass || USERS[idx].pass,
+        ...(role === 'family' ? { residentId } : { residentId: undefined })
+      };
+      // Si editó su propia cuenta, actualizar display
+      if (originalUsername === currentUser.user) {
+        currentUser = USERS[idx];
+        window.currentUser = USERS[idx];
+        document.getElementById('user-display').textContent = currentUser.name + ' · ' + ROLE_LABELS[currentUser.role];
+      }
+    }
+    showToast('Usuario actualizado ✅');
+  } else {
+    // Nuevo usuario
+    const newUser = { user: username, pass, name, role };
+    if (role === 'family') newUser.residentId = residentId;
+    USERS.push(newUser);
+    showToast('Usuario creado ✅');
+  }
+
+  saveUsers();
+  closeModal();
+  renderTab('users');
+}
+
+function deleteUser(username) {
+  if (username === currentUser.user) { showToast('No podés eliminar tu propia cuenta'); return; }
+  if (!confirm('¿Eliminar el usuario ' + username + '?')) return;
+  const idx = USERS.findIndex(u => u.user === username);
+  if (idx !== -1) {
+    const uname = USERS[idx].user;
+    USERS.splice(idx, 1);
+    // Borrar de Firestore también
+    if (window._deleteUser) window._deleteUser(uname);
+  }
+  showToast('Usuario eliminado');
+  renderTab('users');
 }
 
 // =====================================================
@@ -1678,6 +1824,23 @@ function checkReady() {
   }
 }
 
+// Sincronización en tiempo real — usuarios
+onSnapshot(collection(db, 'usuarios'), snapshot => {
+  const dbUsers = snapshot.docs.map(d => d.data());
+  if (dbUsers.length > 0) {
+    // Mezclar: los usuarios de la DB sobreescriben los del código
+    dbUsers.forEach(dbU => {
+      const idx = USERS.findIndex(u => u.user === dbU.user);
+      if (idx !== -1) USERS[idx] = dbU;
+      else USERS.push(dbU);
+    });
+    // Eliminar los que están en código pero fueron borrados de DB
+    // (solo si ya hay datos en DB, para no borrar todo al inicio)
+    const dbUsernames = dbUsers.map(u => u.user);
+    // Marcar como "gestionados" solo los que alguna vez se guardaron en DB
+  }
+});
+
 // Sincronización en tiempo real — meds
 onSnapshot(collection(db, 'meds'), snapshot => {
   medications = snapshot.docs.map(d => d.data());
@@ -1709,6 +1872,22 @@ window._saveMovs = async function() {
       await setDoc(doc(db, 'movimientos', String(last.id)), last);
     } catch(e) { console.error('Error guardando movimiento:', e); }
   }
+};
+
+// saveUsers — guarda todos los usuarios modificados en Firestore
+window._saveUsers = async function() {
+  for (const u of USERS) {
+    try {
+      await setDoc(doc(db, 'usuarios', u.user), u);
+    } catch(e) { console.error('Error guardando usuario:', e); }
+  }
+};
+
+// deleteUser de Firestore
+window._deleteUser = async function(username) {
+  try {
+    await deleteDoc(doc(db, 'usuarios', username));
+  } catch(e) { console.error('Error eliminando usuario:', e); }
 };
 
 // deleteMed
