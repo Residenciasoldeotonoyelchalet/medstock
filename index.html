@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5c3d1e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MedStock">
+<link rel="manifest" href="/medstock/manifest.json">
 <title>MedStock – Residencia Sol de Otoño y El Chalet</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1064,18 +1070,23 @@ function debeTomarsHoy(med) {
 }
 
 function getDosisdiaria(med) {
-  if (med.horarios && med.horarios.length > 0) {
-    if (typeof med.horarios[0] === 'object')
-      return med.horarios.reduce((sum, h) => sum + (parseFloat(h.dosis) || med.dailyDose || 0), 0);
-    return (med.dailyDose || 0) * med.horarios.length;
-  }
+  const horarios = normalizarHorarios(med);
+  if (horarios.length > 0) return horarios.reduce((sum, h) => sum + h.dosis, 0);
   return med.dailyDose || 0;
 }
 
-function getHorasArray(med) {
+// Normaliza horarios al formato [{hora, dosis}] sin importar cómo vengan de Firebase
+function normalizarHorarios(med) {
   if (!med.horarios || med.horarios.length === 0) return [];
-  if (typeof med.horarios[0] === 'object') return med.horarios.map(h => h.hora);
-  return med.horarios;
+  return med.horarios.map(h => {
+    if (h && typeof h === 'object' && h.hora) return { hora: h.hora, dosis: parseFloat(h.dosis) || med.dailyDose || 1 };
+    if (typeof h === 'string' && h.length > 0) return { hora: h, dosis: med.dailyDose || 1 };
+    return null;
+  }).filter(Boolean);
+}
+
+function getHorasArray(med) {
+  return normalizarHorarios(med).map(h => h.hora);
 }
 
 function calcDiasCalendario(med) {
@@ -1437,11 +1448,8 @@ function showResident(id) {
                   ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
                 <td style="font-size:12px">
-                  ${getHorasArray(m).length > 0
-                    ? (typeof m.horarios[0] === 'object'
-                        ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
-                        : m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h}</span>`).join('')
-                      )
+                  ${normalizarHorarios(m).length > 0
+                    ? normalizarHorarios(m).map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
                     : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
                 <td style="font-size:11px;color:var(--text-muted)">${frecuenciaLabel(m)}</td>
@@ -1504,7 +1512,8 @@ function registerTake(mid) {
     note: 'Toma registrada por enfermería'
   });
 
-  saveData();
+  saveMeds(med.id);
+  saveMovs();
   showResident(med.residentId);
   showToast("✅ Toma de " + med.name + " registrada");
 }
@@ -1857,8 +1866,8 @@ function openAddMed(residentId, medId = null) {
       <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Agregá cada toma con su horario y dosis</div>
       <div id="horarios-container" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         ${(med?.horarios || []).map((h, i) => {
-          const hora = typeof h === 'object' ? h.hora : h;
-          const dosis = typeof h === 'object' ? h.dosis : (med?.dailyDose || 1);
+          const hora = h.hora;
+          const dosis = h.dosis;
           return `<div class="horario-row" style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
             <span style="font-size:12px;color:var(--text-muted);width:50px">Hora:</span>
             <input type="time" value="${hora}" style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;width:110px;">
@@ -2046,7 +2055,7 @@ function saveMovement(medId, type) {
   if (!med) return;
   if (type === 'out' && med.qty < qty) { showToast('No hay suficiente stock'); return; }
   med.qty = type === 'in' ? med.qty + qty : med.qty - qty;
-  saveMeds();
+  saveMeds(medId);
   movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type, qty, unit: med.unit, by: currentUser.name, date: today(), note });
   saveMovs();
   closeModal();
@@ -2101,8 +2110,8 @@ function printResident(id) {
     const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
     const horariosCells = (m.horarios && m.horarios.length > 0)
       ? m.horarios.map(h => {
-          const hora = typeof h === 'object' ? h.hora : h;
-          const dosis = typeof h === 'object' ? h.dosis : (m.dailyDose || '');
+          const hora = h.hora;
+          const dosis = h.dosis;
           return `<span class="horario-pill">${hora}<br><span style="font-size:8px">${dosis}${m.unit}</span></span>`;
         }).join('')
       : '<span style="color:#bbb">—</span>';
@@ -2183,6 +2192,21 @@ function printResident(id) {
 }
 
 // ─── Helpers horarios dinámicos ───
+function toggleFrecuencia() {
+  const val = document.getElementById('m-frecuencia')?.value;
+  const diasDiv = document.getElementById('freq-dias-semana');
+  const xDiv = document.getElementById('freq-cada-x');
+  if (diasDiv) diasDiv.style.display = val === 'especificos' ? 'block' : 'none';
+  if (xDiv)    xDiv.style.display    = val === 'cada_x_dias' ? 'block' : 'none';
+}
+
+function selectDosis(valor, btn) {
+  const input = document.getElementById('m-daily');
+  if (input) input.value = valor;
+  btn.closest('div').querySelectorAll('.dosis-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
 function addHorario() {
   const container = document.getElementById('horarios-container');
   if (!container) return;
@@ -2429,6 +2453,15 @@ function dismissInstall() {
 // Si ya está instalada como PWA, ocultar el banner
 if (window.matchMedia('(display-mode: standalone)').matches) {
   document.getElementById('install-bar-app').style.display = 'none';
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/medstock/sw.js')
+      .then(r => console.log('SW registrado:', r.scope))
+      .catch(e => console.log('SW error:', e));
+  });
 }
 </script>
 </body>
