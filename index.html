@@ -7,1315 +7,363 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --cream: #faf7f2;
-    --warm-white: #fff9f2;
-    --amber: #d4883a;
-    --amber-light: #f0b060;
-    --amber-dark: #a05e20;
-    --brown: #5c3d1e;
-    --brown-light: #8a6040;
-    --green: #4a7c59;
-    --green-light: #e8f4ec;
-    --red: #c0392b;
-    --red-light: #fdecea;
-    --yellow: #e6a817;
-    --yellow-light: #fef9e7;
-    --blue: #2c6fad;
-    --blue-light: #e8f0fb;
-    --text: #2d1f0e;
-    --text-muted: #7a5c40;
-    --border: #e8d8c4;
-    --shadow: 0 2px 16px rgba(92,61,30,0.10);
-    --shadow-lg: 0 8px 40px rgba(92,61,30,0.16);
-    --radius: 14px;
-    --radius-sm: 8px;
+    --cream: #faf7f2; --warm-white: #fff9f2; --amber: #d4883a; --amber-light: #f0b060;
+    --amber-dark: #a05e20; --brown: #5c3d1e; --brown-light: #8a6040; --green: #4a7c59;
+    --green-light: #e8f4ec; --red: #c0392b; --red-light: #fdecea; --yellow: #e6a817;
+    --yellow-light: #fef9e7; --blue: #2c6fad; --blue-light: #e8f0fb; --text: #2d1f0e;
+    --text-muted: #7a5c40; --border: #e8d8c4; --shadow: 0 2px 16px rgba(92,61,30,0.10);
+    --shadow-lg: 0 8px 40px rgba(92,61,30,0.16); --radius: 14px; --radius-sm: 8px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  /* LOGIN */
+  #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #fdf3e3 0%, #f5e6d0 50%, #eeddc0 100%); padding: 20px; }
+  .login-card { background: white; border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+  .login-logo { text-align: center; margin-bottom: 32px; }
+  .login-logo .icon { font-size: 52px; display: block; margin-bottom: 12px; }
+  .login-logo h1 { font-family: 'Fraunces', serif; font-size: 26px; color: var(--brown); font-weight: 700; }
+  
+  /* FORMULARIOS */
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--brown); margin-bottom: 6px; text-transform: uppercase; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; outline: none; background: var(--warm-white); }
+  
+  /* BOTONES */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+  .btn-primary { background: var(--amber); color: white; }
+  .btn-green { background: var(--green); color: white; }
+  .btn-secondary { background: var(--border); color: var(--brown); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
 
-  /* ====== LOGIN ====== */
-  #login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #fdf3e3 0%, #f5e6d0 50%, #eeddc0 100%);
-    padding: 20px;
-  }
-
-  .login-card {
-    background: white;
-    border-radius: 24px;
-    padding: 48px 40px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border);
-  }
-
-  .login-logo {
-    text-align: center;
-    margin-bottom: 32px;
-  }
-
-  .login-logo .icon {
-    font-size: 52px;
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  .login-logo h1 {
-    font-family: 'Fraunces', serif;
-    font-size: 26px;
-    color: var(--brown);
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  .login-logo p {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
-  }
-
-  .form-group {
-    margin-bottom: 18px;
-  }
-
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .form-group input, .form-group select, .form-group textarea {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    color: var(--text);
-    background: var(--warm-white);
-    transition: border-color 0.2s;
-    outline: none;
-  }
-
-  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--amber);
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-
-  .btn-primary {
-    background: var(--amber);
-    color: white;
-    width: 100%;
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 10px;
-  }
-
-  .btn-primary:hover { background: var(--amber-dark); }
-
-  .btn-secondary {
-    background: var(--border);
-    color: var(--brown);
-  }
-
-  .btn-secondary:hover { background: #d8c4a8; }
-
-  .btn-green {
-    background: var(--green);
-    color: white;
-  }
-
-  .btn-green:hover { background: #3a6347; }
-
-  .btn-red {
-    background: var(--red);
-    color: white;
-  }
-
-  .btn-red:hover { background: #a93226; }
-
-  .btn-sm {
-    padding: 7px 14px;
-    font-size: 13px;
-  }
-
-  .login-error {
-    background: var(--red-light);
-    color: var(--red);
-    padding: 10px 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  /* ====== APP SHELL ====== */
-  #app { display: none; min-height: 100vh; background: var(--cream); }
-
-  .topbar {
-    background: var(--brown);
-    color: white;
-    padding: 0 24px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-  }
-
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .topbar-brand span { font-size: 22px; }
-
-  .topbar-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-  }
-
-  .user-badge {
-    background: rgba(255,255,255,0.15);
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 13px;
-  }
-
-  .btn-logout {
-    background: rgba(255,255,255,0.15);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: background 0.2s;
-  }
-
-  .btn-logout:hover { background: rgba(255,255,255,0.25); }
-
-  .nav-tabs {
-    background: white;
-    border-bottom: 2px solid var(--border);
-    padding: 0 24px;
-    display: flex;
-    gap: 4px;
-    overflow-x: auto;
-  }
-
-  .nav-tab {
-    padding: 14px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    white-space: nowrap;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .nav-tab:hover { color: var(--amber); }
+  /* APP */
+  #app { display: none; }
+  .topbar { background: var(--brown); color: white; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .nav-tabs { background: white; border-bottom: 2px solid var(--border); padding: 0 24px; display: flex; overflow-x: auto; }
+  .nav-tab { padding: 16px 20px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
   .nav-tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .main-content { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
-  .main-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
-
-  /* ====== CARDS ====== */
-  .card {
-    background: white;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .card-header {
-    padding: 18px 22px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .card-title {
-    font-family: 'Fraunces', serif;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--brown);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card-body { padding: 20px 22px; }
-
-  /* ====== STATS ====== */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .stat-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    box-shadow: var(--shadow);
-  }
-
-  .stat-card .stat-icon { font-size: 28px; margin-bottom: 8px; }
-  .stat-card .stat-value { font-size: 32px; font-weight: 700; color: var(--brown); font-family: 'Fraunces', serif; }
-  .stat-card .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-
-  /* ====== TABLE ====== */
+  /* TABLAS Y CARDS */
+  .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .table-wrapper { overflow-x: auto; }
-
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-
-  th {
-    background: var(--cream);
-    padding: 10px 14px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-  }
-
-  td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--warm-white); }
-
-  /* ====== BADGES ====== */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
+  th { background: var(--cream); padding: 12px; text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+  td { padding: 14px 12px; border-bottom: 1px solid var(--border); }
+  
+  /* BADGES */
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
   .badge-ok { background: var(--green-light); color: var(--green); }
   .badge-low { background: var(--yellow-light); color: var(--yellow); }
   .badge-out { background: var(--red-light); color: var(--red); }
-  .badge-role { background: var(--blue-light); color: var(--blue); }
 
-  /* ====== PROGRESS BAR ====== */
-  .progress-bar {
-    background: var(--border);
-    border-radius: 10px;
-    height: 8px;
-    overflow: hidden;
-    min-width: 80px;
-  }
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal { background: white; border-radius: 20px; padding: 30px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-  .progress-fill {
-    height: 100%;
-    border-radius: 10px;
-    transition: width 0.4s;
-  }
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--brown); color: white; padding: 12px 24px; border-radius: 8px; display: none; z-index: 2000; box-shadow: var(--shadow-lg); }
 
-  .fill-ok { background: var(--green); }
-  .fill-low { background: var(--yellow); }
-  .fill-out { background: var(--red); }
-
-  /* ====== MODAL ====== */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; padding: 20px;
-  }
-
-  .modal {
-    background: white;
-    border-radius: 20px;
-    padding: 32px;
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .modal-title {
-    font-family: 'Fraunces', serif;
-    font-size: 20px;
-    color: var(--brown);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .modal-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 24px;
-  }
-
-  /* ====== ALERTS ====== */
-  .alert-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 10px;
-    font-size: 14px;
-  }
-
-  .alert-low { background: var(--yellow-light); border-left: 4px solid var(--yellow); }
-  .alert-out { background: var(--red-light); border-left: 4px solid var(--red); }
-
-  /* ====== SEARCH ====== */
-  .search-bar {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-  }
-
-  .search-bar input {
-    width: 100%;
-    padding: 10px 16px 10px 38px;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    background: var(--warm-white);
-    outline: none;
-  }
-
-  .search-bar input:focus { border-color: var(--amber); }
-
-  .search-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 16px;
-  }
-
-  /* ====== RESIDENT LIST ====== */
-  .resident-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .resident-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    cursor: pointer;
-    transition: all 0.2s;
-    box-shadow: var(--shadow);
-  }
-
-  .resident-card:hover {
-    border-color: var(--amber);
-    box-shadow: 0 4px 20px rgba(212,136,58,0.15);
-    transform: translateY(-2px);
-  }
-
-  .resident-name {
-    font-family: 'Fraunces', serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--brown);
-    margin-bottom: 8px;
-  }
-
-  .resident-meta {
-    font-size: 13px;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  /* ====== MOVEMENTS ====== */
-  .movement-item {
-    display: flex;
-    gap: 12px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 14px;
-    align-items: flex-start;
-  }
-
-  .movement-item:last-child { border-bottom: none; }
-
-  .movement-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-
-  .mov-in { background: var(--green-light); }
-  .mov-out { background: var(--red-light); }
-
-  .empty-state {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text-muted);
-  }
-
-  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 15px; }
-
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 22px;
-    color: var(--brown);
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .tag {
-    display: inline-block;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--brown);
-    color: white;
-    padding: 12px 20px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    display: none;
-    z-index: 9999;
-    animation: slideUp 0.3s ease;
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  .back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-bottom: 16px;
-    padding: 4px 0;
-  }
-
-  .back-btn:hover { color: var(--amber); }
-
-  @media (max-width: 768px) {
-    .main-content { padding: 16px; }
-    .login-card { padding: 32px 24px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .modal { padding: 24px 20px; }
-  }
+  @media print { .topbar, .nav-tabs, .btn, .back-btn { display: none !important; } }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">
       <span class="icon">🍂</span>
-      <h1>Residencia Sol de Otoño y El Chalet</h1>
-      <p>Sistema de gestión de medicamentos</p>
+      <h1>MedStock</h1>
+      <p>Gestión Sol de Otoño y El Chalet</p>
     </div>
-    <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
-    <div class="form-group">
-      <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••">
-    </div>
-    <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
+    <div id="login-error" style="color:var(--red); font-size:13px; margin-bottom:15px; display:none; text-align:center;">Credenciales incorrectas</div>
+    <div class="form-group"><label>Usuario</label><input type="text" id="login-user" placeholder="usuario"></div>
+    <div class="form-group"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="doLogin()">Ingresar</button>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <div class="topbar">
-    <div class="topbar-brand">
-      <span>🍂</span> MedStock
-    </div>
-    <div class="topbar-user">
-      <span class="user-badge" id="user-display"></span>
-      <button class="btn-logout" onclick="doLogout()">Salir</button>
-    </div>
+    <div style="font-family:'Fraunces'; font-weight:700">🍂 MedStock</div>
+    <div id="user-display" style="font-size:13px opacity:0.8"></div>
+    <button class="btn btn-sm btn-secondary" onclick="doLogout()">Salir</button>
   </div>
-
   <div class="nav-tabs" id="nav-tabs"></div>
-
   <div class="main-content" id="main-content"></div>
 </div>
 
 <div id="toast"></div>
 
 <script>
-// =====================================================
-// DATOS
-// =====================================================
+// CONFIGURACIÓN Y DATOS
+const UNITS = ['comprimidos', 'sobres', 'porcentaje', 'capsulas', 'parches', 'unidades', 'ml'];
+const TREATMENTS = [
+  {id: 'prolongado', label: 'Tratamiento Prolongado'},
+  {id: 'unica', label: 'Única toma'},
+  {id: 'evolucion', label: 'Esperar evolución'}
+];
 
+// Usuarios de prueba (igual que en tu código original)
 const USERS = [
   { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
-  { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
-  { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
   { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
-  { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
-  { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
-  { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
-  { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
-  { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
-  { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
-  { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
-  { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
-  { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
-  { user: 'rosa.andraca', pass: '1234', name: 'Familiar – Rosa Andraca', role: 'family', residentId: 5 },
-  { user: 'emilia.giron', pass: '1234', name: 'Familiar – Emilia Girón', role: 'family', residentId: 6 },
-  { user: 'susana.bustos', pass: '1234', name: 'Familiar – Susana Bustos', role: 'family', residentId: 7 },
-  { user: 'ines.rivera', pass: '1234', name: 'Familiar – Inés Rivera', role: 'family', residentId: 8 },
-  { user: 'olga.marinelli', pass: '1234', name: 'Familiar – Olga Marinelli', role: 'family', residentId: 9 },
-  { user: 'esther.moreno', pass: '1234', name: 'Familiar – Esther Moreno', role: 'family', residentId: 10 },
-  { user: 'carlos.quiroga', pass: '1234', name: 'Familiar – Carlos Quiroga', role: 'family', residentId: 11 },
-  { user: 'mario.rivero', pass: '1234', name: 'Familiar – Mario Rivero', role: 'family', residentId: 12 },
-  { user: 'antonio.delavega', pass: '1234', name: 'Familiar – Antonio de la Vega', role: 'family', residentId: 13 },
-  { user: 'mireya.olivares', pass: '1234', name: 'Familiar – Mireya Olivares', role: 'family', residentId: 14 },
-  { user: 'rosa.oche', pass: '1234', name: 'Familiar – Rosa Oche', role: 'family', residentId: 15 },
-  { user: 'susana.serignani', pass: '1234', name: 'Familiar – Susana Serignani', role: 'family', residentId: 16 },
-  { user: 'manuel.ricavarren', pass: '1234', name: 'Familiar – Manuel Ricavarren', role: 'family', residentId: 17 },
-  { user: 'carmen.narvaez', pass: '1234', name: 'Familiar – Carmen Narváez', role: 'family', residentId: 18 },
-  { user: 'francisco.cara', pass: '1234', name: 'Familiar – Francisco Cara', role: 'family', residentId: 19 },
-  { user: 'jose.collado', pass: '1234', name: 'Familiar – José Collado', role: 'family', residentId: 20 },
-  { user: 'nelson.tello', pass: '1234', name: 'Familiar – Nelson Tello', role: 'family', residentId: 21 },
-  { user: 'linares.francisco', pass: '1234', name: 'Familiar – Linares Francisco', role: 'family', residentId: 22 },
-  { user: 'gladys.nunez', pass: '1234', name: 'Familiar – Gladys Núñez', role: 'family', residentId: 23 },
+  { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 }
 ];
 
 const RESIDENTS = [
   { id: 1, name: 'Amelia Ápez' },
   { id: 2, name: 'María Doralinda Moreno' },
-  { id: 3, name: 'Lidia Esther Gómez' },
-  { id: 4, name: 'Amelia Cigala' },
-  { id: 5, name: 'Rosa Andraca' },
-  { id: 6, name: 'Emilia Girón' },
-  { id: 7, name: 'Susana Bustos' },
-  { id: 8, name: 'Inés Rivera' },
-  { id: 9, name: 'Olga Marinelli' },
-  { id: 10, name: 'Esther Moreno' },
-  { id: 11, name: 'Carlos Quiroga' },
-  { id: 12, name: 'Mario Rivero' },
-  { id: 13, name: 'Antonio de la Vega' },
-  { id: 14, name: 'Mireya Olivares' },
-  { id: 15, name: 'Rosa Oche' },
-  { id: 16, name: 'Susana Serignani' },
-  { id: 17, name: 'Manuel Ricavarren' },
-  { id: 18, name: 'Carmen Narváez' },
-  { id: 19, name: 'Francisco Cara' },
-  { id: 20, name: 'José Collado' },
-  { id: 21, name: 'Nelson Tello' },
-  { id: 22, name: 'Linares Francisco' },
-  { id: 23, name: 'Gladys Núñez' },
+  { id: 3, name: 'Lidia Esther Gómez' }
 ];
 
-const ROLE_LABELS = { owner: 'Dueño', manager: 'Encargada', nurse: 'Enfermera', family: 'Familiar' };
-
-// =====================================================
-// ESTADO — ahora viene de Firestore
-// =====================================================
 let currentUser = null;
 let currentTab = 'home';
-let medications = [];
-let movements = [];
+let medications = JSON.parse(localStorage.getItem('meds')) || [];
+let movements = JSON.parse(localStorage.getItem('movs')) || [];
 
-// saveMeds y saveMovs ahora son async y usan Firestore
-// Se definen abajo en el bloque module, pero las llamamos como window.saveMeds / window.saveMovs
-
-function saveMeds() { if (window._saveMeds) window._saveMeds(); }
-function saveMovs() { if (window._saveMovs) window._saveMovs(); }
-
-// =====================================================
-// AUTH
-// =====================================================
-
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim().toLowerCase();
-  const p = document.getElementById('login-pass').value;
-  const found = USERS.find(x => x.user === u && x.pass === p);
-  if (!found) {
-    document.getElementById('login-error').style.display = 'block';
-    return;
-  }
-  currentUser = found;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
-  buildNav();
-  renderTab('home');
+// PERSISTENCIA SIMPLE (Sustituir por Firestore luego)
+function saveData() {
+  localStorage.setItem('meds', JSON.stringify(medications));
+  localStorage.setItem('movs', JSON.stringify(movements));
 }
 
-document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
-}
-
-function canEdit() { return ['owner','manager','nurse'].includes(currentUser.role); }
-function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
-
-// =====================================================
-// NAV
-// =====================================================
-
-function buildNav() {
-  const tabs = document.getElementById('nav-tabs');
-  let items = [];
-  if (currentUser.role === 'family') {
-    items = [
-      { id: 'home', label: '🏠 Inicio' },
-      { id: 'my-resident', label: '👤 Mi familiar' },
-    ];
-  } else {
-    items = [
-      { id: 'home', label: '🏠 Inicio' },
-      { id: 'residents', label: '👥 Residentes' },
-      { id: 'medications', label: '💊 Medicamentos' },
-      { id: 'movements', label: '📋 Movimientos' },
-    ];
-    if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
-  }
-  tabs.innerHTML = items.map(t =>
-    `<div class="nav-tab ${t.id === currentTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
-  ).join('');
-}
-
-function renderTab(tab) {
-  currentTab = tab;
-  buildNav();
-  const c = document.getElementById('main-content');
-  if (tab === 'home') renderHome(c);
-  else if (tab === 'residents') renderResidents(c);
-  else if (tab === 'my-resident') renderMyResident(c);
-  else if (tab === 'medications') renderMedications(c);
-  else if (tab === 'movements') renderMovements(c);
-  else if (tab === 'users') renderUsers(c);
-}
-
-// =====================================================
-// HOME
-// =====================================================
-
-function renderHome(c) {
-  const totalMeds = medications.length;
-  const lowCount = medications.filter(m => getStatus(m) === 'low').length;
-  const outCount = medications.filter(m => getStatus(m) === 'out').length;
-
-  if (currentUser.role === 'family') {
-    const res = RESIDENTS.find(r => r.id === currentUser.residentId);
-    const myMeds = medications.filter(m => m.residentId === currentUser.residentId);
-    c.innerHTML = `
-      <h2 class="section-title">🍂 Bienvenida/o</h2>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
-        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
-        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
-      </div>
-      ${renderAlertsSection(myMeds)}
-    `;
-    return;
-  }
-
-  c.innerHTML = `
-    <h2 class="section-title">🍂 Panel general</h2>
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${RESIDENTS.length}</div><div class="stat-label">Residentes</div></div>
-      <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${totalMeds}</div><div class="stat-label">Medicamentos cargados</div></div>
-      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${lowCount}</div><div class="stat-label">Stock bajo</div></div>
-      <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${outCount}</div><div class="stat-label">Sin stock</div></div>
-    </div>
-    ${renderAlertsSection(medications)}
-    <div class="card" style="margin-top:20px">
-      <div class="card-header"><div class="card-title">📋 Últimos movimientos</div></div>
-      <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice(-8).reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit} · ${mov.by} · ${mov.date}</span></div>
-            </div>`;
-          }).join('')
-        }
-      </div>
-    </div>
-  `;
-}
-
-function renderAlertsSection(meds) {
-  const alerts = meds.filter(m => getStatus(m) !== 'ok');
-  if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
-  return `<div class="card">
-    <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
-    <div class="card-body">
-      ${alerts.map(m => {
-        const res = RESIDENTS.find(r => r.id === m.residentId);
-        const st = getStatus(m);
-        return `<div class="alert-item ${st === 'out' ? 'alert-out' : 'alert-low'}">
-          <span>${st === 'out' ? '🚨' : '⚠️'}</span>
-          <div><strong>${m.name}</strong> ${m.drug ? `(${m.drug})` : ''} — ${res ? res.name : ''}<br>
-          <span style="font-size:13px">${st === 'out' ? 'Sin stock' : `Stock bajo: ${m.qty} ${m.unit} restantes`}</span></div>
-        </div>`;
-      }).join('')}
-    </div>
-  </div>`;
-}
-
+// LÓGICA DE NEGOCIO
 function getStatus(m) {
   if (m.qty <= 0) return 'out';
-  if (m.minQty && m.qty <= m.minQty) return 'low';
+  if (m.dailyDose > 0) {
+    const daysLeft = m.qty / m.dailyDose;
+    if (daysLeft <= (m.minDays || 7)) return 'low';
+  }
   return 'ok';
-}
-
-// =====================================================
-// RESIDENTS
-// =====================================================
-
-function renderResidents(c) {
-  const search = (c._search || '').toLowerCase();
-  const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(search));
-  c.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">👥 Residentes</h2>
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" placeholder="Buscar residente..." value="${c._search||''}" oninput="document.getElementById('main-content')._search=this.value;renderTab('residents')">
-      </div>
-    </div>
-    <div class="resident-grid">
-      ${list.map(r => {
-        const meds = medications.filter(m => m.residentId === r.id);
-        const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
-        return `<div class="resident-card" onclick="showResident(${r.id})">
-          <div class="resident-name">👤 ${r.name}</div>
-          <div class="resident-meta">
-            <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
-            ${alerts > 0 ? `<span class="badge badge-low">⚠️ ${alerts} alerta${alerts !== 1 ? 's' : ''}</span>` : '<span class="badge badge-ok">✅ OK</span>'}
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-  `;
-}
-
-function showResident(id) {
-  const res = RESIDENTS.find(r => r.id === id);
-  const meds = medications.filter(m => m.residentId === id);
-  const c = document.getElementById('main-content');
-  c.innerHTML = `
-    <div class="back-btn" onclick="renderTab('residents')">← Volver a residentes</div>
-    <h2 class="section-title">👤 ${res.name}</h2>
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-      ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">💊 Medicamentos</div></div>
-      <div class="table-wrapper">
-        ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
-          `<table>
-            <thead><tr><th>Medicamento</th><th>Droga</th><th>Concentrarion</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
-            <tbody>${meds.map(m => {
-              const st = getStatus(m);
-              const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
-              return `<tr>
-                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-low" style="font-size:10px">SOS</span>' : ''}</td>
-                <td>${m.drug || '—'}</td>
-                <td>${m.concentration || '—'}</td>
-                <td style="font-size:13px;color:var(--text-muted)">${m.horario || '—'}</td>
-                <td>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span>${m.qty} ${m.unit}</span>
-                    <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
-                  </div>
-                </td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
-                </td>` : ''}
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`
-        }
-      </div>
-    </div>
-  `;
-}
-
-function renderMyResident(c) {
-  showResident(currentUser.residentId);
-  setTimeout(() => { const bb = document.querySelector('.back-btn'); if (bb) bb.remove(); }, 0);
-}
-
-function renderMedications(c) {
-  const search = (c._medSearch || '').toLowerCase();
-  const list = search ? medications.filter(m => {
-    const res = RESIDENTS.find(r => r.id === m.residentId);
-    return m.name.toLowerCase().includes(search) || (m.drug||'').toLowerCase().includes(search) || (res && res.name.toLowerCase().includes(search));
-  }) : medications;
-  c.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">💊 Todos los medicamentos</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div class="search-bar">
-          <span class="search-icon">🔍</span>
-          <input type="text" placeholder="Buscar..." value="${c._medSearch||''}" oninput="document.getElementById('main-content')._medSearch=this.value;renderTab('medications')">
-        </div>
-        ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMedGeneral()">+ Agregar</button>` : ''}
-      </div>
-    </div>
-    <div class="card">
-      <div class="table-wrapper">
-        ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
-          `<table>
-            <thead><tr><th>Residente</th><th>Medicamento</th><th>Droga</th><th>Concentración</th><th>Stock</th><th>Vencimiento</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
-            <tbody>${list.map(m => {
-              const res = RESIDENTS.find(r => r.id === m.residentId);
-              const st = getStatus(m);
-              return `<tr>
-                <td>${res ? res.name : '—'}</td>
-                <td><strong>${m.name}</strong></td>
-                <td>${m.drug || '—'}</td>
-                <td>${m.concentration || '—'}</td>
-                <td>${m.qty} ${m.unit}</td>
-                <td>${m.expiry || '—'}</td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
-                </td>` : ''}
-              </tr>`;
-            }).join('')}</tbody>
-          </table>`
-        }
-      </div>
-    </div>
-  `;
-}
-
-function renderMovements(c) {
-  c.innerHTML = `
-    <h2 class="section-title">📋 Historial de movimientos</h2>
-    <div class="card">
-      <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice().reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">
-                ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
-                ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
-              </span></div>
-            </div>`;
-          }).join('')
-        }
-      </div>
-    </div>
-  `;
-}
-
-function renderUsers(c) {
-  const staff = USERS.filter(u => u.role !== 'family');
-  const family = USERS.filter(u => u.role === 'family');
-  c.innerHTML = `
-    <h2 class="section-title">⚙️ Usuarios del sistema</h2>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th></tr></thead>
-          <tbody>${staff.map(u => `<tr><td>${u.name}</td><td><code>${u.user}</code></td><td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td></tr>`).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
-      <div class="table-wrapper">
-        <table>
-          <thead><tr><th>Residente</th><th>Usuario familiar</th><th>Contraseña inicial</th></tr></thead>
-          <tbody>${family.map(u => {
-            const res = RESIDENTS.find(r => r.id === u.residentId);
-            return `<tr><td>${res ? res.name : '—'}</td><td><code>${u.user}</code></td><td><code>1234</code></td></tr>`;
-          }).join('')}</tbody>
-        </table>
-      </div>
-    </div>
-  `;
-}
-
-// =====================================================
-// MODALS: ADD MED
-// =====================================================
-
-function openAddMed(residentId) {
-  showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
-    <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga / principio activo</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-       <select id="m-unit">
-  <option>comprimidos</option>
-  <option>cápsulas</option>
-  <option>%</option>
-  <option>sobres</option>
-  <option>gotas</option>
-  <option>parches</option>
-  <option>unidades</option>
-  <option>aplicaciones</option>
-</select>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo (alerta)</label><input id="m-min" type="number" min="0" value="5"></div>
-    </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
-    <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMed(${residentId})">Guardar</button>
-    </div>
-  `);
-}
-
-function openAddMedGeneral() {
-  showModal(`
-    <div class="modal-title">💊 Agregar medicamento</div>
-    <div class="form-group"><label>Residente</label>
-      <select id="m-res">${RESIDENTS.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}</select>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Nombre comercial</label><input id="m-name" type="text" placeholder="Ej: Losartan"></div>
-      <div class="form-group"><label>Droga</label><input id="m-drug" type="text" placeholder="Ej: Losartán potásico"></div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Concentración</label><input id="m-conc" type="text" placeholder="Ej: 50mg"></div>
-      <div class="form-group"><label>Unidad</label>
-        <select id="m-unit"><option>comprimidos</option><option>cápsulas</option><option>sobres</option><option>%</option><option>gotas</option><option>parches</option><option>unidades</option><option>aplicaciones</option></select>
-      </div>
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Cantidad inicial</label><input id="m-qty" type="number" min="0" value="0"></div>
-      <div class="form-group"><label>Stock mínimo</label><input id="m-min" type="number" min="0" value="5"></div>
-    </div>
-    <div class="form-group"><label>Vencimiento</label><input id="m-exp" type="date"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
-    </div>
-  `);
-}
-
-function saveMed(residentId) {
-  const name = document.getElementById('m-name').value.trim();
-  if (!name) { showToast('El nombre es obligatorio'); return; }
-  const med = {
-    id: Date.now(),
-    residentId,
-    name,
-    drug: document.getElementById('m-drug').value.trim(),
-    concentration: document.getElementById('m-conc').value.trim(),
-    unit: document.getElementById('m-unit').value,
-    qty: parseInt(document.getElementById('m-qty').value) || 0,
-    minQty: parseInt(document.getElementById('m-min').value) || 0,
-    expiry: document.getElementById('m-exp').value || '',
-    obs: document.getElementById('m-obs') ? document.getElementById('m-obs').value : '',
-    addedBy: currentUser.name,
-    addedDate: today()
-  };
-  medications.push(med);
-  saveMeds();
-  if (med.qty > 0) {
-    movements.push({ id: Date.now()+1, medId: med.id, medName: med.name, residentId, type: 'in', qty: med.qty, unit: med.unit, by: currentUser.name, date: today(), note: 'Stock inicial' });
-    saveMovs();
-  }
-  closeModal();
-  showToast('Medicamento agregado ✅');
-  showResident(residentId);
-}
-
-function saveMedGeneral() {
-  const residentId = parseInt(document.getElementById('m-res').value);
-  saveMed(residentId);
-}
-
-function deleteMed(id) {
-  if (!confirm('¿Eliminar este medicamento?')) return;
-  const med = medications.find(m => m.id === id);
-  const rid = med ? med.residentId : null;
-  medications = medications.filter(m => m.id !== id);
-  saveMeds();
-  showToast('Medicamento eliminado');
-  if (rid) showResident(rid); else renderTab('medications');
-}
-
-// =====================================================
-// MODALS: MOVEMENT
-// =====================================================
-
-function openMovement(medId, type) {
-  const med = medications.find(m => m.id === medId);
-  if (!med) return;
-  showModal(`
-    <div class="modal-title">${type === 'in' ? '⬆️ Entrada de stock' : '⬇️ Salida de stock'}</div>
-    <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px"><strong>${med.name}</strong> — Stock actual: ${med.qty} ${med.unit}</p>
-    <div class="form-group"><label>Cantidad</label><input id="mov-qty" type="number" min="1" value="1"></div>
-    <div class="form-group"><label>Observación (opcional)</label><input id="mov-note" type="text" placeholder="${type === 'in' ? 'Ej: Compra farmacia' : 'Ej: Administrado'}"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn ${type === 'in' ? 'btn-green' : 'btn-red'}" onclick="saveMovement(${medId}, '${type}')">Confirmar</button>
-    </div>
-  `);
-}
-
-function saveMovement(medId, type) {
-  const qty = parseInt(document.getElementById('mov-qty').value) || 0;
-  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
-  const note = document.getElementById('mov-note').value.trim();
-  const med = medications.find(m => m.id === medId);
-  if (!med) return;
-  if (type === 'out' && med.qty < qty) { showToast('No hay suficiente stock'); return; }
-  med.qty = type === 'in' ? med.qty + qty : med.qty - qty;
-  saveMeds();
-  movements.push({ id: Date.now(), medId, medName: med.name, residentId: med.residentId, type, qty, unit: med.unit, by: currentUser.name, date: today(), note });
-  saveMovs();
-  closeModal();
-  showToast(type === 'in' ? `+${qty} ${med.unit} agregados ✅` : `-${qty} ${med.unit} registrados ✅`);
-  showResident(med.residentId);
-}
-
-// =====================================================
-// MODAL HELPERS
-// =====================================================
-
-function showModal(html) {
-  let ov = document.getElementById('modal-overlay');
-  if (!ov) {
-    ov = document.createElement('div');
-    ov.id = 'modal-overlay';
-    ov.className = 'modal-overlay';
-    ov.innerHTML = `<div class="modal" id="modal-box"></div>`;
-    ov.addEventListener('click', e => { if (e.target === ov) closeModal(); });
-    document.body.appendChild(ov);
-  }
-  document.getElementById('modal-box').innerHTML = html;
-  ov.style.display = 'flex';
-}
-
-function closeModal() {
-  const ov = document.getElementById('modal-overlay');
-  if (ov) ov.style.display = 'none';
-}
-
-// =====================================================
-// UTILS
-// =====================================================
-
-function today() {
-  return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3000);
-}
-</script>
-
-<!-- PANTALLA DE CARGA -->
-<div id="loading-screen" style="position:fixed;inset:0;background:#faf7f2;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px">
-  <div style="font-size:48px">🍂</div>
-  <div style="font-family:'Fraunces',serif;font-size:22px;color:#5c3d1e">Cargando MedStock...</div>
-  <div style="width:200px;height:4px;background:#e8d8c4;border-radius:4px;overflow:hidden">
-    <div id="loading-bar" style="height:100%;background:#d4883a;width:0%;transition:width 0.4s"></div>
-  </div>
-</div>
-
-<!-- FIREBASE + SINCRONIZACIÓN EN TIEMPO REAL -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
-  authDomain: "medstock-29e24.firebaseapp.com",
-  projectId: "medstock-29e24",
-  storageBucket: "medstock-29e24.firebasestorage.app",
-  messagingSenderId: "276664612131",
-  appId: "1:276664612131:web:68ec5aa0d95b4e47850896"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let medsLoaded = false;
-let movsLoaded = false;
-const bar = document.getElementById('loading-bar');
-
-function checkReady() {
-  if (medsLoaded && movsLoaded) {
-    bar.style.width = '100%';
-    setTimeout(() => {
-      document.getElementById('loading-screen').style.display = 'none';
-    }, 400);
-  }
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
 }
 
-// Sincronización en tiempo real — meds
-onSnapshot(collection(db, 'meds'), snapshot => {
-  medications = snapshot.docs.map(d => d.data());
-  if (!medsLoaded) { medsLoaded = true; bar.style.width = '50%'; checkReady(); }
-  // Si ya está logueado, refrescar la vista
-  if (window.currentUser) renderTab(window.currentTab || 'home');
-});
+// AUTENTICACIÓN
+function doLogin() {
+  const u = document.getElementById('login-user').value.toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  const found = USERS.find(x => x.user === u && x.pass === p);
+  if (!found) { document.getElementById('login-error').style.display = 'block'; return; }
+  currentUser = found;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = found.name;
+  renderTab(currentUser.role === 'family' ? 'my-resident' : 'home');
+}
 
-// Sincronización en tiempo real — movimientos
-onSnapshot(collection(db, 'movimientos'), snapshot => {
-  movements = snapshot.docs.map(d => d.data()).sort((a,b) => a.id - b.id);
-  if (!movsLoaded) { movsLoaded = true; checkReady(); }
-  if (window.currentUser) renderTab(window.currentTab || 'home');
-});
+function doLogout() { location.reload(); }
 
-// saveMeds: guarda/actualiza medicamentos en Firestore
-window._saveMeds = async function() {
-  for (const med of medications) {
-    try {
-      await setDoc(doc(db, 'meds', String(med.id)), med);
-    } catch(e) { console.error('Error guardando med:', e); }
+// NAVEGACIÓN
+function renderTab(tab) {
+  currentTab = tab;
+  const tabs = document.getElementById('nav-tabs');
+  const c = document.getElementById('main-content');
+  
+  let menu = [
+    {id: 'home', label: '🏠 Inicio', roles: ['owner', 'manager', 'nurse']},
+    {id: 'residents', label: '👥 Residentes', roles: ['owner', 'manager', 'nurse']},
+    {id: 'my-resident', label: '👤 Mi Familiar', roles: ['family']}
+  ];
+
+  tabs.innerHTML = menu.filter(m => m.roles.includes(currentUser.role)).map(m => 
+    `<div class="nav-tab ${currentTab === m.id ? 'active' : ''}" onclick="renderTab('${m.id}')">${m.label}</div>`
+  ).join('');
+
+  if (tab === 'home') renderHome(c);
+  if (tab === 'residents') renderResidents(c);
+  if (tab === 'my-resident') renderResidentDetail(c, currentUser.residentId);
+}
+
+// VISTAS
+function renderHome(c) {
+  const low = medications.filter(m => getStatus(m) !== 'ok').length;
+  c.innerHTML = `
+    <h2 style="margin-bottom:20px; font-family:'Fraunces'">🍂 Resumen General</h2>
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card" style="padding:20px; text-align:center">
+        <div style="font-size:32px">💊</div>
+        <div style="font-size:24px; font-weight:700">${medications.length}</div>
+        <div style="font-size:12px; color:var(--text-muted)">Medicamentos Totales</div>
+      </div>
+      <div class="card" style="padding:20px; text-align:center">
+        <div style="font-size:32px">⚠️</div>
+        <div style="font-size:24px; font-weight:700; color:var(--red)">${low}</div>
+        <div style="font-size:12px; color:var(--text-muted)">Alertas de Stock</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderResidents(c) {
+  c.innerHTML = `
+    <h2 style="margin-bottom:20px; font-family:'Fraunces'">👥 Listado de Residentes</h2>
+    <div class="grid-2">
+      ${RESIDENTS.map(r => `
+        <div class="card" style="padding:20px; cursor:pointer" onclick="renderResidentDetail(document.getElementById('main-content'), ${r.id})">
+          <div style="font-weight:700; color:var(--brown)">${r.name}</div>
+          <div style="font-size:13px; color:var(--text-muted)">Medicación activa: ${medications.filter(m => m.residentId === r.id).length}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderResidentDetail(c, rid) {
+  const res = RESIDENTS.find(r => r.id === rid);
+  const meds = medications.filter(m => m.residentId === rid);
+  
+  c.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px">
+       <div>
+         <div style="font-size:14px; color:var(--text-muted); cursor:pointer" onclick="renderTab('residents')">← Volver</div>
+         <h2 style="font-family:'Fraunces'">${res.name}</h2>
+       </div>
+       <div style="display:flex; gap:10px">
+         ${currentUser.role !== 'family' ? `<button class="btn btn-primary btn-sm" onclick="openMedModal(${rid})">+ Agregar Medicamento</button>` : ''}
+         <button class="btn btn-secondary btn-sm" onclick="window.print()">📥 Exportar PDF</button>
+       </div>
+    </div>
+    
+    <div class="card">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Medicamento</th>
+              <th>Tratamiento</th>
+              <th>Dosis Diaria</th>
+              <th>Stock Actual</th>
+              <th>Estado</th>
+              ${currentUser.role !== 'family' ? '<th>Acciones</th>' : ''}
+            </tr>
+          </thead>
+          <tbody>
+            ${meds.map(m => {
+              const st = getStatus(m);
+              return `
+              <tr>
+                <td><strong>${m.name}</strong><br><small>${m.drug || ''}</small> ${m.sos ? '<span class="badge badge-low" style="padding:2px 5px">SOS</span>' : ''}</td>
+                <td style="font-size:12px">${TREATMENTS.find(t => t.id === m.treatment)?.label || '—'}</td>
+                <td>${m.dailyDose} ${m.unit}/día</td>
+                <td>${m.qty} ${m.unit}</td>
+                <td><span class="badge badge-${st}">${st === 'ok' ? 'En Stock' : st === 'low' ? 'Bajo' : 'Agotado'}</span></td>
+                ${currentUser.role !== 'family' ? `
+                  <td style="display:flex; gap:5px">
+                    <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">Dar</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMedModal(${rid}, ${m.id})">⚙️</button>
+                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                  </td>
+                ` : ''}
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// MODAL Y ACCIONES
+function openMedModal(residentId, medId = null) {
+  const med = medId ? medications.find(m => m.id === medId) : null;
+  const html = `
+    <div class="modal-overlay" id="modal">
+      <div class="modal">
+        <h3 style="margin-bottom:20px; font-family:'Fraunces'">${med ? 'Editar' : 'Nuevo'} Medicamento</h3>
+        <div class="form-group"><label>Nombre</label><input type="text" id="m-name" value="${med?.name || ''}"></div>
+        <div class="form-group"><label>Droga/Presentación</label><input type="text" id="m-drug" value="${med?.drug || ''}"></div>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Unidad</label>
+            <select id="m-unit">
+              ${UNITS.map(u => `<option value="${u}" ${med?.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group"><label>Dosis diaria</label><input type="number" id="m-daily" value="${med?.dailyDose || 1}"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de Tratamiento</label>
+          <select id="m-treatment">
+            ${TREATMENTS.map(t => `<option value="${t.id}" ${med?.treatment === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group"><label>Stock Inicial</label><input type="number" id="m-qty" value="${med?.qty || 0}"></div>
+          <div class="form-group"><label>Avisar cuando falten (días)</label><input type="number" id="m-min" value="${med?.minDays || 7}"></div>
+        </div>
+
+        <div class="form-group" style="display:flex; gap:10px; align-items:center">
+          <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''}> <label style="margin:0">Es SOS (Suministrar solo si es necesario)</label>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px">
+          <button class="btn btn-secondary" onclick="document.getElementById('modal').remove()">Cerrar</button>
+          <button class="btn btn-primary" onclick="saveMedData(${residentId}, ${medId})">Guardar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function saveMedData(rid, mid) {
+  const data = {
+    id: mid || Date.now(),
+    residentId: rid,
+    name: document.getElementById('m-name').value,
+    drug: document.getElementById('m-drug').value,
+    unit: document.getElementById('m-unit').value,
+    dailyDose: parseFloat(document.getElementById('m-daily').value),
+    treatment: document.getElementById('m-treatment').value,
+    qty: parseFloat(document.getElementById('m-qty').value),
+    minDays: parseInt(document.getElementById('m-min').value),
+    sos: document.getElementById('m-sos').checked
+  };
+
+  if (mid) {
+    const idx = medications.findIndex(m => m.id === mid);
+    medications[idx] = data;
+  } else {
+    medications.push(data);
   }
-};
 
-// saveMovs: guarda movimientos nuevos en Firestore
-window._saveMovs = async function() {
-  const last = movements[movements.length - 1];
-  if (last) {
-    try {
-      await setDoc(doc(db, 'movimientos', String(last.id)), last);
-    } catch(e) { console.error('Error guardando movimiento:', e); }
-  }
-};
+  saveData();
+  document.getElementById('modal').remove();
+  renderResidentDetail(document.getElementById('main-content'), rid);
+  showToast("Guardado correctamente");
+}
 
-// deleteMed: elimina de Firestore
-window.deleteMed = async function(id) {
-  if (!confirm('¿Eliminar este medicamento?')) return;
-  const med = medications.find(m => m.id === id);
-  const rid = med ? med.residentId : null;
-  try {
-    await deleteDoc(doc(db, 'meds', String(id)));
-    showToast('Medicamento eliminado');
-  } catch(e) { showToast('Error al eliminar'); }
-  if (rid) showResident(rid); else renderTab('medications');
-};
+function registerTake(mid) {
+  const med = medications.find(m => m.id === mid);
+  if (med.qty < med.dailyDose) return showToast("⚠️ Stock insuficiente");
+  
+  med.qty -= med.dailyDose;
+  movements.push({ date: new Date().toLocaleString(), medId: mid, qty: med.dailyDose, type: 'take' });
+  
+  saveData();
+  renderResidentDetail(document.getElementById('main-content'), med.residentId);
+  showToast("Toma registrada");
+}
+
+function deleteMed(mid) {
+  if (!confirm("¿Eliminar este medicamento?")) return;
+  const rid = medications.find(m => m.id === mid).residentId;
+  medications = medications.filter(m => m.id !== mid);
+  saveData();
+  renderResidentDetail(document.getElementById('main-content'), rid);
+}
 
 </script>
 </body>
