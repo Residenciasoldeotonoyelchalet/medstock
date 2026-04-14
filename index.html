@@ -358,6 +358,28 @@
   .badge-unica { background: #e8f0fb; color: #2c6fad; }
   .badge-evaluar { background: #f0e8fb; color: #6b2cad; }
 
+  /* Botones selector de dosis */
+  .dosis-btn {
+    flex: 1;
+    padding: 10px 0;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--warm-white);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .dosis-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .dosis-btn.active {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: white;
+  }
+
   /* Install banner */
   #install-banner {
     display: none;
@@ -1027,22 +1049,25 @@ function debeTomarsHoy(med) {
 // Devuelve cuántos días de calendario dura el stock
 function calcDiasCalendario(med) {
   if (!med.dailyDose || med.dailyDose <= 0) return 0;
-  const tomas = med.qty / med.dailyDose; // total de tomas restantes
+  // diasPorToma = cuántos días de calendario pasan entre cada toma
+  // unidadesPorDia = cuántas unidades se consumen por día de calendario
+  let unidadesPorDia;
 
   if (!med.frecuencia || med.frecuencia === 'diario') {
-    return Math.floor(tomas); // 1 toma por día
+    unidadesPorDia = med.dailyDose; // toma todos los días
+  } else if (med.frecuencia === 'alternos') {
+    unidadesPorDia = med.dailyDose / 2; // toma cada 2 días
+  } else if (med.frecuencia === 'especificos') {
+    const diasSemana = (med.diasSemana || []).length || 1;
+    unidadesPorDia = (med.dailyDose * diasSemana) / 7; // X días por semana
+  } else if (med.frecuencia === 'cada_x_dias') {
+    unidadesPorDia = med.dailyDose / (med.cadaXDias || 1);
+  } else {
+    unidadesPorDia = med.dailyDose;
   }
-  if (med.frecuencia === 'alternos') {
-    return Math.floor(tomas * 2); // 1 toma cada 2 días
-  }
-  if (med.frecuencia === 'especificos') {
-    const dias = (med.diasSemana || []).length || 1;
-    return Math.floor((tomas / dias) * 7); // X tomas por semana → semanas × 7
-  }
-  if (med.frecuencia === 'cada_x_dias') {
-    return Math.floor(tomas * (med.cadaXDias || 1));
-  }
-  return Math.floor(tomas);
+
+  if (unidadesPorDia <= 0) return 0;
+  return Math.floor(med.qty / unidadesPorDia);
 }
 
 // Label de frecuencia para mostrar en tabla
@@ -1784,7 +1809,15 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="grid-2">
-      <div class="form-group"><label>Dosis por toma</label><input id="m-daily" type="text" inputmode="decimal" value="${med?.dailyDose ?? 1}" placeholder="Ej: 1, 0,5, 1,5"></div>
+      <div class="form-group">
+        <label>Dosis diaria total</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 0.5 ? 'active' : ''}" onclick="selectDosis(0.5, this)">½</button>
+          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 1   ? 'active' : ''}" onclick="selectDosis(1,   this)">1</button>
+          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 2   ? 'active' : ''}" onclick="selectDosis(2,   this)">2</button>
+        </div>
+        <input type="hidden" id="m-daily" value="${med?.dailyDose ?? 1}">
+      </div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="${med?.qty ?? 0}"></div>
     </div>
 
@@ -1882,7 +1915,15 @@ function openAddMedGeneral() {
       </div>
     </div>
     <div class="grid-2">
-      <div class="form-group"><label>Dosis por toma</label><input id="m-daily" type="text" inputmode="decimal" value="1" placeholder="Ej: 1, 0,5, 1,5"></div>
+      <div class="form-group">
+        <label>Dosis diaria total</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="dosis-btn" onclick="selectDosis(0.5, this)">½</button>
+          <button type="button" class="dosis-btn active" onclick="selectDosis(1, this)">1</button>
+          <button type="button" class="dosis-btn" onclick="selectDosis(2, this)">2</button>
+        </div>
+        <input type="hidden" id="m-daily" value="1">
+      </div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="0"></div>
     </div>
     <div class="form-group">
@@ -1919,7 +1960,7 @@ function saveMed(residentId, medId = null) {
     conc: document.getElementById('m-conc').value,
     unit: document.getElementById('m-unit').value,
     treatment: document.getElementById('m-treatment').value,
-    dailyDose: parseFloat(document.getElementById('m-daily').value.replace(',', '.')) || 0,
+    dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
@@ -2138,6 +2179,15 @@ function toggleFrecuencia() {
   const xDiv = document.getElementById('freq-cada-x');
   if (diasDiv) diasDiv.style.display = val === 'especificos' ? 'block' : 'none';
   if (xDiv)    xDiv.style.display    = val === 'cada_x_dias' ? 'block' : 'none';
+}
+
+function selectDosis(valor, btn) {
+  // Actualizar hidden input
+  const input = document.getElementById('m-daily');
+  if (input) input.value = valor;
+  // Resaltar botón activo
+  btn.closest('div').querySelectorAll('.dosis-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 function showToast(msg) {
