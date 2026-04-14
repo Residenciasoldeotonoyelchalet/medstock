@@ -845,7 +845,9 @@ function doLogout() {
   document.getElementById('login-error').style.display = 'none';
 }
 
-function canEdit() { return ['owner','manager','nurse'].includes(currentUser.role); }
+function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
+function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
+function canFamilyAction(){ return ['owner','manager','nurse','family'].includes(currentUser.role); }
 function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
 
 // =====================================================
@@ -859,14 +861,15 @@ function buildNav() {
     items = [
       { id: 'home', label: '🏠 Inicio' },
       { id: 'my-resident', label: '👤 Mi familiar' },
-    ];
+      { id: 'movements', label: '📋 Movimientos' },
+    ]; // familia: solo lectura + movimientos
   } else {
     items = [
       { id: 'home', label: '🏠 Inicio' },
       { id: 'residents', label: '👥 Residentes' },
       { id: 'medications', label: '💊 Medicamentos' },
-      { id: 'movements', label: '📋 Movimientos' },
     ];
+    if (canFullEdit()) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
@@ -1030,7 +1033,7 @@ function showResident(id) {
       <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
-        <button class="btn btn-secondary btn-sm" onclick="printResident(${id})">📥 Descargar Planilla PDF</button>
+        ${(canFullEdit() || currentUser.role === 'family') ? `<button class="btn btn-secondary btn-sm" onclick="printResident(${id})">📥 Descargar Planilla PDF</button>` : ''}
       </div>
     </div>
 
@@ -1077,9 +1080,12 @@ function showResident(id) {
                 <td>
                   <div style="display:flex;gap:6px;flex-wrap:wrap">
                     <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})" title="Marcar toma diaria">✅ Dar</button>
-                    <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})" title="Editar medicamento">✏️ Editar</button>
                     <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')" title="Cargar stock">+ Stock</button>
-                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})" title="Eliminar">🗑</button>
+                    <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')" title="Registrar salida">- Salida</button>
+                    ${canFullEdit() ? `
+                      <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})" title="Editar medicamento">✏️ Editar</button>
+                      <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})" title="Eliminar">🗑</button>
+                    ` : ''}
                   </div>
                 </td>` : ''}
               </tr>`;
@@ -1164,8 +1170,10 @@ function renderMedications(c) {
                 ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
                   <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openAddMed(${m.residentId}, ${m.id})">✏️</button>
-                  <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                  ${canFullEdit() ? `
+                    <button class="btn btn-secondary btn-sm" onclick="openAddMed(${m.residentId}, ${m.id})">✏️</button>
+                    <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
+                  ` : ''}
                 </td>` : ''}
               </tr>`;
             }).join('')}</tbody>
@@ -1177,16 +1185,25 @@ function renderMedications(c) {
 }
 
 function renderMovements(c) {
+  // Familiares solo ven movimientos de su residente
+  const list = currentUser.role === 'family'
+    ? movements.filter(m => m.residentId === currentUser.residentId)
+    : movements;
+  const res = currentUser.role === 'family'
+    ? RESIDENTS.find(r => r.id === currentUser.residentId)
+    : null;
+  const titulo = res ? `📋 Movimientos de ${res.name}` : '📋 Historial de movimientos';
+
   c.innerHTML = `
-    <h2 class="section-title">📋 Historial de movimientos</h2>
+    <h2 class="section-title">${titulo}</h2>
     <div class="card">
       <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice().reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
+        ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
+          list.slice().reverse().map(mov => {
+            const r = RESIDENTS.find(r => r.id === mov.residentId);
             return `<div class="movement-item">
               <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
+              <div><strong>${mov.medName}</strong> — ${r ? r.name : ''}<br>
               <span style="color:var(--text-muted);font-size:13px">
                 ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
                 ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
