@@ -878,8 +878,10 @@ function getStatus(m) {
 // =====================================================
 
 function renderResidents(c) {
-  // Mantenemos el término de búsqueda en una variable para no perderlo
-  const searchTerm = (c._search || '').toLowerCase();
+  // 1. Usamos una variable global temporal para el filtro si no existe
+  if (window._resSearch === undefined) window._resSearch = '';
+  
+  const searchTerm = window._resSearch.toLowerCase();
   const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(searchTerm));
 
   c.innerHTML = `
@@ -887,59 +889,45 @@ function renderResidents(c) {
       <h2 class="section-title" style="margin:0">👥 Residentes</h2>
       <div class="search-bar">
         <span class="search-icon">🔍</span>
-        <input type="text" id="res-search-input" placeholder="Buscar residente..." value="${c._search || ''}">
+        <input type="text" id="res-search-input" placeholder="Buscar residente..." value="${window._resSearch}">
       </div>
     </div>
     <div class="resident-grid">
-      ${list.length === 0 ? '<p style="padding:20px; color:var(--text-muted)">No se encontraron residentes.</p>' : 
-        list.map(r => {
-          const meds = medications.filter(m => m.residentId === r.id);
-          const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
-          return `
-            <div class="resident-card" onclick="showResident(${r.id})" style="cursor:pointer">
-              <div class="resident-name">👤 ${r.name}</div>
-              <div class="resident-meta">
-                <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
-                ${alerts > 0 ? `<span class="badge badge-low">⚠️ ${alerts} alerta${alerts !== 1 ? 's' : ''}</span>` : '<span class="badge badge-ok">✅ OK</span>'}
-              </div>
-            </div>`;
-        }).join('')}
+      ${list.map(r => {
+        const meds = medications.filter(m => m.residentId === r.id);
+        const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
+        return `
+          <div class="resident-card" onclick="verDetalleResidente(${r.id})" style="cursor:pointer">
+            <div class="resident-name">👤 ${r.name}</div>
+            <div class="resident-meta">
+              <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
+              ${alerts > 0 ? `<span class="badge badge-low">⚠️ ${alerts} alerta${alerts !== 1 ? 's' : ''}</span>` : '<span class="badge badge-ok">✅ OK</span>'}
+            </div>
+          </div>`;
+      }).join('')}
     </div>
   `;
 
-  // --- TRUCO PARA LA BÚSQUEDA ---
-  // Esto hace que la búsqueda funcione sin refrescar toda la pantalla
+  // --- SOLUCIÓN BÚSQUEDA ---
   const input = document.getElementById('res-search-input');
-  
-  // Ponemos el cursor al final del texto
-  input.focus();
+  input.focus(); 
+  // Esto pone el cursor al final
   input.setSelectionRange(input.value.length, input.value.length);
 
   input.oninput = function() {
-    c._search = this.value;
-    // En lugar de renderTab, llamamos a la misma función pero sin perder el foco
-    renderResidents(c);
+    window._resSearch = this.value;
+    renderResidents(c); // Recarga solo esta parte sin perder el foco
   };
 }
 
-// --- ASEGURAR EL INGRESO ---
-// Si showResident no funciona, es probable que necesitemos esta función puente:
-function showResident(id) {
-  console.log("Accediendo al residente:", id);
-  window.currentTab = 'resident-detail'; // Marcamos la pestaña interna
+// --- SOLUCIÓN INGRESO (Función Puente) ---
+function verDetalleResidente(id) {
+  // Cambiamos el estado de la pestaña actual para que el sistema sepa que estamos "adentro"
+  window.currentTab = 'resident-detail'; 
   
-  // Si tu función de ver medicamentos se llama showResident (la que pegamos antes),
-  // asegúrate de que no haya otra con el mismo nombre.
-  // Si usas el código que te pasé antes, debería funcionar directo.
-  if (typeof renderResidentDetail === 'function') {
-    renderResidentDetail(id);
-  } else {
-    // Si no, forzamos el dibujo de la tabla:
-    const content = document.getElementById('main-content');
-    // Aquí llamamos a la función que dibuja los medicamentos del residente
-    // (Ajustá el nombre si en tu código se llama distinto)
-    renderResidentDetail(content, id); 
-  }
+  // Llamamos a la función que YA TENÉS en tu código para mostrar los datos
+  // En tu archivo se llama "showResident"
+  showResident(id);
 }
 
 function showResident(id) {
