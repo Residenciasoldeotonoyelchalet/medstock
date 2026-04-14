@@ -1283,16 +1283,26 @@ function renderAlertsSection(meds) {
 }
 
 function getStatus(m) {
-  // Única toma y A evaluar nunca generan alarma de stock
+  // Fecha de fin
+  if (m.fechaFin) {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const fin = new Date(m.fechaFin + 'T00:00:00');
+    if (hoy > fin) return 'finalizado';
+  }
+  // Única toma y A evaluar nunca generan alarma
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
-  if (m.dailyDose > 0) {
-    // Si tiene dosis, calcular por días restantes
-    const diasRestantes = m.qty / m.dailyDose;
-    if (diasRestantes <= minDays) return 'low';
+  // Porcentaje
+  if (m.unit === '%') {
+    if (m.qty <= 20) return 'low';
+    return 'ok';
+  }
+  const dosis = getDosisdiaria(m);
+  if (dosis > 0) {
+    const dias = calcDiasCalendario(m);
+    if (dias <= minDays) return 'low';
   } else {
-    // Sin dosis cargada, comparar stock directamente contra el mínimo
     if (m.qty <= minDays) return 'low';
   }
   return 'ok';
@@ -1842,6 +1852,12 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
+
+    <div class="form-group">
+      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input id="m-fecha-fin" type="date" value="${med?.fechaFin || ''}" style="max-width:200px">
+      ${med?.fechaFin ? `<div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Finaliza el ${new Date(med.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'long',year:'numeric'})}</div>` : ''}
+    </div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
