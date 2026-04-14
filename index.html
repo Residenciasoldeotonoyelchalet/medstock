@@ -1078,6 +1078,7 @@ function calcDiasCalendario(med) {
 
 // Label de frecuencia para mostrar en tabla
 function frecuenciaLabel(med) {
+  if (med.sos) return 'Según necesidad';
   if (!med.frecuencia || med.frecuencia === 'diario') return 'Todos los días';
   if (med.frecuencia === 'alternos') return 'Días alternos';
   if (med.frecuencia === 'cada_x_dias') return `Cada ${med.cadaXDias || '?'} días`;
