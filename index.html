@@ -355,6 +355,40 @@
   .badge-low { background: var(--yellow-light); color: var(--yellow); }
   .badge-out { background: var(--red-light); color: var(--red); }
   .badge-role { background: var(--blue-light); color: var(--blue); }
+  .badge-unica { background: #e8f0fb; color: #2c6fad; }
+  .badge-evaluar { background: #f0e8fb; color: #6b2cad; }
+
+  /* Install banner */
+  #install-banner {
+    display: none;
+    background: var(--brown);
+    color: white;
+    padding: 12px 20px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  #install-banner.show { display: flex; }
+  #install-banner .install-text { display:flex; align-items:center; gap:8px; }
+  #install-banner button {
+    background: var(--amber);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #install-banner .dismiss {
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    padding: 4px 8px;
+    font-size: 18px;
+  }
 
   /* ====== PROGRESS BAR ====== */
   .progress-bar {
@@ -809,12 +843,28 @@
     </div>
   </div>
 
+  <div id="install-bar-app" style="display:none;background:linear-gradient(90deg,#5c3d1e,#8a5c2e);color:white;padding:10px 20px;font-size:13px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <span>📲 Instalá MedStock en tu dispositivo para acceder sin el navegador</span>
+    <div style="display:flex;gap:8px">
+      <button onclick="installApp()" style="background:var(--amber);color:white;border:none;padding:6px 16px;border-radius:6px;font-weight:600;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">Instalar</button>
+      <button onclick="document.getElementById('install-bar-app').style.display='none'" style="background:transparent;color:rgba(255,255,255,0.6);border:none;font-size:18px;cursor:pointer;padding:0 4px">×</button>
+    </div>
+  </div>
   <div class="nav-tabs" id="nav-tabs"></div>
 
   <div class="main-content" id="main-content"></div>
 </div>
 
 <div id="toast"></div>
+
+<!-- BANNER INSTALAR APP -->
+<div id="install-banner">
+  <div class="install-text">📲 <span>Agregá MedStock a tu pantalla de inicio para acceder más rápido</span></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button onclick="installApp()">Instalar app</button>
+    <button class="dismiss" onclick="dismissInstall()" title="Cerrar">×</button>
+  </div>
+</div>
 
 <!-- ÁREA DE IMPRESIÓN — oculta en pantalla, visible al imprimir -->
 <div id="print-area" style="display:none"></div>
@@ -908,16 +958,23 @@ function saveData() {
 // AUTH
 // =====================================================
 
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim().toLowerCase();
-  const p = document.getElementById('login-pass').value;
-  const found = USERS.find(x => x.user === u && x.pass === p);
+function doLogin(savedUser = null) {
+  let found;
+  if (savedUser) {
+    found = USERS.find(x => x.user === savedUser.user && x.pass === savedUser.pass);
+  } else {
+    const u = document.getElementById('login-user').value.trim().toLowerCase();
+    const p = document.getElementById('login-pass').value;
+    found = USERS.find(x => x.user === u && x.pass === p);
+  }
   if (!found) {
-    document.getElementById('login-error').style.display = 'block';
+    if (!savedUser) document.getElementById('login-error').style.display = 'block';
     return;
   }
   currentUser = found;
   window.currentUser = found;
+  // Guardar sesión en localStorage
+  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
@@ -925,14 +982,69 @@ function doLogin() {
   renderTab('home');
 }
 
+// Restaurar sesión al cargar la página
+function tryRestoreSession() {
+  try {
+    const saved = localStorage.getItem('medstock_session');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      doLogin(parsed);
+    }
+  } catch(e) { localStorage.removeItem('medstock_session'); }
+}
+
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 // Guardar usuarios en Firestore
 function saveUsers() { if (window._saveUsers) window._saveUsers(); }
 
+// ── DESCUENTO AUTOMÁTICO DIARIO ──
+function checkDailyDiscount() {
+  const today = new Date().toISOString().slice(0, 10); // "2026-04-14"
+  const lastDiscount = localStorage.getItem('medstock_last_discount');
+  if (lastDiscount === today) return; // Ya se hizo hoy
+
+  let huboDescuento = false;
+  medications.forEach(med => {
+    // Solo prolongado, con dosis definida, sin SOS
+    if (med.treatment !== 'prolongado') return;
+    if (med.sos) return;
+    if (!med.dailyDose || med.dailyDose <= 0) return;
+    if (med.qty <= 0) return;
+
+    const descuento = Math.min(med.dailyDose, med.qty);
+    med.qty = Math.max(0, med.qty - descuento);
+
+    movements.push({
+      id: Date.now() + Math.random(),
+      medId: med.id,
+      medName: med.name,
+      residentId: med.residentId,
+      type: 'out',
+      qty: descuento,
+      unit: med.unit,
+      by: 'Sistema automático',
+      date: new Date().toLocaleDateString('es-AR'),
+      note: 'Descuento diario automático'
+    });
+    huboDescuento = true;
+  });
+
+  if (huboDescuento) {
+    localStorage.setItem('medstock_last_discount', today);
+    saveMeds();
+    saveMovs();
+    console.log('Descuento diario realizado:', today);
+  } else {
+    // Marcar igual para no volver a intentar hoy
+    localStorage.setItem('medstock_last_discount', today);
+  }
+}
+
 function doLogout() {
   currentUser = null;
   window.currentUser = null;
+  localStorage.removeItem('medstock_session');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-user').value = '';
@@ -1001,6 +1113,21 @@ function renderHome(c) {
     const myMeds = medications.filter(m => m.residentId === currentUser.residentId);
     c.innerHTML = `
       <h2 class="section-title">🍂 Bienvenida/o</h2>
+
+      ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('medstock_install_dismissed') ? `
+      <div id="install-card" style="background:linear-gradient(135deg,#5c3d1e,#8a5c2e);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">📲</span>
+          <div>
+            <div style="font-weight:700;font-size:15px">Instalá MedStock</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:2px">Accedé más rápido desde tu pantalla de inicio</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="handleInstall()" style="background:var(--amber);color:white;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Instalar</button>
+          <button onclick="localStorage.setItem('medstock_install_dismissed','1');document.getElementById('install-card').remove()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:9px 12px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">×</button>
+        </div>
+      </div>` : ''}
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
         <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
@@ -1013,6 +1140,21 @@ function renderHome(c) {
 
   c.innerHTML = `
     <h2 class="section-title">🍂 Panel general</h2>
+
+      ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('medstock_install_dismissed') ? `
+      <div id="install-card" style="background:linear-gradient(135deg,#5c3d1e,#8a5c2e);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">📲</span>
+          <div>
+            <div style="font-weight:700;font-size:15px">Instalá MedStock</div>
+            <div style="font-size:12px;opacity:0.8;margin-top:2px">Accedé más rápido desde tu pantalla de inicio</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="handleInstall()" style="background:var(--amber);color:white;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Instalar</button>
+          <button onclick="localStorage.setItem('medstock_install_dismissed','1');document.getElementById('install-card').remove()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:9px 12px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">×</button>
+        </div>
+      </div>` : ''}
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${RESIDENTS.length}</div><div class="stat-label">Residentes</div></div>
       <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${totalMeds}</div><div class="stat-label">Medicamentos cargados</div></div>
@@ -1058,10 +1200,17 @@ function renderAlertsSection(meds) {
 }
 
 function getStatus(m) {
+  // Única toma y A evaluar nunca generan alarma de stock
+  if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
   if (m.qty <= 0) return 'out';
+  const minDays = m.minDays || 7;
   if (m.dailyDose > 0) {
+    // Si tiene dosis, calcular por días restantes
     const diasRestantes = m.qty / m.dailyDose;
-    if (diasRestantes <= (m.minDays || 7)) return 'low';
+    if (diasRestantes <= minDays) return 'low';
+  } else {
+    // Sin dosis cargada, comparar stock directamente contra el mínimo
+    if (m.qty <= minDays) return 'low';
   }
   return 'ok';
 }
@@ -1153,10 +1302,15 @@ function showResident(id) {
               const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose) : 0;
               const pct = Math.min(100, Math.round((diasRestantes / 15) * 100));
               const treatmentLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
+              const treatBadge = m.treatment === 'unica'
+                ? '<span class="badge badge-unica" style="font-size:9px;padding:2px 6px" title="Este medicamento es de única toma, no se vuelve a comprar">💊 Única toma</span>'
+                : m.treatment === 'evolucion'
+                ? '<span class="badge badge-evaluar" style="font-size:9px;padding:2px 6px" title="Se reevaluará con el médico antes de volver a comprarse">🔬 A evaluar</span>'
+                : '';
               
               return `<tr>
                 <td>
-                  <strong>${m.name}</strong><br>
+                  <strong>${m.name}</strong> ${treatBadge}<br>
                   <small style="color:var(--text-muted)">${m.drug || ''} ${m.conc ? '(' + m.conc + ')' : ''}</small>
                   ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
                   ${m.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${m.obs}</small>` : ''}
@@ -1173,7 +1327,7 @@ function showResident(id) {
                     <span>${m.qty} ${m.unit}</span>
                     <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
                   </div>
-                  <small style="color:var(--text-muted); font-size:10px">${diasRestantes.toFixed(1)} días restantes</small>
+                  <small style="color:var(--text-muted); font-size:10px">${Math.floor(diasRestantes)} días restantes</small>
                 </td>
                 <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
                 
@@ -1530,7 +1684,7 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="grid-2">
-      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="number" min="0" step="0.5" value="${med?.dailyDose ?? 1}"></div>
+      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="text" inputmode="decimal" value="${med?.dailyDose ?? 1}" placeholder="Ej: 1, 0,5, 1,5"></div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="${med?.qty ?? 0}"></div>
     </div>
 
@@ -1600,7 +1754,7 @@ function openAddMedGeneral() {
       </select>
     </div>
     <div class="grid-2">
-      <div class="form-group"><label>Dosis al día</label><input id="m-daily" type="number" min="0" step="0.5" value="1"></div>
+      <div class="form-group"><label>Dosis al día</label><input id="m-daily" type="text" inputmode="decimal" value="1" placeholder="Ej: 1, 0,5, 1,5"></div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="0"></div>
     </div>
     <div class="form-group">
@@ -1637,7 +1791,7 @@ function saveMed(residentId, medId = null) {
     conc: document.getElementById('m-conc').value,
     unit: document.getElementById('m-unit').value,
     treatment: document.getElementById('m-treatment').value,
-    dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
+    dailyDose: parseFloat(document.getElementById('m-daily').value.replace(',', '.')) || 0,
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
@@ -1887,6 +2041,8 @@ function checkReady() {
     bar.style.width = '100%';
     setTimeout(() => {
       document.getElementById('loading-screen').style.display = 'none';
+      // Intentar restaurar sesión guardada
+      if (!window.currentUser) tryRestoreSession();
     }, 400);
   }
 }
@@ -1911,8 +2067,15 @@ onSnapshot(collection(db, 'usuarios'), snapshot => {
 // Sincronización en tiempo real — meds
 onSnapshot(collection(db, 'meds'), snapshot => {
   medications = snapshot.docs.map(d => d.data());
-  if (!medsLoaded) { medsLoaded = true; bar.style.width = '50%'; checkReady(); }
-  if (window.currentUser) renderTab(window.currentTab || 'home');
+  if (!medsLoaded) {
+    medsLoaded = true;
+    bar.style.width = '50%';
+    checkReady();
+  }
+  if (window.currentUser) {
+    checkDailyDiscount(); // Verificar descuento al cargar/actualizar
+    renderTab(window.currentTab || 'home');
+  }
 });
 
 // Sincronización en tiempo real — movimientos
@@ -1969,6 +2132,78 @@ window.deleteMed = async function(id) {
   if (rid) showResident(rid); else renderTab('medications');
 };
 
+</script>
+
+<!-- PWA INSTALL PROMPT -->
+<script>
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Mostrar barra solo si no fue descartada antes
+  if (!localStorage.getItem('medstock_install_dismissed')) {
+    document.getElementById('install-bar-app').style.display = 'flex';
+  }
+});
+
+async function installApp() {
+  handleInstall();
+}
+
+async function handleInstall() {
+  if (deferredPrompt) {
+    // Android/Chrome — instala directo
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === 'accepted') {
+      localStorage.setItem('medstock_install_dismissed', '1');
+      const card = document.getElementById('install-card');
+      if (card) card.remove();
+    }
+  } else {
+    // iOS Safari u otro — mostrar instrucciones paso a paso
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    if (isIOS) {
+      showModal(`
+        <div class="modal-title">📲 Instalar en iPhone</div>
+        <div style="font-size:15px;line-height:1.8;color:var(--text)">
+          <p style="margin-bottom:16px">Para agregar MedStock a tu pantalla de inicio:</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <span style="background:var(--amber);color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</span>
+              <span>Tocá el botón <strong>Compartir</strong> <span style="font-size:18px">⬆️</span> en la barra de Safari (abajo en el centro)</span>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <span style="background:var(--amber);color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</span>
+              <span>Deslizá hacia abajo y tocá <strong>"Agregar a pantalla de inicio"</strong></span>
+            </div>
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <span style="background:var(--amber);color:white;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</span>
+              <span>Tocá <strong>Agregar</strong> arriba a la derecha</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="closeModal()">Entendido</button>
+        </div>
+      `);
+    } else {
+      showToast('Abrí esta página en Chrome para instalar la app 📲');
+    }
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('install-bar-app').style.display = 'none';
+  localStorage.setItem('medstock_install_dismissed', '1');
+}
+
+// Si ya está instalada como PWA, ocultar el banner
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.getElementById('install-bar-app').style.display = 'none';
+}
 </script>
 </body>
 </html>
