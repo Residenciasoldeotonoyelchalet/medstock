@@ -1265,6 +1265,12 @@ function getStatus(m) {
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
+  if (m.unit === '%') {
+    // Para porcentaje: bajo si es <= 20%, sin stock si es 0
+    if (m.qty <= 0) return 'out';
+    if (m.qty <= 20) return 'low';
+    return 'ok';
+  }
   if (m.dailyDose > 0) {
     const diasCalendario = calcDiasCalendario(m);
     if (diasCalendario <= minDays) return 'low';
@@ -1359,8 +1365,9 @@ function showResident(id) {
             </thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
-              const diasRestantes = m.dailyDose > 0 ? calcDiasCalendario(m) : 0;
-              const pct = Math.min(100, Math.round((diasRestantes / 30) * 100));
+              const esPorcentaje = m.unit === '%';
+              const diasRestantes = (!esPorcentaje && m.dailyDose > 0) ? calcDiasCalendario(m) : 0;
+              const pct = esPorcentaje ? m.qty : Math.min(100, Math.round((diasRestantes / 30) * 100));
               const treatmentLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
               const treatBadge = m.treatment === 'unica'
                 ? '<span class="badge badge-unica" style="font-size:9px;padding:2px 6px" title="Este medicamento es de única toma, no se vuelve a comprar">💊 Única toma</span>'
@@ -1388,7 +1395,7 @@ function showResident(id) {
                     <span>${m.qty} ${m.unit}</span>
                     <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
                   </div>
-                  <small style="color:var(--text-muted); font-size:10px">${diasRestantes} días</small>
+                  ${!esPorcentaje ? `<small style="color:var(--text-muted); font-size:10px">${diasRestantes} días</small>` : ""}
                 </td>
                 <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
                 
