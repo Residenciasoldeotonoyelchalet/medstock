@@ -1,12 +1,13 @@
 {
-  "name": "MedStock · Residencia",
+  "name": "MedStock – Residencia Sol de Otoño y El Chalet",
   "short_name": "MedStock",
-  "description": "Gestión de stock de medicamentos para residencias",
-  "start_url": "/",
+  "description": "Sistema de gestión de medicamentos",
+  "start_url": "/medstock/",
+  "scope": "/medstock/",
   "display": "standalone",
-  "background_color": "#0b1120",
-  "theme_color": "#0b1120",
   "orientation": "portrait",
+  "background_color": "#faf7f2",
+  "theme_color": "#5c3d1e",
   "icons": [
     {
       "src": "icon-192.png",
@@ -20,7 +21,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["medical", "health", "productivity"],
-  "lang": "es"
+  ]
 }
