@@ -356,30 +356,7 @@
   .badge-out { background: var(--red-light); color: var(--red); }
   .badge-role { background: var(--blue-light); color: var(--blue); }
   .badge-unica { background: #e8f0fb; color: #2c6fad; }
-  .badge-evaluar    { background: #f0e8fb; color: #6b2cad; }
-  .badge-finalizado { background: #ececec; color: #888; }
-
-  /* Botones selector de dosis */
-  .dosis-btn {
-    flex: 1;
-    padding: 10px 0;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    background: var(--warm-white);
-    color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .dosis-btn:hover { border-color: var(--amber); color: var(--amber); }
-  .dosis-btn.active {
-    background: var(--amber);
-    border-color: var(--amber);
-    color: white;
-  }
+  .badge-evaluar { background: #f0e8fb; color: #6b2cad; }
 
   /* Install banner */
   #install-banner {
@@ -1021,75 +998,6 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if (e.k
 // Guardar usuarios en Firestore
 function saveUsers() { if (window._saveUsers) window._saveUsers(); }
 
-// ── HELPERS DE FRECUENCIA ──
-
-// Devuelve true si hoy corresponde tomar el medicamento
-function debeTomarsHoy(med) {
-  if (!med.frecuencia || med.frecuencia === 'diario') return true;
-  const hoy = new Date();
-  const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
-  const diaHoy = diasSemana[hoy.getDay()];
-
-  if (med.frecuencia === 'alternos') {
-    // Usar fecha de inicio para determinar par/impar
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    const diffDias = Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
-    return diffDias % 2 === 0;
-  }
-  if (med.frecuencia === 'especificos') {
-    return (med.diasSemana || []).includes(diaHoy);
-  }
-  if (med.frecuencia === 'cada_x_dias') {
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    const diffDias = Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
-    return diffDias % (med.cadaXDias || 1) === 0;
-  }
-  return true;
-}
-
-// Devuelve cuántos días de calendario dura el stock
-// Descuento diario real = dosis por toma × nº de horarios (mínimo 1)
-function getDosisdiaria(med) {
-  const tomasAlDia = (med.horarios && med.horarios.length > 0) ? med.horarios.length : 1;
-  return (med.dailyDose || 0) * tomasAlDia;
-}
-
-function calcDiasCalendario(med) {
-  const dosisdiaria = getDosisdiaria(med); // dosis por toma × horarios
-  if (dosisdiaria <= 0) return 0;
-
-  // unidadesPorDia = lo que consume por día de calendario según frecuencia
-  let unidadesPorDia;
-  if (!med.frecuencia || med.frecuencia === 'diario') {
-    unidadesPorDia = dosisdiaria;
-  } else if (med.frecuencia === 'alternos') {
-    unidadesPorDia = dosisdiaria / 2;
-  } else if (med.frecuencia === 'especificos') {
-    const diasSemana = (med.diasSemana || []).length || 1;
-    unidadesPorDia = (dosisdiaria * diasSemana) / 7;
-  } else if (med.frecuencia === 'cada_x_dias') {
-    unidadesPorDia = dosisdiaria / (med.cadaXDias || 1);
-  } else {
-    unidadesPorDia = dosisdiaria;
-  }
-
-  if (unidadesPorDia <= 0) return 0;
-  return Math.floor(med.qty / unidadesPorDia);
-}
-
-// Label de frecuencia para mostrar en tabla
-function frecuenciaLabel(med) {
-  if (med.sos) return 'Según necesidad';
-  if (!med.frecuencia || med.frecuencia === 'diario') return 'Todos los días';
-  if (med.frecuencia === 'alternos') return 'Días alternos';
-  if (med.frecuencia === 'cada_x_dias') return `Cada ${med.cadaXDias || '?'} días`;
-  if (med.frecuencia === 'especificos') {
-    const labels = { lun:'Lun', mar:'Mar', mie:'Mié', jue:'Jue', vie:'Vie', sab:'Sáb', dom:'Dom' };
-    return (med.diasSemana || []).map(d => labels[d] || d).join(', ');
-  }
-  return '';
-}
-
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
 function checkDailyDiscount() {
   const today = new Date().toISOString().slice(0, 10); // "2026-04-14"
@@ -1103,12 +1011,8 @@ function checkDailyDiscount() {
     if (med.sos) return;
     if (!med.dailyDose || med.dailyDose <= 0) return;
     if (med.qty <= 0) return;
-    // No descontar si ya finalizó
-    if (getStatus(med) === 'finalizado') return;
-    // Verificar si hoy corresponde tomar según frecuencia
-    if (!debeTomarsHoy(med)) return;
 
-    const descuento = Math.min(getDosisdiaria(med), med.qty);
+    const descuento = Math.min(med.dailyDose, med.qty);
     med.qty = Math.max(0, med.qty - descuento);
 
     movements.push({
@@ -1277,7 +1181,7 @@ function renderHome(c) {
 }
 
 function renderAlertsSection(meds) {
-  const alerts = meds.filter(m => getStatus(m) !== 'ok' && getStatus(m) !== 'finalizado');
+  const alerts = meds.filter(m => getStatus(m) !== 'ok');
   if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
   return `<div class="card">
     <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
@@ -1296,26 +1200,16 @@ function renderAlertsSection(meds) {
 }
 
 function getStatus(m) {
-  // Verificar si tiene fecha de fin y ya pasó
-  if (m.fechaFin) {
-    const hoy = new Date(); hoy.setHours(0,0,0,0);
-    const fin = new Date(m.fechaFin + 'T00:00:00');
-    if (hoy > fin) return 'finalizado';
-  }
   // Única toma y A evaluar nunca generan alarma de stock
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
-  if (m.unit === '%') {
-    // Para porcentaje: bajo si es <= 20%, sin stock si es 0
-    if (m.qty <= 0) return 'out';
-    if (m.qty <= 20) return 'low';
-    return 'ok';
-  }
-  if (getDosisdiaria(m) > 0) {
-    const diasCalendario = calcDiasCalendario(m);
-    if (diasCalendario <= minDays) return 'low';
+  if (m.dailyDose > 0) {
+    // Si tiene dosis, calcular por días restantes
+    const diasRestantes = m.qty / m.dailyDose;
+    if (diasRestantes <= minDays) return 'low';
   } else {
+    // Sin dosis cargada, comparar stock directamente contra el mínimo
     if (m.qty <= minDays) return 'low';
   }
   return 'ok';
@@ -1396,8 +1290,7 @@ function showResident(id) {
               <tr>
                 <th>Medicamento</th>
                 <th>Horarios</th>
-                <th>Frecuencia</th>
-                <th>Dosis/Toma</th>
+                <th>Dosis/Día</th>
                 <th>Tratamiento</th>
                 <th>Stock</th>
                 <th>Estado</th>
@@ -1406,9 +1299,8 @@ function showResident(id) {
             </thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
-              const esPorcentaje = m.unit === '%';
-              const diasRestantes = (!esPorcentaje && m.dailyDose > 0) ? calcDiasCalendario(m) : 0;
-              const pct = esPorcentaje ? m.qty : Math.min(100, Math.round((diasRestantes / 30) * 100));
+              const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose) : 0;
+              const pct = Math.min(100, Math.round((diasRestantes / 15) * 100));
               const treatmentLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
               const treatBadge = m.treatment === 'unica'
                 ? '<span class="badge badge-unica" style="font-size:9px;padding:2px 6px" title="Este medicamento es de única toma, no se vuelve a comprar">💊 Única toma</span>'
@@ -1422,29 +1314,25 @@ function showResident(id) {
                   <small style="color:var(--text-muted)">${m.drug || ''} ${m.conc ? '(' + m.conc + ')' : ''}</small>
                   ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
                   ${m.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${m.obs}</small>` : ''}
-                  ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
                 <td style="font-size:13px">
-                  ${(m.horarios && m.horarios.length > 0)
-                    ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h}</span>`).join('')
+                  ${getHorasArray(m).length > 0
+                    ? (typeof m.horarios[0] === 'object'
+                        ? m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h.hora}<br><span style="font-size:10px;opacity:0.8">${h.dosis}${m.unit}</span></span>`).join('')
+                        : m.horarios.map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 7px;margin:2px;font-size:12px;font-weight:600">${h}</span>`).join('')
+                      )
                     : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
-                <td style="font-size:11px">${frecuenciaLabel(m)}</td>
-                <td>
-                  ${m.dailyDose || 0} ${m.unit}/toma
-                  ${(m.horarios && m.horarios.length > 1) ? `<br><small style="color:var(--text-muted);font-size:10px">Total: ${getDosisdiaria(m)} ${m.unit}/día</small>` : ''}
-                </td>
+                <td>${m.dailyDose || 0} ${m.unit}</td>
                 <td style="font-size:12px">${treatmentLabel}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span>${m.qty} ${m.unit}</span>
                     <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
                   </div>
-                  ${!esPorcentaje ? `<small style="color:var(--text-muted); font-size:10px">${diasRestantes} días</small>` : ""}
+                  <small style="color:var(--text-muted); font-size:10px">${Math.floor(diasRestantes)} días restantes</small>
                 </td>
-                <td><span class="badge badge-${st}">
-                  ${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : st === 'out' ? '🚨 Sin stock' : st === 'finalizado' ? '🏁 Finalizado' : ''}
-                </span></td>
+                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
                 
                 ${canEdit() ? `
                 <td>
@@ -1471,13 +1359,14 @@ function registerTake(mid) {
   const med = medications.find(m => m.id === mid);
   if (!med) return;
 
-  if (med.qty < med.dailyDose) {
-    alert("⚠️ No hay stock suficiente para la dosis de hoy (" + med.dailyDose + " " + med.unit + ")");
+  const dosisHoy = getDosisdiaria(med);
+  if (med.qty < dosisHoy) {
+    alert("⚠️ No hay stock suficiente para la dosis de hoy (" + dosisHoy + " " + med.unit + ")");
     return;
   }
 
-  med.qty = Math.max(0, med.qty - med.dailyDose);
-  
+  med.qty = Math.max(0, med.qty - dosisHoy);
+
   movements.push({
     id: Date.now(),
     medId: mid,
@@ -1488,12 +1377,11 @@ function registerTake(mid) {
     unit: med.unit,
     date: new Date().toLocaleString(),
     by: currentUser.name,
-    note: 'Toma diaria registrada por enfermería'
+    note: 'Toma registrada por enfermería'
   });
 
   saveData();
   showResident(med.residentId);
-  
   showToast("✅ Toma de " + med.name + " registrada");
 }
 
@@ -1536,9 +1424,7 @@ function renderMedications(c) {
                 <td>${m.conc || '—'}</td>
                 <td style="font-size:12px">${treatmentLabel}</td>
                 <td>${m.qty} ${m.unit}</td>
-                <td><span class="badge badge-${st}">
-                  ${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : st === 'out' ? '🚨 Sin stock' : st === 'finalizado' ? '🏁 Finalizado' : ''}
-                </span></td>
+                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
                 ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
                   <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
@@ -1800,48 +1686,8 @@ function openAddMed(residentId, medId = null) {
       </select>
     </div>
 
-    <div class="form-group">
-      <label>Frecuencia</label>
-      <select id="m-frecuencia" onchange="toggleFrecuencia()">
-        <option value="diario"      ${(!med?.frecuencia || med?.frecuencia === 'diario')      ? 'selected' : ''}>Todos los días</option>
-        <option value="alternos"    ${med?.frecuencia === 'alternos'    ? 'selected' : ''}>Días alternos (un día sí, un día no)</option>
-        <option value="especificos" ${med?.frecuencia === 'especificos' ? 'selected' : ''}>Días específicos de la semana</option>
-        <option value="cada_x_dias" ${med?.frecuencia === 'cada_x_dias' ? 'selected' : ''}>Cada X días</option>
-      </select>
-    </div>
-
-    <div id="freq-dias-semana" style="display:${med?.frecuencia === 'especificos' ? 'block' : 'none'}">
-      <div class="form-group">
-        <label>Días de la semana</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${['lun','mar','mie','jue','vie','sab','dom'].map(d => {
-            const labels = {lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};
-            const checked = (med?.diasSemana || []).includes(d) ? 'checked' : '';
-            return `<label style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600">
-              <input type="checkbox" name="dia-semana" value="${d}" ${checked} style="width:auto;margin:0"> ${labels[d]}
-            </label>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>
-
-    <div id="freq-cada-x" style="display:${med?.frecuencia === 'cada_x_dias' ? 'block' : 'none'}">
-      <div class="form-group">
-        <label>Cada cuántos días</label>
-        <input id="m-cada-x" type="number" min="2" max="30" value="${med?.cadaXDias || 2}" placeholder="Ej: 3">
-      </div>
-    </div>
-
     <div class="grid-2">
-      <div class="form-group">
-        <label>Dosis por toma</label>
-        <div style="display:flex;gap:8px">
-          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 0.5 ? 'active' : ''}" onclick="selectDosis(0.5, this)">½</button>
-          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 1   ? 'active' : ''}" onclick="selectDosis(1,   this)">1</button>
-          <button type="button" class="dosis-btn ${(med?.dailyDose ?? 1) == 2   ? 'active' : ''}" onclick="selectDosis(2,   this)">2</button>
-        </div>
-        <input type="hidden" id="m-daily" value="${med?.dailyDose ?? 1}">
-      </div>
+      <div class="form-group"><label>Dosis que toma al día</label><input id="m-daily" type="text" inputmode="decimal" value="${med?.dailyDose ?? 1}" placeholder="Ej: 1, 0,5, 1,5"></div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="${med?.qty ?? 0}"></div>
     </div>
 
@@ -1856,24 +1702,30 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="form-group">
-      <label>Horarios de toma</label>
-      <div id="horarios-container" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-        ${(med?.horarios || []).map((h,i) => `
-          <div style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">
-            <input type="time" value="${h}" style="border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:90px;" onchange="updateHorario(this,${i})">
-            <span style="cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1" onclick="removeHorario(${i})">×</span>
-          </div>`).join('')}
+      <label>Horarios y dosis por toma</label>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Agregá cada toma con su horario y dosis</div>
+      <div id="horarios-container" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
+        ${(med?.horarios || []).map((h, i) => {
+          const hora = typeof h === 'object' ? h.hora : h;
+          const dosis = typeof h === 'object' ? h.dosis : (med?.dailyDose || 1);
+          return `<div class="horario-row" style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;">
+            <span style="font-size:12px;color:var(--text-muted);width:50px">Hora:</span>
+            <input type="time" value="${hora}" style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;width:110px;">
+            <span style="font-size:12px;color:var(--text-muted);margin-left:8px">Dosis:</span>
+            <div style="display:flex;gap:4px">
+              <button type="button" class="dosis-btn ${dosis == 0.5 ? 'active' : ''}" onclick="selectDosisToma(0.5, this)" style="padding:6px 10px;font-size:14px">½</button>
+              <button type="button" class="dosis-btn ${dosis == 1 ? 'active' : ''}" onclick="selectDosisToma(1, this)" style="padding:6px 10px;font-size:14px">1</button>
+              <button type="button" class="dosis-btn ${dosis == 2 ? 'active' : ''}" onclick="selectDosisToma(2, this)" style="padding:6px 10px;font-size:14px">2</button>
+            </div>
+            <input type="hidden" class="dosis-valor" value="${dosis}">
+            <span style="cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;margin-left:auto" onclick="this.closest('.horario-row').remove()">×</span>
+          </div>`;
+        }).join('')}
       </div>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar toma</button>
     </div>
 
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
-
-    <div class="form-group">
-      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
-      <input id="m-fecha-fin" type="date" value="${med?.fechaFin || ''}" style="max-width:200px">
-      ${med?.fechaFin ? `<div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Finaliza el ${new Date(med.fechaFin + 'T00:00:00').toLocaleDateString('es-AR', {day:'2-digit',month:'long',year:'numeric'})}</div>` : ''}
-    </div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
@@ -1916,44 +1768,8 @@ function openAddMedGeneral() {
         <option value="evolucion">Esperar evolución</option>
       </select>
     </div>
-    <div class="form-group">
-      <label>Frecuencia</label>
-      <select id="m-frecuencia" onchange="toggleFrecuencia()">
-        <option value="diario">Todos los días</option>
-        <option value="alternos">Días alternos</option>
-        <option value="especificos">Días específicos</option>
-        <option value="cada_x_dias">Cada X días</option>
-      </select>
-    </div>
-    <div id="freq-dias-semana" style="display:none">
-      <div class="form-group">
-        <label>Días de la semana</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          ${['lun','mar','mie','jue','vie','sab','dom'].map(d => {
-            const labels = {lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};
-            return `<label style="display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;font-weight:600">
-              <input type="checkbox" name="dia-semana" value="${d}" style="width:auto;margin:0"> ${labels[d]}
-            </label>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>
-    <div id="freq-cada-x" style="display:none">
-      <div class="form-group">
-        <label>Cada cuántos días</label>
-        <input id="m-cada-x" type="number" min="2" max="30" value="2" placeholder="Ej: 3">
-      </div>
-    </div>
     <div class="grid-2">
-      <div class="form-group">
-        <label>Dosis por toma</label>
-        <div style="display:flex;gap:8px">
-          <button type="button" class="dosis-btn" onclick="selectDosis(0.5, this)">½</button>
-          <button type="button" class="dosis-btn active" onclick="selectDosis(1, this)">1</button>
-          <button type="button" class="dosis-btn" onclick="selectDosis(2, this)">2</button>
-        </div>
-        <input type="hidden" id="m-daily" value="1">
-      </div>
+      <div class="form-group"><label>Dosis al día</label><input id="m-daily" type="text" inputmode="decimal" value="1" placeholder="Ej: 1, 0,5, 1,5"></div>
       <div class="form-group"><label>Stock actual</label><input id="m-qty" type="number" min="0" value="0"></div>
     </div>
     <div class="form-group">
@@ -1970,10 +1786,6 @@ function openAddMedGeneral() {
       <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
     </div>
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
-    <div class="form-group">
-      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
-      <input id="m-fecha-fin" type="date" style="max-width:200px">
-    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
@@ -1994,17 +1806,12 @@ function saveMed(residentId, medId = null) {
     conc: document.getElementById('m-conc').value,
     unit: document.getElementById('m-unit').value,
     treatment: document.getElementById('m-treatment').value,
-    dailyDose: parseFloat(document.getElementById('m-daily').value) || 0,
+    dailyDose: parseFloat(document.getElementById('m-daily').value.replace(',', '.')) || 0,
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
     obs: document.getElementById('m-obs').value,
-    horarios: Array.from(document.querySelectorAll('#horarios-container input[type=time]')).map(i => i.value).filter(Boolean),
-    frecuencia: document.getElementById('m-frecuencia')?.value || 'diario',
-    diasSemana: Array.from(document.querySelectorAll('input[name=dia-semana]:checked')).map(i => i.value),
-    cadaXDias: parseInt(document.getElementById('m-cada-x')?.value) || 2,
-    fechaInicio: (medId ? (medications.find(m => m.id === medId)?.fechaInicio) : null) || new Date().toISOString().slice(0,10),
-    fechaFin: document.getElementById('m-fecha-fin')?.value || ''
+    horarios: Array.from(document.querySelectorAll('#horarios-container input[type=time]')).map(i => i.value).filter(Boolean)
   };
 
   if (medId) {
@@ -2106,9 +1913,13 @@ function printResident(id) {
   const filas = meds.map(m => {
     const st = getStatus(m);
     const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
-    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : st === 'out' ? '✗ Sin stock' : '🏁 Finalizado';
+    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
     const horariosCells = (m.horarios && m.horarios.length > 0)
-      ? m.horarios.map(h => `<span class="horario-pill">${h}</span>`).join('')
+      ? m.horarios.map(h => {
+          const hora = typeof h === 'object' ? h.hora : h;
+          const dosis = typeof h === 'object' ? h.dosis : (m.dailyDose || '');
+          return `<span class="horario-pill">${hora}<br><span style="font-size:8px">${dosis}${m.unit}</span></span>`;
+        }).join('')
       : '<span style="color:#bbb">—</span>';
     return `
       <tr>
@@ -2154,13 +1965,12 @@ function printResident(id) {
       : `<table class="print-table">
           <thead>
             <tr>
-              <th style="width:24%">Medicamento</th>
-              <th style="width:14%">Horarios</th>
-              <th style="width:16%">Frecuencia</th>
-              <th style="width:9%;text-align:center">Dosis</th>
-              <th style="width:13%">Tratamiento</th>
-              <th style="width:10%;text-align:center">Stock</th>
-              <th style="width:10%">Estado</th>
+              <th style="width:28%">Medicamento</th>
+              <th style="width:18%">Horarios</th>
+              <th style="width:10%;text-align:center">Dosis / día</th>
+              <th style="width:14%">Tratamiento</th>
+              <th style="width:12%;text-align:center">Stock</th>
+              <th style="width:12%">Estado</th>
             </tr>
           </thead>
           <tbody>${filas}</tbody>
@@ -2191,13 +2001,30 @@ function printResident(id) {
 function addHorario() {
   const container = document.getElementById('horarios-container');
   if (!container) return;
-  const idx = container.children.length;
   const div = document.createElement('div');
-  div.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:4px 8px;';
-  div.innerHTML = `<input type="time" style="border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;width:90px;">
-    <span style="cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1" onclick="this.parentElement.remove()">×</span>`;
+  div.className = 'horario-row';
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;';
+  div.innerHTML = `
+    <span style="font-size:12px;color:var(--text-muted);width:50px">Hora:</span>
+    <input type="time" style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;width:110px;">
+    <span style="font-size:12px;color:var(--text-muted);margin-left:8px">Dosis:</span>
+    <div style="display:flex;gap:4px">
+      <button type="button" class="dosis-btn" onclick="selectDosisToma(0.5, this)" style="padding:6px 10px;font-size:14px">½</button>
+      <button type="button" class="dosis-btn active" onclick="selectDosisToma(1, this)" style="padding:6px 10px;font-size:14px">1</button>
+      <button type="button" class="dosis-btn" onclick="selectDosisToma(2, this)" style="padding:6px 10px;font-size:14px">2</button>
+    </div>
+    <input type="hidden" class="dosis-valor" value="1">
+    <span style="cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;margin-left:auto" onclick="this.closest('.horario-row').remove()">×</span>
+  `;
   container.appendChild(div);
-  div.querySelector('input').focus();
+  div.querySelector('input[type=time]').focus();
+}
+
+function selectDosisToma(valor, btn) {
+  const row = btn.closest('.horario-row');
+  row.querySelectorAll('.dosis-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  row.querySelector('.dosis-valor').value = valor;
 }
 
 function removeHorario(idx) {
@@ -2205,25 +2032,7 @@ function removeHorario(idx) {
   if (container && container.children[idx]) container.children[idx].remove();
 }
 
-function updateHorario(input, idx) { /* valor se lee directo del input */ }
-
-// Toggle campos de frecuencia en el modal
-function toggleFrecuencia() {
-  const val = document.getElementById('m-frecuencia')?.value;
-  const diasDiv = document.getElementById('freq-dias-semana');
-  const xDiv = document.getElementById('freq-cada-x');
-  if (diasDiv) diasDiv.style.display = val === 'especificos' ? 'block' : 'none';
-  if (xDiv)    xDiv.style.display    = val === 'cada_x_dias' ? 'block' : 'none';
-}
-
-function selectDosis(valor, btn) {
-  // Actualizar hidden input
-  const input = document.getElementById('m-daily');
-  if (input) input.value = valor;
-  // Resaltar botón activo
-  btn.closest('div').querySelectorAll('.dosis-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
+function updateHorario(input, idx) { /* no usado */ }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
