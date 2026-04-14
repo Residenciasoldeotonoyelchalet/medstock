@@ -965,18 +965,20 @@ let currentTab = 'home';
 let medications = [];
 let movements = [];
 
-function saveMeds() {
-  if (window._saveMeds) {
-    window._saveMeds();
-  } else {
-    // Reintentar hasta 10 veces si Firebase aún no cargó
-    let intentos = 0;
-    const retry = setInterval(() => {
-      intentos++;
-      if (window._saveMeds) { clearInterval(retry); window._saveMeds(); }
-      else if (intentos >= 10) { clearInterval(retry); console.warn('_saveMeds no disponible'); }
-    }, 300);
-  }
+function saveMeds(medId = null) {
+  const trySave = () => {
+    if (window._saveMeds) {
+      window._saveMeds(medId);
+    } else {
+      let intentos = 0;
+      const retry = setInterval(() => {
+        intentos++;
+        if (window._saveMeds) { clearInterval(retry); window._saveMeds(medId); }
+        else if (intentos >= 20) { clearInterval(retry); console.warn('_saveMeds no disponible'); }
+      }, 200);
+    }
+  };
+  trySave();
 }
 
 function saveMovs() {
@@ -2002,7 +2004,9 @@ function saveMed(residentId, medId = null) {
     showToast('Medicamento agregado ✅');
   }
 
-  saveData();
+  // Guardar solo este medicamento específico en Firestore
+  saveMeds(newMed.id);
+  saveMovs();
   closeModal();
   showToast(medId ? 'Medicamento actualizado ✅' : 'Medicamento guardado ✅');
   showResident(parseInt(residentId));
@@ -2288,9 +2292,10 @@ onSnapshot(collection(db, 'meds'), snapshot => {
     medsLoaded = true;
     bar.style.width = '50%';
     checkReady();
+    // checkDailyDiscount solo al cargar por primera vez
+    if (window.currentUser) checkDailyDiscount();
   }
   if (window.currentUser) {
-    checkDailyDiscount(); // Verificar descuento al cargar/actualizar
     renderTab(window.currentTab || 'home');
   }
 });
@@ -2302,12 +2307,16 @@ onSnapshot(collection(db, 'movimientos'), snapshot => {
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
-// saveMeds
-window._saveMeds = async function() {
-  for (const med of medications) {
+// saveMeds — guarda todos los meds o uno específico
+window._saveMeds = async function(medId = null) {
+  const lista = medId ? medications.filter(m => String(m.id) === String(medId)) : medications;
+  for (const med of lista) {
     try {
       await setDoc(doc(db, 'meds', String(med.id)), med);
-    } catch(e) { console.error('Error guardando med:', e); }
+    } catch(e) {
+      console.error('Error guardando med:', e);
+      showToast('❌ Error al guardar en la base de datos');
+    }
   }
 };
 
