@@ -598,126 +598,178 @@
 
   /* ====== PRINT ====== */
   @media print {
-    @page { margin: 18mm 16mm; }
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    @page { margin: 20mm 18mm 18mm 18mm; size: A4; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
 
     body > *:not(#print-area) { display: none !important; }
-    #print-area { display: block !important; font-family: 'DM Sans', sans-serif; color: #1a1a1a; }
-
-    /* ENCABEZADO */
-    .print-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 28px;
-      padding-bottom: 16px;
-      border-bottom: 3px solid #5c3d1e;
+    #print-area {
+      display: block !important;
+      font-family: 'DM Sans', sans-serif;
+      color: #1a1a1a;
+      font-size: 11px;
+      line-height: 1.5;
     }
-    .print-header-left .print-institution {
-      font-size: 13px;
+
+    /* ── BANDA SUPERIOR ── */
+    .print-topband {
+      background: #5c3d1e !important;
+      color: #fff !important;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0;
+      border-radius: 6px 6px 0 0;
+    }
+    .print-topband .print-institution {
+      font-family: 'Fraunces', serif;
+      font-size: 15px;
       font-weight: 700;
-      color: #5c3d1e;
+      letter-spacing: 0.3px;
+      color: #fff !important;
+    }
+    .print-topband .print-subtitle {
+      font-size: 9px;
+      color: rgba(255,255,255,0.7) !important;
+      margin-top: 2px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    .print-header-left .print-subtitle {
+    .print-topband .print-fecha {
       font-size: 10px;
-      color: #7a5c40;
-      margin-top: 2px;
-    }
-    .print-header-right {
+      color: rgba(255,255,255,0.85) !important;
       text-align: right;
-      font-size: 10px;
-      color: #7a5c40;
       line-height: 1.6;
     }
+    .print-topband .print-fecha strong {
+      display: block;
+      font-size: 12px;
+      color: #fff !important;
+    }
 
-    /* NOMBRE RESIDENTE */
+    /* ── BLOQUE RESIDENTE ── */
     .print-resident-block {
-      margin-bottom: 20px;
-      padding: 12px 16px;
       background: #faf7f2 !important;
-      border-left: 4px solid #5c3d1e;
-      border-radius: 4px;
+      border: 1px solid #e8d8c4;
+      border-top: none;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-radius: 0 0 6px 6px;
+    }
+    .print-resident-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #5c3d1e !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
     }
     .print-resident-block .print-label {
-      font-size: 9px;
+      font-size: 8px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       color: #7a5c40;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
     .print-resident-block .print-name {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       color: #2d1f0e;
       font-family: 'Fraunces', serif;
+      line-height: 1.2;
     }
 
-    /* TABLA */
+    /* ── TABLA ── */
     .print-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
-      margin-top: 4px;
+      font-size: 10.5px;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: none;
     }
-    .print-table thead tr {
-      background: #5c3d1e !important;
-    }
+    .print-table thead tr { background: #3d2810 !important; }
     .print-table th {
-      background: #5c3d1e !important;
+      background: #3d2810 !important;
       color: #fff !important;
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      padding: 9px 10px;
+      letter-spacing: 0.8px;
+      padding: 10px 12px;
       text-align: left;
       border: none;
+      white-space: nowrap;
     }
-    .print-table tbody tr:nth-child(even) td {
-      background: #faf7f2 !important;
-    }
+    .print-table tbody tr { border-bottom: 1px solid #ede0d0; }
+    .print-table tbody tr:nth-child(even) td { background: #fdf8f3 !important; }
+    .print-table tbody tr:nth-child(odd)  td { background: #ffffff !important; }
     .print-table td {
-      padding: 9px 10px;
-      border-bottom: 1px solid #e8d8c4;
+      padding: 10px 12px;
       vertical-align: middle;
       color: #1a1a1a;
+      border: none;
     }
     .print-table tr:last-child td { border-bottom: none; }
-    .print-table .med-name { font-weight: 700; font-size: 12px; }
-    .print-table .med-sub  { font-size: 9px; color: #7a5c40; display: block; margin-top: 1px; }
-    .print-table .sos-tag  { font-size: 9px; color: #b07800; font-weight: 700; background: #fef3cd; padding: 1px 5px; border-radius: 3px; }
 
-    .status-ok  { color: #2d6a3f !important; font-weight: 700; }
-    .status-low { color: #946200 !important; font-weight: 700; }
-    .status-out { color: #c0392b !important; font-weight: 700; }
+    .med-name { font-weight: 700; font-size: 11px; color: #2d1f0e; }
+    .med-sub  { font-size: 9px; color: #8a6040; display: block; margin-top: 2px; }
+    .sos-tag  { font-size: 8px; color: #7a4800; font-weight: 700; background: #fde8b0 !important; padding: 2px 6px; border-radius: 3px; display: inline-block; margin-top: 2px; }
 
-    /* FIRMA */
+    .horario-pill {
+      display: inline-block;
+      background: #e8f0fb !important;
+      color: #1a4a8a;
+      border-radius: 3px;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      margin: 1px 2px;
+    }
+
+    .status-ok  { color: #1a6b3c !important; font-weight: 700; }
+    .status-low { color: #7a4f00 !important; font-weight: 700; }
+    .status-out { color: #b52a1c !important; font-weight: 700; }
+
+    /* ── SECCIÓN FIRMA ── */
     .print-firma {
       display: flex;
-      gap: 40px;
-      margin-top: 40px;
-      padding-top: 0;
+      gap: 24px;
+      margin-top: 36px;
     }
     .print-firma-box {
       flex: 1;
-      border-top: 1px solid #aaa;
-      padding-top: 6px;
-      font-size: 9px;
-      color: #7a5c40;
+      padding-top: 36px;
+      border-top: 1.5px solid #bbb;
+      font-size: 8.5px;
+      color: #888;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
+      text-align: center;
     }
 
-    /* PIE */
+    /* ── PIE ── */
     .print-footer {
-      margin-top: 24px;
-      font-size: 9px;
-      color: #bbb;
-      text-align: center;
-      border-top: 1px solid #e8d8c4;
+      margin-top: 20px;
       padding-top: 8px;
+      border-top: 1px solid #e8d8c4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 8px;
+      color: #bbb;
+    }
+    .print-footer .footer-logo {
+      font-weight: 700;
+      color: #c8a878;
+      font-family: 'Fraunces', serif;
+      font-size: 10px;
     }
   }
 </style>
@@ -1683,72 +1735,87 @@ function today() {
 // IMPRIMIR PLANILLA PDF — solo medicamentos del residente
 // =====================================================
 function printResident(id) {
-  const res = RESIDENTS.find(r => r.id === id);
+  const res  = RESIDENTS.find(r => r.id === id);
   const meds = medications.filter(m => m.residentId === id);
-  const fechaHoy = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const now  = new Date();
+  const fechaHoy = now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const fechaCorta = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  const filas = meds.map((m, i) => {
+  const filas = meds.map(m => {
     const st = getStatus(m);
-    const diasRestantes = m.dailyDose > 0 ? Math.floor(m.qty / m.dailyDose) + ' días' : '—';
     const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
     const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
+    const horariosCells = (m.horarios && m.horarios.length > 0)
+      ? m.horarios.map(h => `<span class="horario-pill">${h}</span>`).join('')
+      : '<span style="color:#bbb">—</span>';
     return `
       <tr>
         <td>
           <span class="med-name">${m.name}</span>
           ${(m.drug || m.conc) ? `<span class="med-sub">${[m.drug, m.conc].filter(Boolean).join(' · ')}</span>` : ''}
-          ${m.sos ? ' <span class="sos-tag">SOS</span>' : ''}
-          ${m.obs ? `<span class="med-sub" style="font-style:italic">${m.obs}</span>` : ''}
+          ${m.sos ? '<span class="sos-tag">SOS</span>' : ''}
+          ${m.obs ? `<span class="med-sub" style="font-style:italic;color:#9a7050">${m.obs}</span>` : ''}
         </td>
-        <td>${(m.horarios && m.horarios.length > 0) ? m.horarios.join(' / ') : '—'}</td>
-        <td>${m.dailyDose || '—'} ${m.dailyDose ? m.unit : ''}</td>
+        <td>${horariosCells}</td>
+        <td style="text-align:center;font-weight:600">${m.dailyDose || '—'}${m.dailyDose ? '<br><span style="font-size:8.5px;font-weight:400;color:#888">' + m.unit + '</span>' : ''}</td>
         <td>${treatLabel}</td>
-        <td>${m.qty} ${m.unit}</td>
+        <td style="text-align:center;font-weight:600">${m.qty}<br><span style="font-size:8.5px;font-weight:400;color:#888">${m.unit}</span></td>
         <td class="${'status-' + st}">${statusLabel}</td>
       </tr>`;
   }).join('');
 
   const html = `
-    <div class="print-header">
-      <div class="print-header-left">
+    <!-- BANDA SUPERIOR -->
+    <div class="print-topband">
+      <div>
         <div class="print-institution">Residencia Sol de Otoño y El Chalet</div>
         <div class="print-subtitle">Planilla de medicamentos activos</div>
       </div>
-      <div class="print-header-right">
-        Fecha: ${fechaHoy}
+      <div class="print-fecha">
+        Generado el
+        <strong>${fechaHoy}</strong>
       </div>
     </div>
 
+    <!-- BLOQUE RESIDENTE -->
     <div class="print-resident-block">
-      <div class="print-label">Residente</div>
-      <div class="print-name">${res.name}</div>
+      <div class="print-resident-avatar">👤</div>
+      <div>
+        <div class="print-label">Residente</div>
+        <div class="print-name">${res.name}</div>
+      </div>
     </div>
 
+    <!-- TABLA -->
     ${meds.length === 0
-      ? '<p style="color:#7a5c40;font-size:13px;padding:12px 0">Sin medicamentos cargados.</p>'
+      ? '<p style="color:#7a5c40;font-size:13px;padding:16px 0">Sin medicamentos cargados.</p>'
       : `<table class="print-table">
           <thead>
             <tr>
-              <th>Medicamento</th>
-              <th>Horarios</th>
-              <th>Dosis / día</th>
-              <th>Tratamiento</th>
-              <th>Stock actual</th>
-              <th>Estado</th>
+              <th style="width:28%">Medicamento</th>
+              <th style="width:18%">Horarios</th>
+              <th style="width:10%;text-align:center">Dosis / día</th>
+              <th style="width:14%">Tratamiento</th>
+              <th style="width:12%;text-align:center">Stock</th>
+              <th style="width:12%">Estado</th>
             </tr>
           </thead>
           <tbody>${filas}</tbody>
         </table>`
     }
 
+    <!-- FIRMA -->
     <div class="print-firma">
       <div class="print-firma-box">Firma médico / profesional</div>
-      <div class="print-firma-box">Sello</div>
+      <div class="print-firma-box">Matrícula / Sello</div>
       <div class="print-firma-box">Fecha</div>
     </div>
 
+    <!-- PIE -->
     <div class="print-footer">
-      Residencia Sol de Otoño y El Chalet · MedStock · ${fechaHoy}
+      <span class="footer-logo">🍂 MedStock</span>
+      <span>Residencia Sol de Otoño y El Chalet</span>
+      <span>${fechaCorta}</span>
     </div>
   `;
 
