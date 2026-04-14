@@ -908,36 +908,64 @@ function showResident(id) {
   const res = RESIDENTS.find(r => r.id === id);
   const meds = medications.filter(m => m.residentId === id);
   const c = document.getElementById('main-content');
+
   c.innerHTML = `
     <div class="back-btn" onclick="renderTab('residents')">← Volver a residentes</div>
-    <h2 class="section-title">👤 ${res.name}</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+      <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
+      <button class="btn btn-secondary btn-sm" onclick="window.print()">📥 Descargar Planilla PDF</button>
+    </div>
+
     <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
       ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
     </div>
+
     <div class="card">
-      <div class="card-header"><div class="card-title">💊 Medicamentos</div></div>
+      <div class="card-header"><div class="card-title">💊 Medicamentos Actuales</div></div>
       <div class="table-wrapper">
         ${meds.length === 0 ? '<div class="empty-state"><div class="empty-icon">💊</div><p>Sin medicamentos cargados</p></div>' :
           `<table>
-            <thead><tr><th>Medicamento</th><th>Droga</th><th>Concentrarion</th><th>Horario</th><th>Stock</th><th>Estado</th>${canEdit() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <thead>
+              <tr>
+                <th>Medicamento</th>
+                <th>Dosis/Día</th>
+                <th>Tratamiento</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                ${canEdit() ? '<th>Acciones de Stock / Enfermería</th>' : ''}
+              </tr>
+            </thead>
             <tbody>${meds.map(m => {
               const st = getStatus(m);
-              const pct = m.minQty ? Math.min(100, Math.round((m.qty / (m.minQty * 3)) * 100)) : 50;
+              // Cálculo de barra de progreso basado en días restantes (ej: 15 días es 100%)
+              const diasRestantes = m.dailyDose > 0 ? (m.qty / m.dailyDose) : 0;
+              const pct = Math.min(100, Math.round((diasRestantes / 15) * 100));
+              
               return `<tr>
-                <td><strong>${m.name}</strong>${m.sos ? ' <span class="badge badge-low" style="font-size:10px">SOS</span>' : ''}</td>
-                <td>${m.drug || '—'}</td>
-                <td>${m.concentration || '—'}</td>
-                <td style="font-size:13px;color:var(--text-muted)">${m.horario || '—'}</td>
+                <td>
+                  <strong>${m.name}</strong><br>
+                  <small style="color:var(--text-muted)">${m.drug || ''} (${m.conc || ''})</small>
+                  ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
+                </td>
+                <td>${m.dailyDose || 0} ${m.unit}</td>
+                <td style="font-size:12px; text-transform:capitalize">${m.treatment || 'prolongado'}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:8px">
                     <span>${m.qty} ${m.unit}</span>
                     <div class="progress-bar"><div class="progress-fill fill-${st}" style="width:${pct}%"></div></div>
                   </div>
+                  <small style="color:var(--text-muted); font-size:10px">${diasRestantes.toFixed(1)} días restantes</small>
                 </td>
                 <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
-                ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                  <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
-                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
+                
+                ${canEdit() ? `
+                <td style="display:flex;gap:6px;flex-wrap:wrap">
+                  <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})" title="Marcar toma diaria">✅ Dar</button>
+                  
+                  <div style="border-left: 1px solid var(--border); margin: 0 4px;"></div>
+                  
+                  <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})" title="Editar Medicamento">⚙️</button>
+                  <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')" title="Cargar Compra">+ Stock</button>
                   <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
                 </td>` : ''}
               </tr>`;
@@ -947,6 +975,42 @@ function showResident(id) {
       </div>
     </div>
   `;
+}
+
+// ESTA FUNCIÓN ES LA QUE HACE QUE EL BOTÓN "DAR" DESCUENTE STOCK
+function registerTake(mid) {
+  const med = medications.find(m => m.id === mid);
+  if (!med) return;
+
+  if (med.qty < med.dailyDose) {
+    alert("⚠️ No hay stock suficiente para la dosis de hoy (" + med.dailyDose + " " + med.unit + ")");
+    return;
+  }
+
+  // Descontar la dosis del stock actual
+  med.qty = Math.max(0, med.qty - med.dailyDose);
+  
+  // Guardamos el movimiento
+  movements.push({
+    id: Date.now(),
+    medId: mid,
+    type: 'out',
+    qty: med.dailyDose,
+    date: new Date().toLocaleString(),
+    user: currentUser.name,
+    note: 'Toma diaria registrada por enfermería'
+  });
+
+  saveData();
+  showResident(med.residentId); // Refrescar la tabla
+  
+  // Mensaje flotante de éxito
+  const t = document.getElementById('toast');
+  if(t) {
+    t.textContent = "✅ Toma de " + med.name + " registrada";
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 2000);
+  }
 }
 
 function renderMyResident(c) {
