@@ -29,25 +29,27 @@
     --shadow-lg: 0 8px 40px rgba(92,61,30,0.16);
     --radius: 14px;
     --radius-sm: 8px;
-  } /* <-- Esta llave cierra el :root, es fundamental */
+  }
 
-  /* Aquí irían el resto de tus estilos normales de la web (body, botones, etc.) */
+  /* --- AQUÍ PODÉS DEJAR TUS ESTILOS NORMALES SI LOS TENÍAS ABAJO --- */
 
   @media print {
-    nav, .topbar, .back-btn, .btn, .no-print, .search-bar, .nav-tabs, .login-screen, #login-screen {
+    nav, .topbar, .back-btn, .btn, .no-print, .search-bar, .nav-tabs, #login-screen {
       display: none !important;
     }
     body { 
       background: white !important; 
       color: black !important;
+      padding: 0 !important;
     }
     .main-content { 
       margin: 0 !important; 
       padding: 0 !important; 
     }
     .card { 
-      border: 1px solid #ccc !important; 
-      box-shadow: none !important; 
+      border: 1px solid #eee !important; 
+      box-shadow: none !important;
+      margin: 0 !important;
     }
     table {
       width: 100% !important;
@@ -57,10 +59,15 @@
       border: 1px solid #eee !important;
       padding: 8px !important;
       color: black !important;
+      font-size: 12px !important;
+    }
+    .section-title {
+      display: block !important;
+      text-align: center !important;
+      margin-bottom: 20px !important;
     }
   }
 </style>
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
