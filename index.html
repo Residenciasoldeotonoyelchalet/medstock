@@ -965,10 +965,33 @@ let currentTab = 'home';
 let medications = [];
 let movements = [];
 
-function saveMeds() { if (window._saveMeds) window._saveMeds(); }
-function saveMovs() { if (window._saveMovs) window._saveMovs(); }
+function saveMeds() {
+  if (window._saveMeds) {
+    window._saveMeds();
+  } else {
+    // Reintentar hasta 10 veces si Firebase aún no cargó
+    let intentos = 0;
+    const retry = setInterval(() => {
+      intentos++;
+      if (window._saveMeds) { clearInterval(retry); window._saveMeds(); }
+      else if (intentos >= 10) { clearInterval(retry); console.warn('_saveMeds no disponible'); }
+    }, 300);
+  }
+}
 
-// FIX: saveData ahora guarda tanto meds como movs
+function saveMovs() {
+  if (window._saveMovs) {
+    window._saveMovs();
+  } else {
+    let intentos = 0;
+    const retry = setInterval(() => {
+      intentos++;
+      if (window._saveMovs) { clearInterval(retry); window._saveMovs(); }
+      else if (intentos >= 10) { clearInterval(retry); console.warn('_saveMovs no disponible'); }
+    }, 300);
+  }
+}
+
 function saveData() {
   saveMeds();
   saveMovs();
@@ -1981,7 +2004,8 @@ function saveMed(residentId, medId = null) {
 
   saveData();
   closeModal();
-  showResident(parseInt(residentId)); // FIX: era renderResidentDetail, ahora es showResident
+  showToast(medId ? 'Medicamento actualizado ✅' : 'Medicamento guardado ✅');
+  showResident(parseInt(residentId));
 }
 
 function saveMedGeneral() {
