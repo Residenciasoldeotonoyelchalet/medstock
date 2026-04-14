@@ -356,7 +356,8 @@
   .badge-out { background: var(--red-light); color: var(--red); }
   .badge-role { background: var(--blue-light); color: var(--blue); }
   .badge-unica { background: #e8f0fb; color: #2c6fad; }
-  .badge-evaluar { background: #f0e8fb; color: #6b2cad; }
+  .badge-evaluar    { background: #f0e8fb; color: #6b2cad; }
+  .badge-finalizado { background: #ececec; color: #888; }
 
   /* Botones selector de dosis */
   .dosis-btn {
@@ -1102,6 +1103,8 @@ function checkDailyDiscount() {
     if (med.sos) return;
     if (!med.dailyDose || med.dailyDose <= 0) return;
     if (med.qty <= 0) return;
+    // No descontar si ya finalizó
+    if (getStatus(med) === 'finalizado') return;
     // Verificar si hoy corresponde tomar según frecuencia
     if (!debeTomarsHoy(med)) return;
 
@@ -1274,7 +1277,7 @@ function renderHome(c) {
 }
 
 function renderAlertsSection(meds) {
-  const alerts = meds.filter(m => getStatus(m) !== 'ok');
+  const alerts = meds.filter(m => getStatus(m) !== 'ok' && getStatus(m) !== 'finalizado');
   if (alerts.length === 0) return `<div class="card"><div class="card-body" style="text-align:center;padding:24px;color:var(--green)">✅ Todo el stock en buen estado</div></div>`;
   return `<div class="card">
     <div class="card-header"><div class="card-title">🔔 Alertas de stock</div></div>
@@ -1293,6 +1296,12 @@ function renderAlertsSection(meds) {
 }
 
 function getStatus(m) {
+  // Verificar si tiene fecha de fin y ya pasó
+  if (m.fechaFin) {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const fin = new Date(m.fechaFin + 'T00:00:00');
+    if (hoy > fin) return 'finalizado';
+  }
   // Única toma y A evaluar nunca generan alarma de stock
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
   if (m.qty <= 0) return 'out';
@@ -1413,6 +1422,7 @@ function showResident(id) {
                   <small style="color:var(--text-muted)">${m.drug || ''} ${m.conc ? '(' + m.conc + ')' : ''}</small>
                   ${m.sos ? ' <span class="badge badge-low" style="font-size:9px; padding:2px 4px">SOS</span>' : ''}
                   ${m.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${m.obs}</small>` : ''}
+                  ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
                 <td style="font-size:13px">
                   ${(m.horarios && m.horarios.length > 0)
@@ -1432,7 +1442,9 @@ function showResident(id) {
                   </div>
                   ${!esPorcentaje ? `<small style="color:var(--text-muted); font-size:10px">${diasRestantes} días</small>` : ""}
                 </td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
+                <td><span class="badge badge-${st}">
+                  ${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : st === 'out' ? '🚨 Sin stock' : st === 'finalizado' ? '🏁 Finalizado' : ''}
+                </span></td>
                 
                 ${canEdit() ? `
                 <td>
@@ -1524,7 +1536,9 @@ function renderMedications(c) {
                 <td>${m.conc || '—'}</td>
                 <td style="font-size:12px">${treatmentLabel}</td>
                 <td>${m.qty} ${m.unit}</td>
-                <td><span class="badge badge-${st}">${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : '🚨 Sin stock'}</span></td>
+                <td><span class="badge badge-${st}">
+                  ${st === 'ok' ? '✅ OK' : st === 'low' ? '⚠️ Bajo' : st === 'out' ? '🚨 Sin stock' : st === 'finalizado' ? '🏁 Finalizado' : ''}
+                </span></td>
                 ${canEdit() ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
                   <button class="btn btn-green btn-sm" onclick="openMovement(${m.id}, 'in')">+ Entrada</button>
                   <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
@@ -1855,6 +1869,12 @@ function openAddMed(residentId, medId = null) {
 
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" value="${med?.obs || ''}" placeholder="Opcional"></div>
 
+    <div class="form-group">
+      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input id="m-fecha-fin" type="date" value="${med?.fechaFin || ''}" style="max-width:200px">
+      ${med?.fechaFin ? `<div style="margin-top:6px;font-size:12px;color:var(--text-muted)">Finaliza el ${new Date(med.fechaFin + 'T00:00:00').toLocaleDateString('es-AR', {day:'2-digit',month:'long',year:'numeric'})}</div>` : ''}
+    </div>
+
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveMed(${residentId}, ${medId || 'null'})">Guardar</button>
@@ -1950,6 +1970,10 @@ function openAddMedGeneral() {
       <button type="button" class="btn btn-secondary btn-sm" onclick="addHorario()" style="margin-top:2px">+ Agregar horario</button>
     </div>
     <div class="form-group"><label>Observaciones</label><input id="m-obs" type="text" placeholder="Opcional"></div>
+    <div class="form-group">
+      <label>Fecha de fin del tratamiento <span style="font-weight:400;color:var(--text-muted)">(opcional)</span></label>
+      <input id="m-fecha-fin" type="date" style="max-width:200px">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="saveMedGeneral()">Guardar</button>
@@ -1979,7 +2003,8 @@ function saveMed(residentId, medId = null) {
     frecuencia: document.getElementById('m-frecuencia')?.value || 'diario',
     diasSemana: Array.from(document.querySelectorAll('input[name=dia-semana]:checked')).map(i => i.value),
     cadaXDias: parseInt(document.getElementById('m-cada-x')?.value) || 2,
-    fechaInicio: (medId ? (medications.find(m => m.id === medId)?.fechaInicio) : null) || new Date().toISOString().slice(0,10)
+    fechaInicio: (medId ? (medications.find(m => m.id === medId)?.fechaInicio) : null) || new Date().toISOString().slice(0,10),
+    fechaFin: document.getElementById('m-fecha-fin')?.value || ''
   };
 
   if (medId) {
@@ -2081,7 +2106,7 @@ function printResident(id) {
   const filas = meds.map(m => {
     const st = getStatus(m);
     const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
-    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
+    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : st === 'out' ? '✗ Sin stock' : '🏁 Finalizado';
     const horariosCells = (m.horarios && m.horarios.length > 0)
       ? m.horarios.map(h => `<span class="horario-pill">${h}</span>`).join('')
       : '<span style="color:#bbb">—</span>';
