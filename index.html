@@ -1401,28 +1401,7 @@ function saveMedGeneral() {
   saveMed(residentId, null);
 }
 
-function renderMovements(c) {
-  c.innerHTML = `
-    <h2 class="section-title">📋 Historial de movimientos</h2>
-    <div class="card">
-      <div class="card-body">
-        ${movements.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          movements.slice().reverse().map(mov => {
-            const res = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${res ? res.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">
-                ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
-                ${mov.note ? '· ' + mov.note : ''} · <strong>${mov.by}</strong> · ${mov.date}
-              </span></div>
-            </div>`;
-          }).join('')
-        }
-      </div>
-    </div>
-  `;
-}
+// renderMovements duplicado eliminado
 
 // =====================================================
 // MODALS: MOVEMENT
