@@ -1186,20 +1186,23 @@ function frecuenciaLabel(med) {
 
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
 function checkDailyDiscount() {
-  const today = new Date().toISOString().slice(0, 10); // "2026-04-14"
+  const today = new Date().toISOString().slice(0, 10);
   const lastDiscount = localStorage.getItem('medstock_last_discount');
-  if (lastDiscount === today) return; // Ya se hizo hoy
+  if (lastDiscount === today) return;
 
   let huboDescuento = false;
   medications.forEach(med => {
     if (med.treatment !== 'prolongado') return;
     if (med.sos) return;
-    if (!med.dailyDose || med.dailyDose <= 0) return;
     if (med.qty <= 0) return;
     if (getStatus(med) === 'finalizado') return;
     if (!debeTomarsHoy(med)) return;
 
-    const descuento = Math.min(getDosisdiaria(med), med.qty);
+    // getDosisdiaria suma todas las dosis de cada horario
+    const dosis = getDosisdiaria(med);
+    if (dosis <= 0) return;
+
+    const descuento = Math.min(dosis, med.qty);
     med.qty = Math.max(0, med.qty - descuento);
 
     movements.push({
@@ -1758,31 +1761,60 @@ function renderMedications(c) {
 }
 
 function renderMovements(c) {
-  // Familiares solo ven movimientos de su residente
-  const list = currentUser.role === 'family'
+  const isFamily = currentUser.role === 'family';
+
+  // Base: movimientos de medicación
+  let list = isFamily
     ? movements.filter(m => m.residentId === currentUser.residentId)
     : movements;
-  const res = currentUser.role === 'family'
-    ? RESIDENTS.find(r => r.id === currentUser.residentId)
-    : null;
+
+  // Familiares: NO ven descuentos automáticos
+  if (isFamily) {
+    list = list.filter(m => m.note !== 'Descuento diario automático');
+  }
+
+  // Movimientos de higiene (entradas/salidas registradas manualmente)
+  const hygieneMovs = (typeof hygieneItems !== 'undefined' ? hygieneItems : [])
+    .filter(h => !isFamily || h.residentId === currentUser.residentId)
+    .flatMap(h => (h.movimientos || []))
+    .sort((a,b) => b.id - a.id);
+
+  const res = isFamily ? RESIDENTS.find(r => r.id === currentUser.residentId) : null;
   const titulo = res ? `📋 Movimientos de ${res.name}` : '📋 Historial de movimientos';
+
+  const medItems = list.slice().reverse().map(mov => {
+    const r = RESIDENTS.find(r => r.id === mov.residentId);
+    return `<div class="movement-item">
+      <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
+      <div>💊 <strong>${mov.medName}</strong> — ${r ? r.name : ''}<br>
+      <span style="color:var(--text-muted);font-size:13px">
+        ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
+        ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
+      </span></div>
+    </div>`;
+  }).join('');
+
+  const hygieneMovItems = hygieneMovs.map(mov => {
+    const r = RESIDENTS.find(r => r.id === mov.residentId);
+    return `<div class="movement-item">
+      <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
+      <div>🧴 <strong>${mov.nombre}</strong> — ${r ? r.name : ''}<br>
+      <span style="color:var(--text-muted);font-size:13px">
+        ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unidad || 'unidades'}
+        · <strong>${mov.by}</strong> · ${mov.date}
+      </span></div>
+    </div>`;
+  }).join('');
+
+  const allItems = medItems + hygieneMovItems;
 
   c.innerHTML = `
     <h2 class="section-title">${titulo}</h2>
     <div class="card">
       <div class="card-body">
-        ${list.length === 0 ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>' :
-          list.slice().reverse().map(mov => {
-            const r = RESIDENTS.find(r => r.id === mov.residentId);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}">${mov.type === 'in' ? '⬆️' : '⬇️'}</div>
-              <div><strong>${mov.medName}</strong> — ${r ? r.name : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">
-                ${mov.type === 'in' ? 'Entrada' : 'Salida'}: ${mov.type === 'in' ? '+' : '-'}${mov.qty} ${mov.unit}
-                ${mov.note ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
-              </span></div>
-            </div>`;
-          }).join('')
+        ${allItems.length === 0
+          ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
+          : allItems
         }
       </div>
     </div>
@@ -2412,6 +2444,18 @@ function saveMovHygiene(itemId, type) {
   if (!item) return;
   if (type === 'out' && item.qty < qty) { showToast('No hay suficiente stock'); return; }
   item.qty = type === 'in' ? item.qty + qty : item.qty - qty;
+  // Guardar movimiento en el item para historial
+  if (!item.movimientos) item.movimientos = [];
+  item.movimientos.push({
+    id: Date.now(),
+    type,
+    qty,
+    unidad: item.unidad || 'unidades',
+    nombre: item.nombre,
+    residentId: item.residentId,
+    by: currentUser.name,
+    date: new Date().toLocaleDateString('es-AR')
+  });
   saveHygiene(itemId);
   closeModal();
   showToast(type === 'in' ? `+${qty} agregados ✅` : `-${qty} registrados ✅`);
@@ -2458,54 +2502,60 @@ function today() {
 // =====================================================
 // IMPRIMIR PLANILLA PDF — solo medicamentos del residente
 // =====================================================
+function fmtDosis(d) {
+  return d == 0.5 ? '½' : d == 1.5 ? '1½' : String(d);
+}
+
 function printResident(id) {
   const res  = RESIDENTS.find(r => r.id === id);
   const meds = medications.filter(m => m.residentId === id);
   const now  = new Date();
-  const fechaHoy = now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const fechaCorta = now.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fechaHoy  = now.toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const fechaCorta = now.toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
 
   const filas = meds.map(m => {
-    const st = getStatus(m);
-    const treatLabel = m.treatment === 'unica' ? 'Única toma' : m.treatment === 'evolucion' ? 'Esperar evolución' : 'Prolongado';
-    const statusLabel = st === 'ok' ? '✓ OK' : st === 'low' ? '⚠ Stock bajo' : '✗ Sin stock';
-    const horariosCells = (m.horarios && m.horarios.length > 0)
-      ? m.horarios.map(h => {
-          const hora = h.hora;
-          const dosis = h.dosis;
-          return `<span class="horario-pill">${hora}<br><span style="font-size:8px">${dosis}${m.unit}</span></span>`;
-        }).join('')
-      : '<span style="color:#bbb">—</span>';
+    const treatLabel = m.treatment === 'unica' ? 'Única toma'
+      : m.treatment === 'evolucion' ? 'A evaluar'
+      : 'Prolongado';
+
+    // Horarios con dosis — mostrar ½ en lugar de 0.5
+    let horariosHtml;
+    const horNorm = normalizarHorarios(m);
+    if (m.sos) {
+      horariosHtml = '<span class="sos-tag">SOS</span>';
+    } else if (horNorm.length > 0) {
+      horariosHtml = horNorm.map(h =>
+        `<span class="horario-pill">${h.hora} · ${fmtDosis(h.dosis)} ${m.unit}</span>`
+      ).join(' ');
+    } else {
+      horariosHtml = '<span style="color:#bbb">—</span>';
+    }
+
+    // Dosis total diaria formateada
+    const dosisTotal = getDosisdiaria(m);
+    const dosisFmt = fmtDosis(dosisTotal);
+
     return `
       <tr>
         <td>
           <span class="med-name">${m.name}</span>
           ${(m.drug || m.conc) ? `<span class="med-sub">${[m.drug, m.conc].filter(Boolean).join(' · ')}</span>` : ''}
-          ${m.sos ? '<span class="sos-tag">SOS</span>' : ''}
-          ${m.obs ? `<span class="med-sub" style="font-style:italic;color:#9a7050">${m.obs}</span>` : ''}
         </td>
-        <td>${horariosCells}</td>
-        <td style="text-align:center;font-weight:600">${m.dailyDose || '—'}${m.dailyDose ? '<br><span style="font-size:8.5px;font-weight:400;color:#888">' + m.unit + '</span>' : ''}</td>
+        <td>${horariosHtml}</td>
+        <td style="text-align:center;font-weight:700;font-size:13px">${dosisFmt}<br><span style="font-size:8.5px;font-weight:400;color:#888">${m.unit}/día</span></td>
         <td>${treatLabel}</td>
-        <td style="text-align:center;font-weight:600">${m.qty}<br><span style="font-size:8.5px;font-weight:400;color:#888">${m.unit}</span></td>
-        <td class="${'status-' + st}">${statusLabel}</td>
       </tr>`;
   }).join('');
 
   const html = `
-    <!-- BANDA SUPERIOR -->
     <div class="print-topband">
       <div>
         <div class="print-institution">Residencia Sol de Otoño y El Chalet</div>
-        <div class="print-subtitle">Planilla de medicamentos activos</div>
+        <div class="print-subtitle">Planilla de medicamentos</div>
       </div>
-      <div class="print-fecha">
-        Generado el
-        <strong>${fechaHoy}</strong>
-      </div>
+      <div class="print-fecha">Generado el<strong>${fechaHoy}</strong></div>
     </div>
 
-    <!-- BLOQUE RESIDENTE -->
     <div class="print-resident-block">
       <div class="print-resident-avatar">👤</div>
       <div>
@@ -2514,32 +2564,27 @@ function printResident(id) {
       </div>
     </div>
 
-    <!-- TABLA -->
     ${meds.length === 0
       ? '<p style="color:#7a5c40;font-size:13px;padding:16px 0">Sin medicamentos cargados.</p>'
       : `<table class="print-table">
           <thead>
             <tr>
-              <th style="width:28%">Medicamento</th>
-              <th style="width:18%">Horarios</th>
-              <th style="width:10%;text-align:center">Dosis / día</th>
-              <th style="width:14%">Tratamiento</th>
-              <th style="width:12%;text-align:center">Stock</th>
-              <th style="width:12%">Estado</th>
+              <th style="width:32%">Medicamento · Droga · mg</th>
+              <th style="width:32%">Horarios / SOS</th>
+              <th style="width:16%;text-align:center">Dosis/día</th>
+              <th style="width:20%">Tratamiento</th>
             </tr>
           </thead>
           <tbody>${filas}</tbody>
         </table>`
     }
 
-    <!-- FIRMA -->
     <div class="print-firma">
       <div class="print-firma-box">Firma médico / profesional</div>
       <div class="print-firma-box">Matrícula / Sello</div>
       <div class="print-firma-box">Fecha</div>
     </div>
 
-    <!-- PIE -->
     <div class="print-footer">
       <span class="footer-logo">🍂 MedStock</span>
       <span>Residencia Sol de Otoño y El Chalet</span>
