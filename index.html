@@ -1400,8 +1400,9 @@ function getStatus(m) {
     const fin = new Date(m.fechaFin + 'T00:00:00');
     if (hoy > fin) return 'finalizado';
   }
-  // Única toma y A evaluar nunca generan alarma
+  // Única toma, A evaluar y SOS nunca generan alarma
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
+  if (m.sos) return 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
   // Porcentaje
