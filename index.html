@@ -1402,7 +1402,7 @@ function getStatus(m) {
   }
   // Única toma, A evaluar y SOS nunca generan alarma
   if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
-  if (m.sos) return 'ok';
+  if (m.sos) return m.qty <= 0 ? 'out' : 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
   // Porcentaje
