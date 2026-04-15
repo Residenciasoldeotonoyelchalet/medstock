@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>MedStock Cron</title></head>
+<body>
+<div id="status">Iniciando descuento automático...</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
+  authDomain: "medstock-29e24.firebaseapp.com",
+  projectId: "medstock-29e24",
+  storageBucket: "medstock-29e24.firebasestorage.app",
+  messagingSenderId: "276664612131",
+  appId: "1:276664612131:web:68ec5aa0d95b4e47850896"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+function normalizarHorarios(med) {
+  if (!med.horarios || med.horarios.length === 0) return [];
+  return med.horarios.map(h => {
+    if (h && typeof h === 'object' && h.hora) return { hora: h.hora, dosis: parseFloat(h.dosis) || med.dailyDose || 1 };
+    if (typeof h === 'string' && h.length > 0) return { hora: h, dosis: med.dailyDose || 1 };
+    return null;
+  }).filter(Boolean);
+}
+
+function getDosisdiaria(med) {
+  const hs = normalizarHorarios(med);
+  if (hs.length > 0) return hs.reduce((s, h) => s + h.dosis, 0);
+  return med.dailyDose || 0;
+}
+
+function debeTomarsHoy(med) {
+  if (!med.frecuencia || med.frecuencia === 'diario') return true;
+  const hoy = new Date();
+  const dias = ['dom','lun','mar','mie','jue','vie','sab'];
+  const diaHoy = dias[hoy.getDay()];
+  if (med.frecuencia === 'alternos') {
+    const inicio = med.fechaInicio ? new Date(med.fechaInicio + 'T00:00:00') : new Date();
+    const diff = Math.floor((hoy - inicio) / 86400000);
+    return diff % 2 === 0;
+  }
+  if (med.frecuencia === 'especificos') return (med.diasSemana || []).includes(diaHoy);
+  if (med.frecuencia === 'cada_x_dias') {
+    const inicio = med.fechaInicio ? new Date(med.fechaInicio + 'T00:00:00') : new Date();
+    const diff = Math.floor((hoy - inicio) / 86400000);
+    return diff % (med.cadaXDias || 1) === 0;
+  }
+  return true;
+}
+
+function estaFinalizado(med) {
+  if (!med.fechaFin) return false;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return hoy > new Date(med.fechaFin + 'T00:00:00');
+}
+
+async function runDiscount() {
+  const today = new Date().toISOString().slice(0, 10);
+  const status = document.getElementById('status');
+
+  try {
+    // Verificar si ya se hizo hoy
+    const cronRef = collection(db, 'cron_log');
+    const cronSnap = await getDocs(cronRef);
+    const logs = cronSnap.docs.map(d => d.data());
+    const yaHecho = logs.some(l => l.fecha === today);
+
+    if (yaHecho) {
+      status.textContent = '✅ Descuento ya realizado hoy: ' + today;
+      return;
+    }
+
+    const medsSnap = await getDocs(collection(db, 'meds'));
+    const meds = medsSnap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+
+    let count = 0;
+    for (const med of meds) {
+      if (med.treatment !== 'prolongado') continue;
+      if (med.sos) continue;
+      if (med.qty <= 0) continue;
+      if (estaFinalizado(med)) continue;
+      if (!debeTomarsHoy(med)) continue;
+
+      const dosis = getDosisdiaria(med);
+      if (dosis <= 0) continue;
+
+      const descuento = Math.min(dosis, med.qty);
+      med.qty = Math.max(0, med.qty - descuento);
+
+      await setDoc(doc(db, 'meds', String(med.id)), med);
+      count++;
+    }
+
+    // Registrar que se hizo
+    await addDoc(collection(db, 'cron_log'), {
+      fecha: today,
+      ejecutado: new Date().toISOString(),
+      medicamentosDescontados: count
+    });
+
+    status.textContent = `✅ Descuento completado: ${count} medicamentos actualizados (${today})`;
+  } catch(e) {
+    status.textContent = '❌ Error: ' + e.message;
+    console.error(e);
+  }
+}
+
+runDiscount();
+</script>
+</body>
+</html>
