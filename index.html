@@ -2628,7 +2628,7 @@ function addHorario() {
   const container = document.getElementById('horarios-container');
   if (!container) return;
   const unit = document.getElementById('m-unit')?.value || '';
-  const esGotas = unit === 'gotas';
+  const esGotas = unit === 'gotas' || unit === '%';
   const div = document.createElement('div');
   div.className = 'horario-row';
   div.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex-wrap:wrap';
