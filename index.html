@@ -2326,80 +2326,28 @@ function openAddHygiene(residentId, itemId = null) {
     </div>
 
     <div id="h-necesidad-fields" style="display:${item?.tipo==='necesidad'?'block':'none'}">
-
-      <!-- Modo gramos (para alimentos/suplementos en polvo) -->
-      <div class="form-group">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-          <input type="checkbox" id="h-modo-gramos" onchange="toggleModoGramos()" ${item?.modoGramos?'checked':''}>
-          <span>Es un producto que se mide en gramos/medidas (ej: Fortsip, suplementos)</span>
-        </label>
-      </div>
-
-      <!-- Campos modo gramos -->
-      <div id="h-gramos-fields" style="display:${item?.modoGramos?'block':'none'};background:var(--cream);border-radius:10px;padding:14px;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:600;color:var(--brown);margin-bottom:12px">📦 Configuración de envase</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Gramos por envase</label>
-            <div style="display:flex;align-items:center;gap:6px">
-              <input id="h-gramos-envase" type="number" min="1" value="${item?.gramosEnvase || 800}" style="width:100px" oninput="calcularMedidas()">
-              <span style="font-size:13px;color:var(--text-muted)">g</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Gramos por medida</label>
-            <div style="display:flex;align-items:center;gap:6px">
-              <input id="h-gramos-medida" type="number" min="1" value="${item?.gramosMedida || 5}" style="width:100px" oninput="calcularMedidas()">
-              <span style="font-size:13px;color:var(--text-muted)">g</span>
-            </div>
-          </div>
+      <div class="grid-2">
+        <div class="form-group"><label>Stock actual</label>
+          <input id="h-qty" type="number" min="0" value="${item?.qty || 0}">
         </div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Cantidad de envases actuales</label>
-            <input id="h-envases" type="number" min="0" value="${item?.envases || 0}" oninput="calcularMedidas()">
-          </div>
-          <div class="form-group">
-            <label>Medidas por día</label>
-            <input id="h-medidas-dia" type="number" min="1" value="${item?.medidasDia || 3}" oninput="calcularMedidas()">
-          </div>
-        </div>
-        <div id="h-gramos-resumen" style="background:white;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-muted)">
-          —
+        <div class="form-group"><label>Unidad</label>
+          <select id="h-unidad">
+            <option ${item?.unidad==='unidades'||!item?.unidad?'selected':''}>unidades</option>
+            <option ${item?.unidad==='paquetes'?'selected':''}>paquetes</option>
+            <option ${item?.unidad==='cajas'?'selected':''}>cajas</option>
+            <option ${item?.unidad==='rollos'?'selected':''}>rollos</option>
+          </select>
         </div>
       </div>
-
-      <!-- Campos modo normal -->
-      <div id="h-normal-fields" style="display:${item?.modoGramos?'none':'block'}">
-        <div class="grid-2">
-          <div class="form-group"><label>Stock actual</label>
-            <input id="h-qty" type="number" min="0" value="${item?.qty || 0}">
-          </div>
-          <div class="form-group"><label>Unidad</label>
-            <select id="h-unidad">
-              <option ${item?.unidad==='unidades'||!item?.unidad?'selected':''}>unidades</option>
-              <option ${item?.unidad==='paquetes'?'selected':''}>paquetes</option>
-              <option ${item?.unidad==='cajas'?'selected':''}>cajas</option>
-              <option ${item?.unidad==='rollos'?'selected':''}>rollos</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group"><label>Consumo diario <span style="font-weight:400;color:var(--text-muted)">(para descuento automático)</span></label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <input id="h-daily" type="number" min="0" step="0.5" value="${item?.dailyUse || 0}" style="width:100px">
-            <span style="font-size:13px;color:var(--text-muted)">por día (0 = no descontar)</span>
-          </div>
-        </div>
-        <div class="form-group"><label>Avisar cuando queden menos de</label>
-          <input id="h-min" type="number" min="0" value="${item?.minQty || 5}"> <span style="font-size:13px;color:var(--text-muted)">${item?.unidad||'unidades'}</span>
+      <div class="form-group"><label>Consumo diario <span style="font-weight:400;color:var(--text-muted)">(para descuento automático)</span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="h-daily" type="number" min="0" step="0.5" value="${item?.dailyUse || 0}" style="width:100px">
+          <span style="font-size:13px;color:var(--text-muted)">por día (0 = no descontar)</span>
         </div>
       </div>
-
-      <!-- Campos ocultos para modo gramos (se calculan solos) -->
-      <input type="hidden" id="h-qty-calc" value="${item?.qty || 0}">
-      <input type="hidden" id="h-daily-calc" value="${item?.dailyUse || 0}">
-      <input type="hidden" id="h-min-calc" value="${item?.minQty || 0}">
-
+      <div class="form-group"><label>Avisar cuando queden menos de</label>
+        <input id="h-min" type="number" min="0" value="${item?.minQty || 5}"> <span style="font-size:13px;color:var(--text-muted)">${item?.unidad||'unidades'}</span>
+      </div>
     </div>
 
     <div class="form-group"><label>Observaciones</label>
@@ -2416,44 +2364,7 @@ function openAddHygiene(residentId, itemId = null) {
   if (item) toggleHigieneFields();
 }
 
-function toggleModoGramos() {
-  const modoGramos = document.getElementById('h-modo-gramos')?.checked;
-  document.getElementById('h-gramos-fields').style.display = modoGramos ? 'block' : 'none';
-  document.getElementById('h-normal-fields').style.display = modoGramos ? 'none' : 'block';
-  if (modoGramos) calcularMedidas();
-}
-
-function calcularMedidas() {
-  const gramosEnvase = parseFloat(document.getElementById('h-gramos-envase')?.value) || 0;
-  const gramosMedida = parseFloat(document.getElementById('h-gramos-medida')?.value) || 1;
-  const envases = parseFloat(document.getElementById('h-envases')?.value) || 0;
-  const medidasDia = parseFloat(document.getElementById('h-medidas-dia')?.value) || 1;
-
-  if (gramosEnvase <= 0 || gramosMedida <= 0) return;
-
-  const medidasPorEnvase = Math.floor(gramosEnvase / gramosMedida);
-  const totalMedidas = Math.floor(envases * medidasPorEnvase);
-  const diasRestantes = medidasDia > 0 ? Math.floor(totalMedidas / medidasDia) : 0;
-  const alertaMedidas = medidasDia * 7; // avisar cuando queden menos de 7 días
-
-  // Guardar en campos ocultos
-  if (document.getElementById('h-qty-calc')) document.getElementById('h-qty-calc').value = totalMedidas;
-  if (document.getElementById('h-daily-calc')) document.getElementById('h-daily-calc').value = medidasDia;
-  if (document.getElementById('h-min-calc')) document.getElementById('h-min-calc').value = alertaMedidas;
-
-  const resumen = document.getElementById('h-gramos-resumen');
-  if (resumen) {
-    resumen.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div>📦 Medidas por envase: <strong>${medidasPorEnvase}</strong></div>
-        <div>📊 Total medidas: <strong>${totalMedidas}</strong></div>
-        <div>📅 Días restantes: <strong style="color:${diasRestantes < 7 ? 'var(--red)' : diasRestantes < 14 ? 'var(--yellow)' : 'var(--green)'}">${diasRestantes} días</strong></div>
-        <div>🔔 Alerta cuando queden: <strong>${alertaMedidas} medidas</strong> (7 días)</div>
-      </div>`;
-  }
-}
-
-
+function toggleHigieneFields() {
   const sel = document.getElementById('h-nombre');
   const opt = sel?.options[sel.selectedIndex];
   const isCustom = sel?.value === '__custom__';
@@ -2479,23 +2390,6 @@ function saveHygieneItem(residentId, itemId = null) {
 
   if (!nombre || nombre === '— Seleccionar —') { showToast('Seleccioná un artículo'); return; }
 
-  const modoGramos = document.getElementById('h-modo-gramos')?.checked || false;
-
-  let qty, unidad, dailyUse, minQty;
-  if (tipo === 'necesidad') {
-    if (modoGramos) {
-      qty      = parseFloat(document.getElementById('h-qty-calc')?.value) || 0;
-      dailyUse = parseFloat(document.getElementById('h-daily-calc')?.value) || 0;
-      minQty   = parseInt(document.getElementById('h-min-calc')?.value) || 0;
-      unidad   = 'medidas';
-    } else {
-      qty      = parseFloat(document.getElementById('h-qty')?.value) || 0;
-      unidad   = document.getElementById('h-unidad')?.value || 'unidades';
-      dailyUse = parseFloat(document.getElementById('h-daily')?.value) || 0;
-      minQty   = parseInt(document.getElementById('h-min')?.value) || 5;
-    }
-  }
-
   const newItem = {
     id: itemId || Date.now(),
     residentId: parseInt(residentId),
@@ -2503,15 +2397,10 @@ function saveHygieneItem(residentId, itemId = null) {
     tipo,
     esPersonalizado: isCustom,
     fechaEntrega: tipo === 'mensual' ? (document.getElementById('h-fecha')?.value || '') : '',
-    qty:      tipo === 'necesidad' ? qty      : 0,
-    unidad:   tipo === 'necesidad' ? unidad   : '',
-    dailyUse: tipo === 'necesidad' ? dailyUse : 0,
-    minQty:   tipo === 'necesidad' ? minQty   : 0,
-    modoGramos: tipo === 'necesidad' ? modoGramos : false,
-    gramosEnvase: modoGramos ? (parseFloat(document.getElementById('h-gramos-envase')?.value) || 0) : 0,
-    gramosMedida: modoGramos ? (parseFloat(document.getElementById('h-gramos-medida')?.value) || 0) : 0,
-    envases:      modoGramos ? (parseFloat(document.getElementById('h-envases')?.value) || 0) : 0,
-    medidasDia:   modoGramos ? (parseFloat(document.getElementById('h-medidas-dia')?.value) || 0) : 0,
+    qty: tipo === 'necesidad' ? (parseFloat(document.getElementById('h-qty')?.value) || 0) : 0,
+    unidad: tipo === 'necesidad' ? (document.getElementById('h-unidad')?.value || 'unidades') : '',
+    dailyUse: tipo === 'necesidad' ? (parseFloat(document.getElementById('h-daily')?.value) || 0) : 0,
+    minQty: tipo === 'necesidad' ? (parseInt(document.getElementById('h-min')?.value) || 5) : 0,
     obs: document.getElementById('h-obs')?.value || ''
   };
 
@@ -2541,69 +2430,29 @@ function registrarEntregaHigiene(itemId) {
 function openMovHygiene(itemId, type) {
   const item = hygieneItems.find(h => h.id === itemId);
   if (!item) return;
-
-  // Si es modo gramos y es entrada, pedir envases en lugar de medidas
-  const esModoGramosEntrada = item.modoGramos && type === 'in';
-
   showModal(`
-    <div class="modal-title">${type==='in' ? '⬆️ Agregar stock' : '⬇️ Registrar uso'} — ${item.nombre}</div>
-    <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Stock actual: <strong>${item.qty} ${item.unidad || 'unidades'}</strong></p>
-
-    ${esModoGramosEntrada ? `
-      <div class="form-group">
-        <label>¿Cuántos envases llegaron?</label>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input id="hm-qty" type="number" min="1" value="1" style="width:100px" oninput="previewMedidas(${itemId})">
-          <span style="font-size:13px;color:var(--text-muted)">envase(s) de ${item.gramosEnvase}g</span>
-        </div>
-      </div>
-      <div id="hm-preview" style="background:var(--green-light);border-radius:8px;padding:10px 14px;font-size:13px;margin-top:8px">
-        = <strong>${Math.floor(item.gramosEnvase / item.gramosMedida)}</strong> medidas se agregarán al stock
-      </div>
-    ` : `
-      <div class="form-group"><label>Cantidad ${item.modoGramos ? '(medidas)' : `(${item.unidad || 'unidades'})`}</label>
-        <input id="hm-qty" type="number" min="1" value="1">
-      </div>
-    `}
-
+    <div class="modal-title">${type==='in' ? '⬆️ Agregar stock' : '⬇️ Usar'} — ${item.nombre}</div>
+    <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">Stock actual: <strong>${item.qty} ${item.unidad}</strong></p>
+    <div class="form-group"><label>Cantidad</label>
+      <input id="hm-qty" type="number" min="1" value="1">
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn ${type==='in'?'btn-green':'btn-red'}" onclick="saveMovHygiene(${itemId},'${type}',${esModoGramosEntrada})">Confirmar</button>
+      <button class="btn ${type==='in'?'btn-green':'btn-red'}" onclick="saveMovHygiene(${itemId},'${type}')">Confirmar</button>
     </div>
   `);
 }
 
-function previewMedidas(itemId) {
+function saveMovHygiene(itemId, type) {
+  const qty = parseFloat(document.getElementById('hm-qty')?.value) || 0;
+  if (qty <= 0) { showToast('Ingresá una cantidad válida'); return; }
   const item = hygieneItems.find(h => h.id === itemId);
   if (!item) return;
-  const envases = parseFloat(document.getElementById('hm-qty')?.value) || 0;
-  const medidasPorEnvase = Math.floor(item.gramosEnvase / item.gramosMedida);
-  const totalMedidas = envases * medidasPorEnvase;
-  const preview = document.getElementById('hm-preview');
-  if (preview) preview.innerHTML = `= <strong>${totalMedidas}</strong> medidas se agregarán al stock`;
-}
-
-function saveMovHygiene(itemId, type, esModoGramosEntrada = false) {
-  const item = hygieneItems.find(h => h.id === itemId);
-  if (!item) return;
-
-  let cantidad;
-  if (esModoGramosEntrada) {
-    const envases = parseFloat(document.getElementById('hm-qty')?.value) || 0;
-    const medidasPorEnvase = Math.floor(item.gramosEnvase / item.gramosMedida);
-    cantidad = envases * medidasPorEnvase;
-    // Actualizar envases guardados
-    item.envases = (item.envases || 0) + envases;
-  } else {
-    cantidad = parseFloat(document.getElementById('hm-qty')?.value) || 0;
-  }
-
-  if (cantidad <= 0) { showToast('Ingresá una cantidad válida'); return; }
-  if (type === 'out' && item.qty < cantidad) { showToast('No hay suficiente stock'); return; }
-  item.qty = type === 'in' ? item.qty + cantidad : item.qty - cantidad;
+  if (type === 'out' && item.qty < qty) { showToast('No hay suficiente stock'); return; }
+  item.qty = type === 'in' ? item.qty + qty : item.qty - qty;
   saveHygiene(itemId);
   closeModal();
-  showToast(type === 'in' ? `+${cantidad} ${item.unidad || 'unidades'} agregadas ✅` : `-${cantidad} registradas ✅`);
+  showToast(type === 'in' ? `+${qty} agregados ✅` : `-${qty} registrados ✅`);
   showResident(item.residentId);
 }
 
