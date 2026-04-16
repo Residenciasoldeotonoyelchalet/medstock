@@ -869,7 +869,6 @@
     </div>
     <div class="topbar-user">
       <span class="user-badge" id="user-display"></span>
-      <button class="btn-logout" onclick="abrirCambioContrasena()" style="background:rgba(255,255,255,0.15);color:white;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;margin-right:4px">🔑 Contraseña</button>
       <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -1212,99 +1211,15 @@ function frecuenciaLabel(med) {
 }
 
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
-// El descuento principal lo ejecuta la Firebase Cloud Function "descuentoDiario"
-// todos los días a las 00:05 hs (Argentina) en el servidor.
-// Esta función actúa como RESPALDO: si la Cloud Function no corrió por algún motivo,
-// el primer usuario que abra la app ese día completa el descuento.
+// El descuento lo realiza la Firebase Cloud Function "descuentoDiario"
+// que se ejecuta todos los días a las 00:05 hs (Argentina) en el servidor.
+// Esta función queda vacía para evitar duplicar el descuento desde el cliente.
 function checkDailyDiscount() {
-  const today = new Date().toISOString().slice(0, 10);
-  const lastDiscount = localStorage.getItem('medstock_last_discount');
-  if (lastDiscount === today) return; // ya corrió hoy (por CF o por respaldo anterior)
-
-  let huboDescuento = false;
-  medications.forEach(med => {
-    if (med.treatment !== 'prolongado') return;
-    if (med.sos) return;
-    if (med.qty <= 0) return;
-    if (getStatus(med) === 'finalizado') return;
-    if (!debeTomarsHoy(med)) return;
-    const dosisReal = getDosisdiaria(med);
-    if (dosisReal <= 0) return;
-    med.qty = Math.max(0, med.qty - Math.min(dosisReal, med.qty));
-    huboDescuento = true;
-  });
-
-  localStorage.setItem('medstock_last_discount', today);
-  if (huboDescuento) {
-    saveMeds();
-    console.log('Descuento diario (respaldo cliente) realizado:', today);
-  }
+  // No hacer nada — manejado por Cloud Function
 }
 
 
-function abrirCambioContrasena() {
-  showModal(`
-    <div class="modal-title">🔑 Cambiar contraseña</div>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">Ingresá tu contraseña actual y la nueva contraseña.</p>
-    <div class="form-group">
-      <label>Contraseña actual</label>
-      <input type="password" id="pass-actual" placeholder="Tu contraseña actual" autocomplete="current-password">
-    </div>
-    <div class="form-group">
-      <label>Nueva contraseña</label>
-      <input type="password" id="pass-nueva" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-    </div>
-    <div class="form-group">
-      <label>Repetir nueva contraseña</label>
-      <input type="password" id="pass-nueva2" placeholder="Repetí la nueva contraseña" autocomplete="new-password">
-    </div>
-    <div id="pass-error" style="color:var(--red);font-size:13px;display:none;margin-bottom:8px"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="cambiarContrasena()">Guardar</button>
-    </div>
-  `);
-}
-
-async function cambiarContrasena() {
-  const actual = document.getElementById('pass-actual').value;
-  const nueva = document.getElementById('pass-nueva').value;
-  const nueva2 = document.getElementById('pass-nueva2').value;
-  const errEl = document.getElementById('pass-error');
-
-  if (!actual || !nueva || !nueva2) {
-    errEl.textContent = 'Completá todos los campos.'; errEl.style.display = 'block'; return;
-  }
-  if (nueva.length < 6) {
-    errEl.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.'; errEl.style.display = 'block'; return;
-  }
-  if (nueva !== nueva2) {
-    errEl.textContent = 'Las contraseñas nuevas no coinciden.'; errEl.style.display = 'block'; return;
-  }
-
-  const btn = document.querySelector('.modal .btn-primary');
-  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-  errEl.style.display = 'none';
-
-  try {
-    // Re-autenticar con la contraseña actual
-    const { EmailAuthProvider, reauthenticateWithCredential } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-    const user = window._auth.currentUser;
-    const credential = EmailAuthProvider.credential(user.email, actual);
-    await reauthenticateWithCredential(user, credential);
-    // Cambiar contraseña
-    await window._updatePassword(user, nueva);
-    closeModal();
-    showToast('✅ Contraseña cambiada correctamente');
-  } catch(e) {
-    let msg = 'Error al cambiar la contraseña.';
-    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'La contraseña actual es incorrecta.';
-    if (e.code === 'auth/weak-password') msg = 'La nueva contraseña es muy débil.';
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
-    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
-  }
-}
+function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
 function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
 function canFamilyAction(){ return ['owner','manager','nurse','family'].includes(currentUser.role); }
 function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
@@ -1349,166 +1264,6 @@ function renderTab(tab) {
   else if (tab === 'medications') renderMedications(c);
   else if (tab === 'movements') renderMovements(c);
   else if (tab === 'users') renderUsers(c);
-}
-
-// ── Banner de descuento pendiente ──
-function renderDescuentoPendienteBanner() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-
-  // Calcular días sin descontar
-  const diasPendientes = [];
-  if (!last) {
-    // Nunca se descontó — mostrar al menos ayer
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
-    diasPendientes.push(ayer.toISOString().slice(0, 10));
-  } else if (last < today) {
-    // Hay días entre el último descuento y hoy
-    let d = new Date(last);
-    d.setDate(d.getDate() + 1);
-    while (d.toISOString().slice(0, 10) < today) {
-      diasPendientes.push(d.toISOString().slice(0, 10));
-      d.setDate(d.getDate() + 1);
-    }
-  }
-
-  if (diasPendientes.length === 0) return '';
-
-  const label = diasPendientes.length === 1
-    ? `el ${formatFecha(diasPendientes[0])}`
-    : `${diasPendientes.length} días (${formatFecha(diasPendientes[0])} al ${formatFecha(diasPendientes[diasPendientes.length-1])})`;
-
-  return `<div style="background:#fdecea;border-left:4px solid var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:700;color:var(--red);font-size:15px">⚠️ Descuento automático pendiente</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:3px">No se descontó la medicación de ${label}</div>
-    </div>
-    <button class="btn btn-red" onclick="forzarDescuentos(${JSON.stringify(diasPendientes).replace(/"/g,'&quot;')})" style="white-space:nowrap">
-      💊 Aplicar descuento ahora
-    </button>
-  </div>`;
-}
-
-function formatFecha(isoDate) {
-  const [y, m, d] = isoDate.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-async function forzarDescuentos(dias) {
-  if (!confirm(`¿Aplicar el descuento de medicación para ${dias.length} día(s) pendiente(s)?\n\nEsto descontará la dosis diaria de cada medicamento prolongado por cada día que faltó.`)) return;
-
-  let totalMeds = 0;
-  let totalUnidades = 0;
-
-  for (const diaStr of dias) {
-    const dia = new Date(diaStr + 'T12:00:00');
-    const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
-    const diaLabel = diasSemana[dia.getDay()];
-
-    medications.forEach(med => {
-      if (med.treatment !== 'prolongado') return;
-      if (med.sos) return;
-      if (med.qty <= 0) return;
-      if (getStatus(med) === 'finalizado') return;
-
-      // Verificar fecha de fin
-      if (med.fechaFin) {
-        const fin = new Date(med.fechaFin + 'T00:00:00');
-        if (dia > fin) return;
-      }
-
-      // Verificar frecuencia para ese día
-      if (!debeTomarsHoyFecha(med, dia, diaLabel)) return;
-
-      const dosisReal = getDosisdiaria(med);
-      if (dosisReal <= 0) return;
-
-      const descuento = Math.min(dosisReal, med.qty);
-      med.qty = Math.max(0, med.qty - descuento);
-      totalUnidades += descuento;
-      totalMeds++;
-    });
-  }
-
-  // Guardar
-  localStorage.setItem('medstock_last_discount', new Date().toISOString().slice(0, 10));
-  await saveMeds();
-  showToast(`✅ Descuento aplicado: ${totalMeds} medicamentos, ${totalUnidades} unidades`);
-  renderTab('home');
-}
-
-function renderBotonDescuentoHoy() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-  const yaHecho = last === today;
-
-  return `<div style="background:${yaHecho ? 'var(--green-light)' : 'var(--blue-light)'};border-left:4px solid ${yaHecho ? 'var(--green)' : 'var(--blue)'};border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:700;color:${yaHecho ? 'var(--green)' : 'var(--blue)'};font-size:15px">${yaHecho ? '✅ Descuento de hoy aplicado' : '💊 Descuento de hoy'}</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:3px">${yaHecho ? `Último descuento: ${formatFecha(today)}` : 'Aplicar el descuento diario de medicación de hoy'}</div>
-    </div>
-    ${!yaHecho ? `<button class="btn btn-green" onclick="aplicarDescuentoHoy()">💊 Descontar hoy</button>` : ''}
-  </div>`;
-}
-
-async function aplicarDescuentoHoy() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-  if (last === today) {
-    showToast('El descuento de hoy ya fue aplicado ✅');
-    return;
-  }
-  if (!confirm('¿Aplicar el descuento de medicación de hoy?\n\nSe descontará la dosis diaria de cada medicamento de tratamiento prolongado.')) return;
-
-  const hoy = new Date();
-  const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
-  const diaHoy = diasSemana[hoy.getDay()];
-  let totalMeds = 0;
-  let totalUnidades = 0;
-
-  medications.forEach(med => {
-    if (med.treatment !== 'prolongado') return;
-    if (med.sos) return;
-    if (med.qty <= 0) return;
-    if (getStatus(med) === 'finalizado') return;
-    if (med.fechaFin) {
-      const fin = new Date(med.fechaFin + 'T00:00:00');
-      hoy.setHours(0,0,0,0);
-      if (hoy > fin) return;
-    }
-    if (!debeTomarsHoyFecha(med, hoy, diaHoy)) return;
-    const dosisReal = getDosisdiaria(med);
-    if (dosisReal <= 0) return;
-    const descuento = Math.min(dosisReal, med.qty);
-    med.qty = Math.max(0, med.qty - descuento);
-    totalUnidades += descuento;
-    totalMeds++;
-  });
-
-  localStorage.setItem('medstock_last_discount', today);
-  await saveMeds();
-  showToast(`✅ Descuento aplicado: ${totalMeds} medicamentos, ${totalUnidades} unidades`);
-  renderTab('home');
-}
-function debeTomarsHoyFecha(med, fecha, diaLabel) {
-  if (!med.frecuencia || med.frecuencia === 'diario') return true;
-  if (med.frecuencia === 'alternos') {
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    inicio.setHours(0,0,0,0);
-    fecha.setHours(0,0,0,0);
-    const diff = Math.floor((fecha - inicio) / (1000*60*60*24));
-    return diff % 2 === 0;
-  }
-  if (med.frecuencia === 'especificos') return (med.diasSemana || []).includes(diaLabel);
-  if (med.frecuencia === 'cada_x_dias') {
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    inicio.setHours(0,0,0,0);
-    fecha.setHours(0,0,0,0);
-    const diff = Math.floor((fecha - inicio) / (1000*60*60*24));
-    return diff % (med.cadaXDias || 1) === 0;
-  }
-  return true;
 }
 
 // =====================================================
@@ -1556,9 +1311,6 @@ function renderHome(c) {
 
   c.innerHTML = `
     <h2 class="section-title">🍂 Panel general</h2>
-
-      ${isAdmin() ? renderDescuentoPendienteBanner() : ''}
-    ${isAdmin() ? renderBotonDescuentoHoy() : ''}
 
       ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('medstock_install_dismissed') ? `
       <div id="install-card" style="background:linear-gradient(135deg,#5c3d1e,#8a5c2e);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
