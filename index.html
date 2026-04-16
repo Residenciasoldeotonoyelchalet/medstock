@@ -2085,6 +2085,7 @@ function openAddMed(residentId, medId = null) {
             <input type="time" value="${hora}" style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;width:110px;">
             <span style="font-size:12px;color:var(--text-muted);margin-left:8px">Dosis:</span>
             <div style="display:flex;gap:4px">
+              <button type="button" class="dosis-btn ${dosis == 0.25 ? 'active' : ''}" onclick="selectDosisToma(0.25, this)" style="padding:6px 10px;font-size:14px">¼</button>
               <button type="button" class="dosis-btn ${dosis == 0.5 ? 'active' : ''}" onclick="selectDosisToma(0.5, this)" style="padding:6px 10px;font-size:14px">½</button>
               <button type="button" class="dosis-btn ${dosis == 1 ? 'active' : ''}" onclick="selectDosisToma(1, this)" style="padding:6px 10px;font-size:14px">1</button>
               <button type="button" class="dosis-btn ${dosis == 2 ? 'active' : ''}" onclick="selectDosisToma(2, this)" style="padding:6px 10px;font-size:14px">2</button>
@@ -2497,11 +2498,31 @@ function today() {
 // =====================================================
 // Convierte dosis numérica a fracción legible
 function formatDosisLabel(n) {
+  if (n === 0.25) return '¼';
   if (n === 0.5)  return '½';
   if (n === 1.5)  return '1½';
   if (n === 2.5)  return '2½';
   if (Number.isInteger(n)) return String(n);
   return String(n).replace('.', ',');
+}
+
+// Singular/plural según cantidad y unidad
+function formatUnidad(cantidad, unidad) {
+  if (!unidad) return '';
+  // Para gotas y unidades que no tienen plural diferente
+  const invariables = ['gotas', '%', 'ml', 'aplicaciones'];
+  if (invariables.includes(unidad)) return unidad;
+  // Si la cantidad es exactamente 1 o fracción menor a 1 → singular
+  const singular = cantidad <= 1;
+  const plurales = {
+    'comprimidos': 'comprimido',
+    'cápsulas': 'cápsula',
+    'sobres': 'sobre',
+    'parches': 'parche',
+    'unidades': 'unidad',
+  };
+  if (singular && plurales[unidad]) return plurales[unidad];
+  return unidad;
 }
 
 function printResident(id) {
@@ -2523,13 +2544,13 @@ function printResident(id) {
     } else {
       const hs = normalizarHorarios(m);
       horariosHtml = hs.length > 0
-        ? hs.map(h => `<span class="horario-pill">${h.hora} · ${formatDosisLabel(h.dosis)} ${m.unit}</span>`).join(' ')
+        ? hs.map(h => `<span class="horario-pill">${h.hora} · ${formatDosisLabel(h.dosis)} ${formatUnidad(h.dosis, m.unit)}</span>`).join(' ')
         : '—';
     }
 
     // Dosis total diaria en fracción
     const dosisTotal = getDosisdiaria(m);
-    const dosisTotalLabel = dosisTotal > 0 ? `${formatDosisLabel(dosisTotal)} ${m.unit}/día` : '—';
+    const dosisTotalLabel = dosisTotal > 0 ? `${formatDosisLabel(dosisTotal)} ${formatUnidad(dosisTotal, m.unit)}/día` : '—';
 
     return `<tr>
       <td>
@@ -2606,19 +2627,27 @@ function selectDosis(valor, btn) {
 function addHorario() {
   const container = document.getElementById('horarios-container');
   if (!container) return;
+  const unit = document.getElementById('m-unit')?.value || '';
+  const esGotas = unit === 'gotas';
   const div = document.createElement('div');
   div.className = 'horario-row';
-  div.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;';
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex-wrap:wrap';
   div.innerHTML = `
     <span style="font-size:12px;color:var(--text-muted);width:50px">Hora:</span>
     <input type="time" style="border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:white;outline:none;width:110px;">
     <span style="font-size:12px;color:var(--text-muted);margin-left:8px">Dosis:</span>
+    ${esGotas ? `
+      <input type="number" min="1" max="100" value="5" class="dosis-valor" style="width:70px;border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;text-align:center;background:white;outline:none;">
+      <span style="font-size:12px;color:var(--text-muted)">gotas</span>
+    ` : `
     <div style="display:flex;gap:4px">
+      <button type="button" class="dosis-btn" onclick="selectDosisToma(0.25, this)" style="padding:6px 10px;font-size:14px">¼</button>
       <button type="button" class="dosis-btn" onclick="selectDosisToma(0.5, this)" style="padding:6px 10px;font-size:14px">½</button>
       <button type="button" class="dosis-btn active" onclick="selectDosisToma(1, this)" style="padding:6px 10px;font-size:14px">1</button>
       <button type="button" class="dosis-btn" onclick="selectDosisToma(2, this)" style="padding:6px 10px;font-size:14px">2</button>
     </div>
     <input type="hidden" class="dosis-valor" value="1">
+    `}
     <span style="cursor:pointer;color:var(--text-muted);font-size:20px;line-height:1;margin-left:auto" onclick="this.closest('.horario-row').remove()">×</span>
   `;
   container.appendChild(div);
