@@ -851,11 +851,11 @@
     <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
     <div class="form-group">
       <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="" autocomplete="username">
+      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="" autocomplete="current-password">
+      <input type="password" id="login-pass" placeholder="••••••••">
     </div>
     <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
   </div>
@@ -869,7 +869,6 @@
     </div>
     <div class="topbar-user">
       <span class="user-badge" id="user-display"></span>
-      <button class="btn-logout" onclick="abrirCambioContrasena()" style="background:rgba(255,255,255,0.15);color:white;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;margin-right:4px">🔑 Contraseña</button>
       <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -1015,88 +1014,45 @@ function saveData() {
 // AUTH
 // =====================================================
 
-// =====================================================
-// AUTH — Firebase Authentication
-// =====================================================
-
-async function doLogin() {
-  const userInput = document.getElementById('login-user').value.trim().toLowerCase();
-  const passInput = document.getElementById('login-pass').value;
-  if (!userInput || !passInput) {
-    document.getElementById('login-error').textContent = 'Completá usuario y contraseña.';
-    document.getElementById('login-error').style.display = 'block';
+function doLogin(savedUser = null) {
+  let found;
+  if (savedUser) {
+    found = USERS.find(x => x.user === savedUser.user && x.pass === savedUser.pass);
+  } else {
+    const u = document.getElementById('login-user').value.trim().toLowerCase();
+    const p = document.getElementById('login-pass').value;
+    found = USERS.find(x => x.user === u && x.pass === p);
+  }
+  if (!found) {
+    if (!savedUser) document.getElementById('login-error').style.display = 'block';
     return;
   }
-
-  const loginBtn = document.querySelector('#login-screen .btn-primary');
-  if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Ingresando...'; }
-  document.getElementById('login-error').style.display = 'none';
-
-  // Esperar hasta 8 segundos a que Firebase cargue
-  let intentos = 0;
-  while ((!window._auth || !window._signInWithEmailAndPassword) && intentos < 40) {
-    await new Promise(r => setTimeout(r, 200));
-    intentos++;
-  }
-
-  if (!window._auth || !window._signInWithEmailAndPassword) {
-    document.getElementById('login-error').textContent = 'Error de conexión. Recargá la página e intentá de nuevo.';
-    document.getElementById('login-error').style.display = 'block';
-    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
-    return;
-  }
-
-  const email = userInput.includes('@') ? userInput : userInput + '@medstock.app';
-  try {
-    await window._signInWithEmailAndPassword(window._auth, email, passInput);
-    document.getElementById('login-error').style.display = 'none';
-  } catch(e) {
-    let msg = 'Usuario o contraseña incorrectos.';
-    if (e.code === 'auth/too-many-requests') msg = 'Demasiados intentos fallidos. Esperá unos minutos.';
-    if (e.code === 'auth/network-request-failed') msg = 'Sin conexión a internet.';
-    if (e.code === 'auth/user-not-found') msg = 'Usuario no encontrado.';
-    document.getElementById('login-error').textContent = msg;
-    document.getElementById('login-error').style.display = 'block';
-  } finally {
-    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
-  }
+  currentUser = found;
+  window.currentUser = found;
+  // Guardar sesión en localStorage
+  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
+  buildNav();
+  renderTab('home');
 }
-window.doLogin = doLogin;
 
-async function doLogout() {
+// Restaurar sesión al cargar la página
+function tryRestoreSession() {
   try {
-    await window._signOut(window._auth);
-  } catch(e) { console.error('Error al cerrar sesión:', e); }
+    const saved = localStorage.getItem('medstock_session');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      doLogin(parsed);
+    }
+  } catch(e) { localStorage.removeItem('medstock_session'); }
 }
-window.doLogout = doLogout;
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-document.getElementById('login-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
 
+// Guardar usuarios en Firestore
 function saveUsers() { if (window._saveUsers) window._saveUsers(); }
-
-function checkStockNotificacionFamiliar(user) {
-  const myMeds = medications.filter(m => m.residentId === user.residentId);
-  const sinStock = myMeds.filter(m => getStatus(m) === 'out');
-  const stockBajo = myMeds.filter(m => getStatus(m) === 'low');
-  if (sinStock.length === 0 && stockBajo.length === 0) return;
-  let html = `<div style="font-size:15px;color:var(--text);line-height:1.7">`;
-  html += `<p style="margin-bottom:14px">Se detectaron los siguientes problemas de stock para <strong>${(RESIDENTS.find(r => r.id === user.residentId) || {}).name || 'su familiar'}</strong>:</p>`;
-  if (sinStock.length > 0) {
-    html += `<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-      <strong style="color:var(--red)">🚨 Sin stock (${sinStock.length})</strong><br>
-      <ul style="margin:6px 0 0 16px;font-size:14px">${sinStock.map(m => `<li>${m.name}${m.drug ? ` (${m.drug})` : ''} — <strong>0 ${m.unit}</strong></li>`).join('')}</ul>
-    </div>`;
-  }
-  if (stockBajo.length > 0) {
-    html += `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px">
-      <strong style="color:var(--yellow)">⚠️ Stock bajo (${stockBajo.length})</strong><br>
-      <ul style="margin:6px 0 0 16px;font-size:14px">${stockBajo.map(m => `<li>${m.name}${m.drug ? ` (${m.drug})` : ''} — <strong>${m.qty} ${m.unit}</strong> restantes</li>`).join('')}</ul>
-    </div>`;
-  }
-  html += `<p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Por favor, comuníquese con la residencia para reabastecer la medicación.</p></div>`;
-  showModal(`<div class="modal-title">🔔 Alerta de stock</div>${html}<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>`);
-}
 
 function saveHygiene(itemId = null) {
   if (window._saveHygiene) {
@@ -1229,14 +1185,10 @@ function frecuenciaLabel(med) {
 }
 
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
-// El descuento principal lo ejecuta la Firebase Cloud Function "descuentoDiario"
-// todos los días a las 00:05 hs (Argentina) en el servidor.
-// Esta función actúa como RESPALDO: si la Cloud Function no corrió por algún motivo,
-// el primer usuario que abra la app ese día completa el descuento.
 function checkDailyDiscount() {
   const today = new Date().toISOString().slice(0, 10);
   const lastDiscount = localStorage.getItem('medstock_last_discount');
-  if (lastDiscount === today) return; // ya corrió hoy (por CF o por respaldo anterior)
+  if (lastDiscount === today) return;
 
   let huboDescuento = false;
   medications.forEach(med => {
@@ -1245,83 +1197,36 @@ function checkDailyDiscount() {
     if (med.qty <= 0) return;
     if (getStatus(med) === 'finalizado') return;
     if (!debeTomarsHoy(med)) return;
+
+    // Usar getDosisdiaria que suma dosis de todos los horarios
     const dosisReal = getDosisdiaria(med);
     if (dosisReal <= 0) return;
-    med.qty = Math.max(0, med.qty - Math.min(dosisReal, med.qty));
+
+    const descuento = Math.min(dosisReal, med.qty);
+    med.qty = Math.max(0, med.qty - descuento);
     huboDescuento = true;
+    // NO agregar a movements — el familiar no debe ver descuentos automáticos
   });
 
   localStorage.setItem('medstock_last_discount', today);
   if (huboDescuento) {
     saveMeds();
-    console.log('Descuento diario (respaldo cliente) realizado:', today);
+    console.log('Descuento diario realizado:', today);
   }
 }
 
-
-function abrirCambioContrasena() {
-  showModal(`
-    <div class="modal-title">🔑 Cambiar contraseña</div>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">Ingresá tu contraseña actual y la nueva contraseña.</p>
-    <div class="form-group">
-      <label>Contraseña actual</label>
-      <input type="password" id="pass-actual" placeholder="Tu contraseña actual" autocomplete="current-password">
-    </div>
-    <div class="form-group">
-      <label>Nueva contraseña</label>
-      <input type="password" id="pass-nueva" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-    </div>
-    <div class="form-group">
-      <label>Repetir nueva contraseña</label>
-      <input type="password" id="pass-nueva2" placeholder="Repetí la nueva contraseña" autocomplete="new-password">
-    </div>
-    <div id="pass-error" style="color:var(--red);font-size:13px;display:none;margin-bottom:8px"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="cambiarContrasena()">Guardar</button>
-    </div>
-  `);
+function doLogout() {
+  currentUser = null;
+  window.currentUser = null;
+  localStorage.removeItem('medstock_session');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
 }
 
-async function cambiarContrasena() {
-  const actual = document.getElementById('pass-actual').value;
-  const nueva = document.getElementById('pass-nueva').value;
-  const nueva2 = document.getElementById('pass-nueva2').value;
-  const errEl = document.getElementById('pass-error');
-
-  if (!actual || !nueva || !nueva2) {
-    errEl.textContent = 'Completá todos los campos.'; errEl.style.display = 'block'; return;
-  }
-  if (nueva.length < 6) {
-    errEl.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.'; errEl.style.display = 'block'; return;
-  }
-  if (nueva !== nueva2) {
-    errEl.textContent = 'Las contraseñas nuevas no coinciden.'; errEl.style.display = 'block'; return;
-  }
-
-  const btn = document.querySelector('.modal .btn-primary');
-  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-  errEl.style.display = 'none';
-
-  try {
-    // Re-autenticar con la contraseña actual
-    const { EmailAuthProvider, reauthenticateWithCredential } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
-    const user = window._auth.currentUser;
-    const credential = EmailAuthProvider.credential(user.email, actual);
-    await reauthenticateWithCredential(user, credential);
-    // Cambiar contraseña
-    await window._updatePassword(user, nueva);
-    closeModal();
-    showToast('✅ Contraseña cambiada correctamente');
-  } catch(e) {
-    let msg = 'Error al cambiar la contraseña.';
-    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'La contraseña actual es incorrecta.';
-    if (e.code === 'auth/weak-password') msg = 'La nueva contraseña es muy débil.';
-    errEl.textContent = msg;
-    errEl.style.display = 'block';
-    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
-  }
-}
+function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
 function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
 function canFamilyAction(){ return ['owner','manager','nurse','family'].includes(currentUser.role); }
 function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
@@ -1366,166 +1271,6 @@ function renderTab(tab) {
   else if (tab === 'medications') renderMedications(c);
   else if (tab === 'movements') renderMovements(c);
   else if (tab === 'users') renderUsers(c);
-}
-
-// ── Banner de descuento pendiente ──
-function renderDescuentoPendienteBanner() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-
-  // Calcular días sin descontar
-  const diasPendientes = [];
-  if (!last) {
-    // Nunca se descontó — mostrar al menos ayer
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
-    diasPendientes.push(ayer.toISOString().slice(0, 10));
-  } else if (last < today) {
-    // Hay días entre el último descuento y hoy
-    let d = new Date(last);
-    d.setDate(d.getDate() + 1);
-    while (d.toISOString().slice(0, 10) < today) {
-      diasPendientes.push(d.toISOString().slice(0, 10));
-      d.setDate(d.getDate() + 1);
-    }
-  }
-
-  if (diasPendientes.length === 0) return '';
-
-  const label = diasPendientes.length === 1
-    ? `el ${formatFecha(diasPendientes[0])}`
-    : `${diasPendientes.length} días (${formatFecha(diasPendientes[0])} al ${formatFecha(diasPendientes[diasPendientes.length-1])})`;
-
-  return `<div style="background:#fdecea;border-left:4px solid var(--red);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:700;color:var(--red);font-size:15px">⚠️ Descuento automático pendiente</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:3px">No se descontó la medicación de ${label}</div>
-    </div>
-    <button class="btn btn-red" onclick="forzarDescuentos(${JSON.stringify(diasPendientes).replace(/"/g,'&quot;')})" style="white-space:nowrap">
-      💊 Aplicar descuento ahora
-    </button>
-  </div>`;
-}
-
-function formatFecha(isoDate) {
-  const [y, m, d] = isoDate.split('-');
-  return `${d}/${m}/${y}`;
-}
-
-async function forzarDescuentos(dias) {
-  if (!confirm(`¿Aplicar el descuento de medicación para ${dias.length} día(s) pendiente(s)?\n\nEsto descontará la dosis diaria de cada medicamento prolongado por cada día que faltó.`)) return;
-
-  let totalMeds = 0;
-  let totalUnidades = 0;
-
-  for (const diaStr of dias) {
-    const dia = new Date(diaStr + 'T12:00:00');
-    const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
-    const diaLabel = diasSemana[dia.getDay()];
-
-    medications.forEach(med => {
-      if (med.treatment !== 'prolongado') return;
-      if (med.sos) return;
-      if (med.qty <= 0) return;
-      if (getStatus(med) === 'finalizado') return;
-
-      // Verificar fecha de fin
-      if (med.fechaFin) {
-        const fin = new Date(med.fechaFin + 'T00:00:00');
-        if (dia > fin) return;
-      }
-
-      // Verificar frecuencia para ese día
-      if (!debeTomarsHoyFecha(med, dia, diaLabel)) return;
-
-      const dosisReal = getDosisdiaria(med);
-      if (dosisReal <= 0) return;
-
-      const descuento = Math.min(dosisReal, med.qty);
-      med.qty = Math.max(0, med.qty - descuento);
-      totalUnidades += descuento;
-      totalMeds++;
-    });
-  }
-
-  // Guardar
-  localStorage.setItem('medstock_last_discount', new Date().toISOString().slice(0, 10));
-  await saveMeds();
-  showToast(`✅ Descuento aplicado: ${totalMeds} medicamentos, ${totalUnidades} unidades`);
-  renderTab('home');
-}
-
-function renderBotonDescuentoHoy() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-  const yaHecho = last === today;
-
-  return `<div style="background:${yaHecho ? 'var(--green-light)' : 'var(--blue-light)'};border-left:4px solid ${yaHecho ? 'var(--green)' : 'var(--blue)'};border-radius:var(--radius);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>
-      <div style="font-weight:700;color:${yaHecho ? 'var(--green)' : 'var(--blue)'};font-size:15px">${yaHecho ? '✅ Descuento de hoy aplicado' : '💊 Descuento de hoy'}</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-top:3px">${yaHecho ? `Último descuento: ${formatFecha(today)}` : 'Aplicar el descuento diario de medicación de hoy'}</div>
-    </div>
-    ${!yaHecho ? `<button class="btn btn-green" onclick="aplicarDescuentoHoy()">💊 Descontar hoy</button>` : ''}
-  </div>`;
-}
-
-async function aplicarDescuentoHoy() {
-  const today = new Date().toISOString().slice(0, 10);
-  const last = localStorage.getItem('medstock_last_discount');
-  if (last === today) {
-    showToast('El descuento de hoy ya fue aplicado ✅');
-    return;
-  }
-  if (!confirm('¿Aplicar el descuento de medicación de hoy?\n\nSe descontará la dosis diaria de cada medicamento de tratamiento prolongado.')) return;
-
-  const hoy = new Date();
-  const diasSemana = ['dom','lun','mar','mie','jue','vie','sab'];
-  const diaHoy = diasSemana[hoy.getDay()];
-  let totalMeds = 0;
-  let totalUnidades = 0;
-
-  medications.forEach(med => {
-    if (med.treatment !== 'prolongado') return;
-    if (med.sos) return;
-    if (med.qty <= 0) return;
-    if (getStatus(med) === 'finalizado') return;
-    if (med.fechaFin) {
-      const fin = new Date(med.fechaFin + 'T00:00:00');
-      hoy.setHours(0,0,0,0);
-      if (hoy > fin) return;
-    }
-    if (!debeTomarsHoyFecha(med, hoy, diaHoy)) return;
-    const dosisReal = getDosisdiaria(med);
-    if (dosisReal <= 0) return;
-    const descuento = Math.min(dosisReal, med.qty);
-    med.qty = Math.max(0, med.qty - descuento);
-    totalUnidades += descuento;
-    totalMeds++;
-  });
-
-  localStorage.setItem('medstock_last_discount', today);
-  await saveMeds();
-  showToast(`✅ Descuento aplicado: ${totalMeds} medicamentos, ${totalUnidades} unidades`);
-  renderTab('home');
-}
-function debeTomarsHoyFecha(med, fecha, diaLabel) {
-  if (!med.frecuencia || med.frecuencia === 'diario') return true;
-  if (med.frecuencia === 'alternos') {
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    inicio.setHours(0,0,0,0);
-    fecha.setHours(0,0,0,0);
-    const diff = Math.floor((fecha - inicio) / (1000*60*60*24));
-    return diff % 2 === 0;
-  }
-  if (med.frecuencia === 'especificos') return (med.diasSemana || []).includes(diaLabel);
-  if (med.frecuencia === 'cada_x_dias') {
-    const inicio = med.fechaInicio ? new Date(med.fechaInicio) : new Date();
-    inicio.setHours(0,0,0,0);
-    fecha.setHours(0,0,0,0);
-    const diff = Math.floor((fecha - inicio) / (1000*60*60*24));
-    return diff % (med.cadaXDias || 1) === 0;
-  }
-  return true;
 }
 
 // =====================================================
@@ -1573,9 +1318,6 @@ function renderHome(c) {
 
   c.innerHTML = `
     <h2 class="section-title">🍂 Panel general</h2>
-
-      ${isAdmin() ? renderDescuentoPendienteBanner() : ''}
-    ${isAdmin() ? renderBotonDescuentoHoy() : ''}
 
       ${!window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem('medstock_install_dismissed') ? `
       <div id="install-card" style="background:linear-gradient(135deg,#5c3d1e,#8a5c2e);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
@@ -2078,27 +1820,21 @@ function renderUsers(c) {
       ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
     </div>
 
-    <!-- AVISO MIGRACIÓN -->
-    ${USERS.some(u => !u.uid) ? `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:14px">
-      ⚠️ <strong>Acción requerida:</strong> Hay usuarios sin migrar a Firebase Auth. Por favor, editá cada uno y asignale una nueva contraseña para completar la migración segura.
-    </div>` : ''}
-
     <!-- PERSONAL -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Auth</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
           <tbody>${staff.map(u => `
             <tr>
               <td>${u.name}</td>
               <td><code>${u.user}</code></td>
               <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
-              <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
-              ${isOwner ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
-                ${u.uid ? `<button class="btn btn-sm" style="background:var(--blue-light);color:var(--blue)" onclick="resetearContrasena('${u.uid}','${u.name.replace(/'/g,'').replace(/"/g,'')}')">🔑 Reset</button>` : ''}
-                ${(u.uid || u.user) !== (currentUser.uid || currentUser.user) ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
+              <td><code>${u.pass}</code></td>
+              ${isOwner ? `<td style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
+                ${u.user !== currentUser.user ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
               </td>` : ''}
             </tr>`).join('')}
           </tbody>
@@ -2111,17 +1847,16 @@ function renderUsers(c) {
       <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Residente</th><th>Usuario</th><th>Auth</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
+          <thead><tr><th>Residente</th><th>Usuario</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
           <tbody>${family.map(u => {
             const res = RESIDENTS.find(r => r.id === u.residentId);
             return `<tr>
               <td>${res ? res.name : '—'}</td>
               <td><code>${u.user}</code></td>
-              <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
-              ${isOwner ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
-                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
-                ${u.uid ? `<button class="btn btn-sm" style="background:var(--blue-light);color:var(--blue)" onclick="resetearContrasena('${u.uid}','${u.name.replace(/'/g,'').replace(/"/g,'')}')">🔑 Reset</button>` : ''}
-                <button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>
+              <td><code>${u.pass}</code></td>
+              ${isOwner ? `<td style="display:flex;gap:6px">
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
+                <button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>
               </td>` : ''}
             </tr>`;
           }).join('')}
@@ -2133,8 +1868,8 @@ function renderUsers(c) {
 }
 
 // ─── Modal usuario ───
-function openUserModal(uid = null) {
-  const u = uid ? USERS.find(x => x.uid === uid) : null;
+function openUserModal(username = null) {
+  const u = username ? USERS.find(x => x.user === username) : null;
   const isFamily = u?.role === 'family';
 
   showModal(`
@@ -2164,16 +1899,16 @@ function openUserModal(uid = null) {
 
     <div class="grid-2">
       <div class="form-group"><label>Usuario (para iniciar sesión)</label>
-        <input id="u-user" type="text" value="${u?.user || ''}" placeholder="Ej: josefina.varona">
+        <input id="u-user" type="text" value="${u?.user || ''}" placeholder="Ej: josefina.varona" ${u ? '' : ''}>
       </div>
-      <div class="form-group"><label>${u ? 'Nueva contraseña (opcional)' : 'Contraseña'}</label>
-        <input id="u-pass" type="password" value="" placeholder="${u ? 'Dejar en blanco para no cambiar' : 'Mínimo 6 caracteres'}">
+      <div class="form-group"><label>Contraseña</label>
+        <input id="u-pass" type="text" value="${u?.pass || ''}" placeholder="${u ? 'Dejar igual o cambiar' : 'Nueva contraseña'}">
       </div>
     </div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveUser('${uid || ''}')">Guardar</button>
+      <button class="btn btn-primary" onclick="saveUser('${username || ''}')">Guardar</button>
     </div>
   `);
 }
@@ -2184,149 +1919,64 @@ function toggleFamilyField() {
   if (field) field.style.display = role === 'family' ? 'block' : 'none';
 }
 
-async function saveUser(originalUid) {
+function saveUser(originalUsername) {
   const name = document.getElementById('u-name').value.trim();
   const role = document.getElementById('u-role').value;
   const username = document.getElementById('u-user').value.trim().toLowerCase();
   const pass = document.getElementById('u-pass').value.trim();
 
   if (!name || !username) { showToast('Completá nombre y usuario'); return; }
-  if (!pass && !originalUid) { showToast('Ingresá una contraseña'); return; }
-  if (!pass && !originalUid) return;
+  if (!pass && !originalUsername) { showToast('Ingresá una contraseña'); return; }
+
+  // Verificar que el username no esté en uso por otro usuario
+  const duplicate = USERS.find(u => u.user === username && u.user !== originalUsername);
+  if (duplicate) { showToast('Ese nombre de usuario ya existe'); return; }
 
   const residentId = role === 'family' ? parseInt(document.getElementById('u-resident').value) : undefined;
-  const email = username.includes('@') ? username : username + '@medstock.app';
 
-  const saveBtn = document.querySelector('.modal .btn-primary');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
-
-  try {
-    if (originalUid) {
-      // Editar usuario existente
-      const idx = USERS.findIndex(u => u.uid === originalUid);
-      const updated = {
+  if (originalUsername) {
+    // Editar existente
+    const idx = USERS.findIndex(u => u.user === originalUsername);
+    if (idx !== -1) {
+      USERS[idx] = {
         ...USERS[idx],
         name,
         role,
         user: username,
-        email,
+        pass: pass || USERS[idx].pass,
         ...(role === 'family' ? { residentId } : { residentId: undefined })
       };
-      if (idx !== -1) USERS[idx] = updated;
-      if (window._saveUsers) await window._saveUsers([updated]);
-      // Si editó su propia cuenta
-      if (originalUid === currentUser.uid) {
-        currentUser = updated;
-        window.currentUser = updated;
+      // Si editó su propia cuenta, actualizar display
+      if (originalUsername === currentUser.user) {
+        currentUser = USERS[idx];
+        window.currentUser = USERS[idx];
         document.getElementById('user-display').textContent = currentUser.name + ' · ' + ROLE_LABELS[currentUser.role];
       }
-      // Cambiar contraseña si se ingresó una nueva
-      if (pass && window._auth.currentUser && window._auth.currentUser.uid === originalUid) {
-        await window._updatePassword(window._auth.currentUser, pass);
-      }
-      showToast('Usuario actualizado ✅');
-    } else {
-      // Crear nuevo usuario en Firebase Auth
-      if (!pass) { showToast('Ingresá una contraseña'); return; }
-      const cred = await window._createUserWithEmailAndPassword(window._auth, email, pass);
-      const uid = cred.user.uid;
-      const newUser = { uid, user: username, email, name, role };
-      if (role === 'family') newUser.residentId = residentId;
-      USERS.push(newUser);
-      if (window._saveUsers) await window._saveUsers([newUser]);
-      showToast('Usuario creado ✅');
     }
-    closeModal();
-    renderTab('users');
-  } catch(e) {
-    console.error('Error guardando usuario:', e);
-    let msg = 'Error al guardar usuario.';
-    if (e.code === 'auth/email-already-in-use') msg = 'Ese nombre de usuario ya está en uso.';
-    if (e.code === 'auth/weak-password') msg = 'La contraseña debe tener al menos 6 caracteres.';
-    showToast(msg);
-  } finally {
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
-  }
-}
-
-function resetearContrasena(uid, nombre) {
-  showModal(`
-    <div class="modal-title">🔑 Resetear contraseña</div>
-    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
-      Vas a asignar una nueva contraseña temporal para <strong>${nombre}</strong>.<br>
-      Avisale la nueva contraseña para que pueda ingresar.
-    </p>
-    <div class="form-group">
-      <label>Nueva contraseña temporal</label>
-      <input type="text" id="pass-reset" value="Medstock1" style="font-size:16px;letter-spacing:1px">
-    </div>
-    <div id="reset-error" style="color:var(--red);font-size:13px;display:none;margin-bottom:8px"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmarReset('${uid}','${nombre}')">🔑 Cambiar contraseña</button>
-    </div>
-  `);
-}
-
-async function confirmarReset(uid, nombre) {
-  const nuevaPass = document.getElementById('pass-reset').value.trim();
-  const errEl = document.getElementById('reset-error');
-
-  if (!nuevaPass || nuevaPass.length < 6) {
-    errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
-    errEl.style.display = 'block';
-    return;
+    showToast('Usuario actualizado ✅');
+  } else {
+    // Nuevo usuario
+    const newUser = { user: username, pass, name, role };
+    if (role === 'family') newUser.residentId = residentId;
+    USERS.push(newUser);
+    showToast('Usuario creado ✅');
   }
 
-  const btn = document.querySelector('.modal .btn-primary');
-  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-
-  try {
-    // Usar Firebase Admin REST API para cambiar contraseña de otro usuario
-    const idToken = await window._auth.currentUser.getIdToken();
-    const res = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken, localId: uid, password: nuevaPass })
-      }
-    );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || 'Error desconocido');
-    closeModal();
-    showToast(`✅ Contraseña de ${nombre} cambiada correctamente`);
-  } catch(e) {
-    // Fallback: usar la API de admin que sí permite cambiar contraseña de cualquier usuario
-    try {
-      const adminRes = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ localId: uid, password: nuevaPass, returnSecureToken: false })
-        }
-      );
-      if (adminRes.ok) {
-        closeModal();
-        showToast(`✅ Contraseña de ${nombre} cambiada correctamente`);
-      } else {
-        throw new Error('No se pudo cambiar la contraseña. Solo el propio usuario puede cambiarla desde su cuenta.');
-      }
-    } catch(e2) {
-      errEl.textContent = '⚠️ Por seguridad, Firebase no permite que una cuenta cambie la contraseña de otra. Usá "Editar" y pedile al usuario que use el botón 🔑 Contraseña en la barra superior.';
-      errEl.style.display = 'block';
-    }
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔑 Cambiar contraseña'; }
-  }
+  saveUsers();
+  closeModal();
+  renderTab('users');
 }
-  if (uid === currentUser.uid) { showToast('No podés eliminar tu propia cuenta'); return; }
-  const u = USERS.find(u => u.uid === uid);
-  if (!confirm('¿Eliminar el usuario ' + (u?.name || uid) + '?')) return;
-  const idx = USERS.findIndex(u => u.uid === uid);
-  if (idx !== -1) USERS.splice(idx, 1);
-  if (window._deleteUser) await window._deleteUser(uid);
+
+function deleteUser(username) {
+  if (username === currentUser.user) { showToast('No podés eliminar tu propia cuenta'); return; }
+  if (!confirm('¿Eliminar el usuario ' + username + '?')) return;
+  const idx = USERS.findIndex(u => u.user === username);
+  if (idx !== -1) {
+    const uname = USERS[idx].user;
+    USERS.splice(idx, 1);
+    // Borrar de Firestore también
+    if (window._deleteUser) window._deleteUser(uname);
+  }
   showToast('Usuario eliminado');
   renderTab('users');
 }
@@ -2992,16 +2642,7 @@ function showToast(msg) {
 <!-- FIREBASE + SINCRONIZACIÓN EN TIEMPO REAL -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  updatePassword,
-  deleteUser as deleteFirebaseUser
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
@@ -3014,18 +2655,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
-
-// ── Exponer auth al scope global ──
-window._auth = auth;
-window._signInWithEmailAndPassword = signInWithEmailAndPassword;
-window._signOut = signOut;
-window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-window._updatePassword = updatePassword;
-window._deleteFirebaseUser = deleteFirebaseUser;
-window._db = db;
-window._getDoc = getDoc;
-window._doc = doc;
 
 let medsLoaded = false;
 let movsLoaded = false;
@@ -3036,57 +2665,26 @@ function checkReady() {
     bar.style.width = '100%';
     setTimeout(() => {
       document.getElementById('loading-screen').style.display = 'none';
-      // La sesión la maneja onAuthStateChanged — no hace falta tryRestoreSession
+      // Intentar restaurar sesión guardada
+      if (!window.currentUser) tryRestoreSession();
     }, 400);
   }
 }
 
-// ── Escuchar estado de autenticación Firebase ──
-onAuthStateChanged(auth, async (firebaseUser) => {
-  if (firebaseUser) {
-    // Usuario autenticado: cargar su perfil desde Firestore
-    try {
-      const snap = await getDoc(doc(db, 'usuarios', firebaseUser.uid));
-      if (snap.exists()) {
-        const profile = snap.data();
-        window.currentUser = profile;
-        currentUser = profile;
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('user-display').textContent = profile.name + ' · ' + ROLE_LABELS[profile.role];
-        buildNav();
-        renderTab('home');
-        if (profile.role === 'family') {
-          setTimeout(() => checkStockNotificacionFamiliar(profile), 800);
-        }
-      } else {
-        // Perfil no encontrado en Firestore — cerrar sesión
-        await signOut(auth);
-      }
-    } catch(e) {
-      console.error('Error cargando perfil:', e);
-    }
-  } else {
-    // No autenticado
-    if (window.currentUser) {
-      window.currentUser = null;
-      currentUser = null;
-      document.getElementById('app').style.display = 'none';
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('login-user').value = '';
-      document.getElementById('login-pass').value = '';
-      document.getElementById('login-error').style.display = 'none';
-    }
-  }
-});
-
-// Sincronización en tiempo real — usuarios (para mantener USERS sincronizado)
+// Sincronización en tiempo real — usuarios
 onSnapshot(collection(db, 'usuarios'), snapshot => {
   const dbUsers = snapshot.docs.map(d => d.data());
   if (dbUsers.length > 0) {
-    // Reemplazar USERS completamente con los de Firestore
-    USERS.length = 0;
-    dbUsers.forEach(u => USERS.push(u));
+    // Mezclar: los usuarios de la DB sobreescriben los del código
+    dbUsers.forEach(dbU => {
+      const idx = USERS.findIndex(u => u.user === dbU.user);
+      if (idx !== -1) USERS[idx] = dbU;
+      else USERS.push(dbU);
+    });
+    // Eliminar los que están en código pero fueron borrados de DB
+    // (solo si ya hay datos en DB, para no borrar todo al inicio)
+    const dbUsernames = dbUsers.map(u => u.user);
+    // Marcar como "gestionados" solo los que alguna vez se guardaron en DB
   }
 });
 
@@ -3143,13 +2741,11 @@ window._saveMovs = async function() {
   }
 };
 
-// saveUsers — guarda todos los usuarios modificados en Firestore (keyed by uid)
-window._saveUsers = async function(usersToSave = null) {
-  const lista = usersToSave || USERS;
-  for (const u of lista) {
-    if (!u.uid) continue; // solo guardar usuarios con uid de Firebase Auth
+// saveUsers — guarda todos los usuarios modificados en Firestore
+window._saveUsers = async function() {
+  for (const u of USERS) {
     try {
-      await setDoc(doc(db, 'usuarios', u.uid), u);
+      await setDoc(doc(db, 'usuarios', u.user), u);
     } catch(e) { console.error('Error guardando usuario:', e); }
   }
 };
@@ -3171,10 +2767,10 @@ window._deleteHygiene = async function(id) {
   } catch(e) { console.error('Error eliminando higiene:', e); }
 };
 
-// deleteUser de Firestore (por uid)
-window._deleteUser = async function(uid) {
+// deleteUser de Firestore
+window._deleteUser = async function(username) {
   try {
-    await deleteDoc(doc(db, 'usuarios', uid));
+    await deleteDoc(doc(db, 'usuarios', username));
   } catch(e) { console.error('Error eliminando usuario:', e); }
 };
 
