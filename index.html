@@ -1044,30 +1044,22 @@ function doLogin(savedUser = null) {
 function checkStockNotificacionFamiliar(user) {
   const myMeds = medications.filter(m => m.residentId === user.residentId);
   const medsSinStock = myMeds.filter(m => getStatus(m) === 'out');
-  const medsBajo    = myMeds.filter(m => getStatus(m) === 'low');
-  const myHigiene   = hygieneItems.filter(h => h.residentId === user.residentId);
+  const medsBajo = myMeds.filter(m => getStatus(m) === 'low');
+  const myHigiene = hygieneItems.filter(h => h.residentId === user.residentId);
   const higSinStock = myHigiene.filter(h => getHygieneStatus(h) === 'out');
-  const higBajo     = myHigiene.filter(h => getHygieneStatus(h) === 'low');
+  const higBajo = myHigiene.filter(h => getHygieneStatus(h) === 'low');
   if (!medsSinStock.length && !medsBajo.length && !higSinStock.length && !higBajo.length) return;
-
   const res = RESIDENTS.find(r => r.id === user.residentId);
-  let html = `<div style="font-size:14px;color:var(--text);line-height:1.7">
-    <p style="margin-bottom:14px">Problemas de stock para <strong>${res ? res.name : 'su familiar'}</strong>:</p>`;
-  if (medsSinStock.length) html += `<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-    <strong style="color:var(--red)">🚨 Medicamentos sin stock</strong>
-    <ul style="margin:6px 0 0 16px">${medsSinStock.map(m=>`<li>${m.name}</li>`).join('')}</ul></div>`;
-  if (medsBajo.length) html += `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-    <strong style="color:var(--yellow)">⚠️ Medicamentos con stock bajo</strong>
-    <ul style="margin:6px 0 0 16px">${medsBajo.map(m=>`<li>${m.name} — <strong>${m.qty} ${m.unit}</strong></li>`).join('')}</ul></div>`;
-  if (higSinStock.length) html += `<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-    <strong style="color:var(--red)">🚨 Artículos de higiene sin stock</strong>
-    <ul style="margin:6px 0 0 16px">${higSinStock.map(h=>`<li>${h.nombre}</li>`).join('')}</ul></div>`;
-  if (higBajo.length) html += `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px;margin-bottom:10px">
-    <strong style="color:var(--yellow)">⚠️ Artículos de higiene con stock bajo</strong>
-    <ul style="margin:6px 0 0 16px">${higBajo.map(h=>`<li>${h.nombre} — <strong>${h.qty} ${h.unidad||'unidades'}</strong></li>`).join('')}</ul></div>`;
-  html += `<p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Comunicarse con la residencia para reabastecer.</p></div>`;
-  showModal(`<div class="modal-title">🔔 Alerta de stock</div>${html}<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>`);
+  let html = '<div style="font-size:14px;color:var(--text);line-height:1.7"><p style="margin-bottom:14px">Problemas de stock para <strong>' + (res ? res.name : 'su familiar') + '</strong>:</p>';
+  if (medsSinStock.length) html += '<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px"><strong style="color:var(--red)">🚨 Medicamentos sin stock</strong><ul style="margin:6px 0 0 16px">' + medsSinStock.map(m => '<li>' + m.name + '</li>').join('') + '</ul></div>';
+  if (medsBajo.length) html += '<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px;margin-bottom:10px"><strong style="color:var(--yellow)">⚠️ Medicamentos con stock bajo</strong><ul style="margin:6px 0 0 16px">' + medsBajo.map(m => '<li>' + m.name + ' — <strong>' + m.qty + ' ' + m.unit + '</strong></li>').join('') + '</ul></div>';
+  if (higSinStock.length) html += '<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px"><strong style="color:var(--red)">🚨 Artículos de higiene sin stock</strong><ul style="margin:6px 0 0 16px">' + higSinStock.map(h => '<li>' + h.nombre + '</li>').join('') + '</ul></div>';
+  if (higBajo.length) html += '<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px;margin-bottom:10px"><strong style="color:var(--yellow)">⚠️ Artículos de higiene con stock bajo</strong><ul style="margin:6px 0 0 16px">' + higBajo.map(h => '<li>' + h.nombre + ' — <strong>' + h.qty + ' ' + (h.unidad||'unidades') + '</strong></li>').join('') + '</ul></div>';
+  html += '<p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Comunicarse con la residencia para reabastecer.</p></div>';
+  showModal('<div class="modal-title">🔔 Alerta de stock</div>' + html + '<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>');
 }
+
+// Restaurar sesión al cargar la página
 function tryRestoreSession() {
   try {
     const saved = localStorage.getItem('medstock_session');
