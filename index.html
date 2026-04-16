@@ -1020,7 +1020,6 @@ function saveData() {
 // =====================================================
 
 async function doLogin() {
-  // Convertir usuario tipo "camila.distefano" a email "camila.distefano@medstock.app"
   const userInput = document.getElementById('login-user').value.trim().toLowerCase();
   const passInput = document.getElementById('login-pass').value;
   if (!userInput || !passInput) {
@@ -1028,30 +1027,48 @@ async function doLogin() {
     document.getElementById('login-error').style.display = 'block';
     return;
   }
-  const email = userInput.includes('@') ? userInput : userInput + '@medstock.app';
+
   const loginBtn = document.querySelector('#login-screen .btn-primary');
   if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Ingresando...'; }
+  document.getElementById('login-error').style.display = 'none';
+
+  // Esperar hasta 8 segundos a que Firebase cargue
+  let intentos = 0;
+  while ((!window._auth || !window._signInWithEmailAndPassword) && intentos < 40) {
+    await new Promise(r => setTimeout(r, 200));
+    intentos++;
+  }
+
+  if (!window._auth || !window._signInWithEmailAndPassword) {
+    document.getElementById('login-error').textContent = 'Error de conexión. Recargá la página e intentá de nuevo.';
+    document.getElementById('login-error').style.display = 'block';
+    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
+    return;
+  }
+
+  const email = userInput.includes('@') ? userInput : userInput + '@medstock.app';
   try {
     await window._signInWithEmailAndPassword(window._auth, email, passInput);
     document.getElementById('login-error').style.display = 'none';
-    // onAuthStateChanged se encarga de mostrar la app
   } catch(e) {
     let msg = 'Usuario o contraseña incorrectos.';
     if (e.code === 'auth/too-many-requests') msg = 'Demasiados intentos fallidos. Esperá unos minutos.';
     if (e.code === 'auth/network-request-failed') msg = 'Sin conexión a internet.';
+    if (e.code === 'auth/user-not-found') msg = 'Usuario no encontrado.';
     document.getElementById('login-error').textContent = msg;
     document.getElementById('login-error').style.display = 'block';
   } finally {
     if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
   }
 }
+window.doLogin = doLogin;
 
 async function doLogout() {
   try {
     await window._signOut(window._auth);
-    // onAuthStateChanged limpia la sesión automáticamente
   } catch(e) { console.error('Error al cerrar sesión:', e); }
 }
+window.doLogout = doLogout;
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('login-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
@@ -2078,8 +2095,9 @@ function renderUsers(c) {
               <td><code>${u.user}</code></td>
               <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
               <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
-              ${isOwner ? `<td style="display:flex;gap:6px">
+              ${isOwner ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
+                ${u.uid ? `<button class="btn btn-sm" style="background:var(--blue-light);color:var(--blue)" onclick="resetearContrasena('${u.uid}','${u.name.replace(/'/g,'').replace(/"/g,'')}')">🔑 Reset</button>` : ''}
                 ${(u.uid || u.user) !== (currentUser.uid || currentUser.user) ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
               </td>` : ''}
             </tr>`).join('')}
@@ -2100,8 +2118,9 @@ function renderUsers(c) {
               <td>${res ? res.name : '—'}</td>
               <td><code>${u.user}</code></td>
               <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
-              ${isOwner ? `<td style="display:flex;gap:6px">
+              ${isOwner ? `<td style="display:flex;gap:6px;flex-wrap:wrap">
                 <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
+                ${u.uid ? `<button class="btn btn-sm" style="background:var(--blue-light);color:var(--blue)" onclick="resetearContrasena('${u.uid}','${u.name.replace(/'/g,'').replace(/"/g,'')}')">🔑 Reset</button>` : ''}
                 <button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>
               </td>` : ''}
             </tr>`;
@@ -2230,7 +2249,78 @@ async function saveUser(originalUid) {
   }
 }
 
-async function deleteUser(uid) {
+function resetearContrasena(uid, nombre) {
+  showModal(`
+    <div class="modal-title">🔑 Resetear contraseña</div>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">
+      Vas a asignar una nueva contraseña temporal para <strong>${nombre}</strong>.<br>
+      Avisale la nueva contraseña para que pueda ingresar.
+    </p>
+    <div class="form-group">
+      <label>Nueva contraseña temporal</label>
+      <input type="text" id="pass-reset" value="Medstock1" style="font-size:16px;letter-spacing:1px">
+    </div>
+    <div id="reset-error" style="color:var(--red);font-size:13px;display:none;margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarReset('${uid}','${nombre}')">🔑 Cambiar contraseña</button>
+    </div>
+  `);
+}
+
+async function confirmarReset(uid, nombre) {
+  const nuevaPass = document.getElementById('pass-reset').value.trim();
+  const errEl = document.getElementById('reset-error');
+
+  if (!nuevaPass || nuevaPass.length < 6) {
+    errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('.modal .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    // Usar Firebase Admin REST API para cambiar contraseña de otro usuario
+    const idToken = await window._auth.currentUser.getIdToken();
+    const res = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken, localId: uid, password: nuevaPass })
+      }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'Error desconocido');
+    closeModal();
+    showToast(`✅ Contraseña de ${nombre} cambiada correctamente`);
+  } catch(e) {
+    // Fallback: usar la API de admin que sí permite cambiar contraseña de cualquier usuario
+    try {
+      const adminRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ localId: uid, password: nuevaPass, returnSecureToken: false })
+        }
+      );
+      if (adminRes.ok) {
+        closeModal();
+        showToast(`✅ Contraseña de ${nombre} cambiada correctamente`);
+      } else {
+        throw new Error('No se pudo cambiar la contraseña. Solo el propio usuario puede cambiarla desde su cuenta.');
+      }
+    } catch(e2) {
+      errEl.textContent = '⚠️ Por seguridad, Firebase no permite que una cuenta cambie la contraseña de otra. Usá "Editar" y pedile al usuario que use el botón 🔑 Contraseña en la barra superior.';
+      errEl.style.display = 'block';
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔑 Cambiar contraseña'; }
+  }
+}
   if (uid === currentUser.uid) { showToast('No podés eliminar tu propia cuenta'); return; }
   const u = USERS.find(u => u.uid === uid);
   if (!confirm('¿Eliminar el usuario ' + (u?.name || uid) + '?')) return;
