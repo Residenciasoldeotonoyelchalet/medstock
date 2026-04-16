@@ -851,11 +851,11 @@
     <div id="login-error" class="login-error">Usuario o contraseña incorrectos.</div>
     <div class="form-group">
       <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="tu.usuario" autocomplete="off">
+      <input type="text" id="login-user" placeholder="" autocomplete="username">
     </div>
     <div class="form-group">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••">
+      <input type="password" id="login-pass" placeholder="" autocomplete="current-password">
     </div>
     <button class="btn btn-primary" onclick="doLogin()">Ingresar</button>
   </div>
@@ -1014,45 +1014,71 @@ function saveData() {
 // AUTH
 // =====================================================
 
-function doLogin(savedUser = null) {
-  let found;
-  if (savedUser) {
-    found = USERS.find(x => x.user === savedUser.user && x.pass === savedUser.pass);
-  } else {
-    const u = document.getElementById('login-user').value.trim().toLowerCase();
-    const p = document.getElementById('login-pass').value;
-    found = USERS.find(x => x.user === u && x.pass === p);
-  }
-  if (!found) {
-    if (!savedUser) document.getElementById('login-error').style.display = 'block';
+// =====================================================
+// AUTH — Firebase Authentication
+// =====================================================
+
+async function doLogin() {
+  // Convertir usuario tipo "camila.distefano" a email "camila.distefano@medstock.app"
+  const userInput = document.getElementById('login-user').value.trim().toLowerCase();
+  const passInput = document.getElementById('login-pass').value;
+  if (!userInput || !passInput) {
+    document.getElementById('login-error').textContent = 'Completá usuario y contraseña.';
+    document.getElementById('login-error').style.display = 'block';
     return;
   }
-  currentUser = found;
-  window.currentUser = found;
-  // Guardar sesión en localStorage
-  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
-  buildNav();
-  renderTab('home');
+  const email = userInput.includes('@') ? userInput : userInput + '@medstock.app';
+  const loginBtn = document.querySelector('#login-screen .btn-primary');
+  if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = 'Ingresando...'; }
+  try {
+    await window._signInWithEmailAndPassword(window._auth, email, passInput);
+    document.getElementById('login-error').style.display = 'none';
+    // onAuthStateChanged se encarga de mostrar la app
+  } catch(e) {
+    let msg = 'Usuario o contraseña incorrectos.';
+    if (e.code === 'auth/too-many-requests') msg = 'Demasiados intentos fallidos. Esperá unos minutos.';
+    if (e.code === 'auth/network-request-failed') msg = 'Sin conexión a internet.';
+    document.getElementById('login-error').textContent = msg;
+    document.getElementById('login-error').style.display = 'block';
+  } finally {
+    if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Ingresar'; }
+  }
 }
 
-// Restaurar sesión al cargar la página
-function tryRestoreSession() {
+async function doLogout() {
   try {
-    const saved = localStorage.getItem('medstock_session');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      doLogin(parsed);
-    }
-  } catch(e) { localStorage.removeItem('medstock_session'); }
+    await window._signOut(window._auth);
+    // onAuthStateChanged limpia la sesión automáticamente
+  } catch(e) { console.error('Error al cerrar sesión:', e); }
 }
 
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('login-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
 
-// Guardar usuarios en Firestore
 function saveUsers() { if (window._saveUsers) window._saveUsers(); }
+
+function checkStockNotificacionFamiliar(user) {
+  const myMeds = medications.filter(m => m.residentId === user.residentId);
+  const sinStock = myMeds.filter(m => getStatus(m) === 'out');
+  const stockBajo = myMeds.filter(m => getStatus(m) === 'low');
+  if (sinStock.length === 0 && stockBajo.length === 0) return;
+  let html = `<div style="font-size:15px;color:var(--text);line-height:1.7">`;
+  html += `<p style="margin-bottom:14px">Se detectaron los siguientes problemas de stock para <strong>${(RESIDENTS.find(r => r.id === user.residentId) || {}).name || 'su familiar'}</strong>:</p>`;
+  if (sinStock.length > 0) {
+    html += `<div style="background:var(--red-light);border-left:4px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <strong style="color:var(--red)">🚨 Sin stock (${sinStock.length})</strong><br>
+      <ul style="margin:6px 0 0 16px;font-size:14px">${sinStock.map(m => `<li>${m.name}${m.drug ? ` (${m.drug})` : ''} — <strong>0 ${m.unit}</strong></li>`).join('')}</ul>
+    </div>`;
+  }
+  if (stockBajo.length > 0) {
+    html += `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 14px">
+      <strong style="color:var(--yellow)">⚠️ Stock bajo (${stockBajo.length})</strong><br>
+      <ul style="margin:6px 0 0 16px;font-size:14px">${stockBajo.map(m => `<li>${m.name}${m.drug ? ` (${m.drug})` : ''} — <strong>${m.qty} ${m.unit}</strong> restantes</li>`).join('')}</ul>
+    </div>`;
+  }
+  html += `<p style="margin-top:14px;font-size:13px;color:var(--text-muted)">Por favor, comuníquese con la residencia para reabastecer la medicación.</p></div>`;
+  showModal(`<div class="modal-title">🔔 Alerta de stock</div>${html}<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal()">Entendido</button></div>`);
+}
 
 function saveHygiene(itemId = null) {
   if (window._saveHygiene) {
@@ -1185,46 +1211,13 @@ function frecuenciaLabel(med) {
 }
 
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
+// El descuento lo realiza la Firebase Cloud Function "descuentoDiario"
+// que se ejecuta todos los días a las 00:05 hs (Argentina) en el servidor.
+// Esta función queda vacía para evitar duplicar el descuento desde el cliente.
 function checkDailyDiscount() {
-  const today = new Date().toISOString().slice(0, 10);
-  const lastDiscount = localStorage.getItem('medstock_last_discount');
-  if (lastDiscount === today) return;
-
-  let huboDescuento = false;
-  medications.forEach(med => {
-    if (med.treatment !== 'prolongado') return;
-    if (med.sos) return;
-    if (med.qty <= 0) return;
-    if (getStatus(med) === 'finalizado') return;
-    if (!debeTomarsHoy(med)) return;
-
-    // Usar getDosisdiaria que suma dosis de todos los horarios
-    const dosisReal = getDosisdiaria(med);
-    if (dosisReal <= 0) return;
-
-    const descuento = Math.min(dosisReal, med.qty);
-    med.qty = Math.max(0, med.qty - descuento);
-    huboDescuento = true;
-    // NO agregar a movements — el familiar no debe ver descuentos automáticos
-  });
-
-  localStorage.setItem('medstock_last_discount', today);
-  if (huboDescuento) {
-    saveMeds();
-    console.log('Descuento diario realizado:', today);
-  }
+  // No hacer nada — manejado por Cloud Function
 }
 
-function doLogout() {
-  currentUser = null;
-  window.currentUser = null;
-  localStorage.removeItem('medstock_session');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('login-error').style.display = 'none';
-}
 
 function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
 function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
@@ -1820,21 +1813,26 @@ function renderUsers(c) {
       ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
     </div>
 
+    <!-- AVISO MIGRACIÓN -->
+    ${USERS.some(u => !u.uid) ? `<div style="background:var(--yellow-light);border-left:4px solid var(--yellow);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:14px">
+      ⚠️ <strong>Acción requerida:</strong> Hay usuarios sin migrar a Firebase Auth. Por favor, editá cada uno y asignale una nueva contraseña para completar la migración segura.
+    </div>` : ''}
+
     <!-- PERSONAL -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">👩‍⚕️ Personal</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
+          <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Auth</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
           <tbody>${staff.map(u => `
             <tr>
               <td>${u.name}</td>
               <td><code>${u.user}</code></td>
               <td><span class="badge badge-role">${ROLE_LABELS[u.role]}</span></td>
-              <td><code>${u.pass}</code></td>
+              <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
               ${isOwner ? `<td style="display:flex;gap:6px">
-                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
-                ${u.user !== currentUser.user ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
+                ${(u.uid || u.user) !== (currentUser.uid || currentUser.user) ? `<button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>` : '<span style="font-size:11px;color:var(--text-muted)">Tu cuenta</span>'}
               </td>` : ''}
             </tr>`).join('')}
           </tbody>
@@ -1847,16 +1845,16 @@ function renderUsers(c) {
       <div class="card-header"><div class="card-title">👨‍👩‍👧 Familiares</div></div>
       <div class="table-wrapper">
         <table>
-          <thead><tr><th>Residente</th><th>Usuario</th><th>Contraseña</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
+          <thead><tr><th>Residente</th><th>Usuario</th><th>Auth</th>${isOwner ? '<th>Acciones</th>' : ''}</tr></thead>
           <tbody>${family.map(u => {
             const res = RESIDENTS.find(r => r.id === u.residentId);
             return `<tr>
               <td>${res ? res.name : '—'}</td>
               <td><code>${u.user}</code></td>
-              <td><code>${u.pass}</code></td>
+              <td>${u.uid ? '<span style="color:var(--green)">🔒 Seguro</span>' : '<span style="color:var(--yellow)">⚠️ Migrar</span>'}</td>
               ${isOwner ? `<td style="display:flex;gap:6px">
-                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.user}')">✏️ Editar</button>
-                <button class="btn btn-red btn-sm" onclick="deleteUser('${u.user}')">🗑</button>
+                <button class="btn btn-secondary btn-sm" onclick="openUserModal('${u.uid || ''}')">✏️ Editar</button>
+                <button class="btn btn-red btn-sm" onclick="deleteUser('${u.uid || ''}')">🗑</button>
               </td>` : ''}
             </tr>`;
           }).join('')}
@@ -1868,8 +1866,8 @@ function renderUsers(c) {
 }
 
 // ─── Modal usuario ───
-function openUserModal(username = null) {
-  const u = username ? USERS.find(x => x.user === username) : null;
+function openUserModal(uid = null) {
+  const u = uid ? USERS.find(x => x.uid === uid) : null;
   const isFamily = u?.role === 'family';
 
   showModal(`
@@ -1899,16 +1897,16 @@ function openUserModal(username = null) {
 
     <div class="grid-2">
       <div class="form-group"><label>Usuario (para iniciar sesión)</label>
-        <input id="u-user" type="text" value="${u?.user || ''}" placeholder="Ej: josefina.varona" ${u ? '' : ''}>
+        <input id="u-user" type="text" value="${u?.user || ''}" placeholder="Ej: josefina.varona">
       </div>
-      <div class="form-group"><label>Contraseña</label>
-        <input id="u-pass" type="text" value="${u?.pass || ''}" placeholder="${u ? 'Dejar igual o cambiar' : 'Nueva contraseña'}">
+      <div class="form-group"><label>${u ? 'Nueva contraseña (opcional)' : 'Contraseña'}</label>
+        <input id="u-pass" type="password" value="" placeholder="${u ? 'Dejar en blanco para no cambiar' : 'Mínimo 6 caracteres'}">
       </div>
     </div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveUser('${username || ''}')">Guardar</button>
+      <button class="btn btn-primary" onclick="saveUser('${uid || ''}')">Guardar</button>
     </div>
   `);
 }
@@ -1919,64 +1917,78 @@ function toggleFamilyField() {
   if (field) field.style.display = role === 'family' ? 'block' : 'none';
 }
 
-function saveUser(originalUsername) {
+async function saveUser(originalUid) {
   const name = document.getElementById('u-name').value.trim();
   const role = document.getElementById('u-role').value;
   const username = document.getElementById('u-user').value.trim().toLowerCase();
   const pass = document.getElementById('u-pass').value.trim();
 
   if (!name || !username) { showToast('Completá nombre y usuario'); return; }
-  if (!pass && !originalUsername) { showToast('Ingresá una contraseña'); return; }
-
-  // Verificar que el username no esté en uso por otro usuario
-  const duplicate = USERS.find(u => u.user === username && u.user !== originalUsername);
-  if (duplicate) { showToast('Ese nombre de usuario ya existe'); return; }
+  if (!pass && !originalUid) { showToast('Ingresá una contraseña'); return; }
+  if (!pass && !originalUid) return;
 
   const residentId = role === 'family' ? parseInt(document.getElementById('u-resident').value) : undefined;
+  const email = username.includes('@') ? username : username + '@medstock.app';
 
-  if (originalUsername) {
-    // Editar existente
-    const idx = USERS.findIndex(u => u.user === originalUsername);
-    if (idx !== -1) {
-      USERS[idx] = {
+  const saveBtn = document.querySelector('.modal .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+
+  try {
+    if (originalUid) {
+      // Editar usuario existente
+      const idx = USERS.findIndex(u => u.uid === originalUid);
+      const updated = {
         ...USERS[idx],
         name,
         role,
         user: username,
-        pass: pass || USERS[idx].pass,
+        email,
         ...(role === 'family' ? { residentId } : { residentId: undefined })
       };
-      // Si editó su propia cuenta, actualizar display
-      if (originalUsername === currentUser.user) {
-        currentUser = USERS[idx];
-        window.currentUser = USERS[idx];
+      if (idx !== -1) USERS[idx] = updated;
+      if (window._saveUsers) await window._saveUsers([updated]);
+      // Si editó su propia cuenta
+      if (originalUid === currentUser.uid) {
+        currentUser = updated;
+        window.currentUser = updated;
         document.getElementById('user-display').textContent = currentUser.name + ' · ' + ROLE_LABELS[currentUser.role];
       }
+      // Cambiar contraseña si se ingresó una nueva
+      if (pass && window._auth.currentUser && window._auth.currentUser.uid === originalUid) {
+        await window._updatePassword(window._auth.currentUser, pass);
+      }
+      showToast('Usuario actualizado ✅');
+    } else {
+      // Crear nuevo usuario en Firebase Auth
+      if (!pass) { showToast('Ingresá una contraseña'); return; }
+      const cred = await window._createUserWithEmailAndPassword(window._auth, email, pass);
+      const uid = cred.user.uid;
+      const newUser = { uid, user: username, email, name, role };
+      if (role === 'family') newUser.residentId = residentId;
+      USERS.push(newUser);
+      if (window._saveUsers) await window._saveUsers([newUser]);
+      showToast('Usuario creado ✅');
     }
-    showToast('Usuario actualizado ✅');
-  } else {
-    // Nuevo usuario
-    const newUser = { user: username, pass, name, role };
-    if (role === 'family') newUser.residentId = residentId;
-    USERS.push(newUser);
-    showToast('Usuario creado ✅');
+    closeModal();
+    renderTab('users');
+  } catch(e) {
+    console.error('Error guardando usuario:', e);
+    let msg = 'Error al guardar usuario.';
+    if (e.code === 'auth/email-already-in-use') msg = 'Ese nombre de usuario ya está en uso.';
+    if (e.code === 'auth/weak-password') msg = 'La contraseña debe tener al menos 6 caracteres.';
+    showToast(msg);
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
   }
-
-  saveUsers();
-  closeModal();
-  renderTab('users');
 }
 
-function deleteUser(username) {
-  if (username === currentUser.user) { showToast('No podés eliminar tu propia cuenta'); return; }
-  if (!confirm('¿Eliminar el usuario ' + username + '?')) return;
-  const idx = USERS.findIndex(u => u.user === username);
-  if (idx !== -1) {
-    const uname = USERS[idx].user;
-    USERS.splice(idx, 1);
-    // Borrar de Firestore también
-    if (window._deleteUser) window._deleteUser(uname);
-  }
+async function deleteUser(uid) {
+  if (uid === currentUser.uid) { showToast('No podés eliminar tu propia cuenta'); return; }
+  const u = USERS.find(u => u.uid === uid);
+  if (!confirm('¿Eliminar el usuario ' + (u?.name || uid) + '?')) return;
+  const idx = USERS.findIndex(u => u.uid === uid);
+  if (idx !== -1) USERS.splice(idx, 1);
+  if (window._deleteUser) await window._deleteUser(uid);
   showToast('Usuario eliminado');
   renderTab('users');
 }
@@ -2642,7 +2654,16 @@ function showToast(msg) {
 <!-- FIREBASE + SINCRONIZACIÓN EN TIEMPO REAL -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  updatePassword,
+  deleteUser as deleteFirebaseUser
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
@@ -2655,6 +2676,18 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ── Exponer auth al scope global ──
+window._auth = auth;
+window._signInWithEmailAndPassword = signInWithEmailAndPassword;
+window._signOut = signOut;
+window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+window._updatePassword = updatePassword;
+window._deleteFirebaseUser = deleteFirebaseUser;
+window._db = db;
+window._getDoc = getDoc;
+window._doc = doc;
 
 let medsLoaded = false;
 let movsLoaded = false;
@@ -2665,26 +2698,57 @@ function checkReady() {
     bar.style.width = '100%';
     setTimeout(() => {
       document.getElementById('loading-screen').style.display = 'none';
-      // Intentar restaurar sesión guardada
-      if (!window.currentUser) tryRestoreSession();
+      // La sesión la maneja onAuthStateChanged — no hace falta tryRestoreSession
     }, 400);
   }
 }
 
-// Sincronización en tiempo real — usuarios
+// ── Escuchar estado de autenticación Firebase ──
+onAuthStateChanged(auth, async (firebaseUser) => {
+  if (firebaseUser) {
+    // Usuario autenticado: cargar su perfil desde Firestore
+    try {
+      const snap = await getDoc(doc(db, 'usuarios', firebaseUser.uid));
+      if (snap.exists()) {
+        const profile = snap.data();
+        window.currentUser = profile;
+        currentUser = profile;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('user-display').textContent = profile.name + ' · ' + ROLE_LABELS[profile.role];
+        buildNav();
+        renderTab('home');
+        if (profile.role === 'family') {
+          setTimeout(() => checkStockNotificacionFamiliar(profile), 800);
+        }
+      } else {
+        // Perfil no encontrado en Firestore — cerrar sesión
+        await signOut(auth);
+      }
+    } catch(e) {
+      console.error('Error cargando perfil:', e);
+    }
+  } else {
+    // No autenticado
+    if (window.currentUser) {
+      window.currentUser = null;
+      currentUser = null;
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    }
+  }
+});
+
+// Sincronización en tiempo real — usuarios (para mantener USERS sincronizado)
 onSnapshot(collection(db, 'usuarios'), snapshot => {
   const dbUsers = snapshot.docs.map(d => d.data());
   if (dbUsers.length > 0) {
-    // Mezclar: los usuarios de la DB sobreescriben los del código
-    dbUsers.forEach(dbU => {
-      const idx = USERS.findIndex(u => u.user === dbU.user);
-      if (idx !== -1) USERS[idx] = dbU;
-      else USERS.push(dbU);
-    });
-    // Eliminar los que están en código pero fueron borrados de DB
-    // (solo si ya hay datos en DB, para no borrar todo al inicio)
-    const dbUsernames = dbUsers.map(u => u.user);
-    // Marcar como "gestionados" solo los que alguna vez se guardaron en DB
+    // Reemplazar USERS completamente con los de Firestore
+    USERS.length = 0;
+    dbUsers.forEach(u => USERS.push(u));
   }
 });
 
@@ -2741,11 +2805,13 @@ window._saveMovs = async function() {
   }
 };
 
-// saveUsers — guarda todos los usuarios modificados en Firestore
-window._saveUsers = async function() {
-  for (const u of USERS) {
+// saveUsers — guarda todos los usuarios modificados en Firestore (keyed by uid)
+window._saveUsers = async function(usersToSave = null) {
+  const lista = usersToSave || USERS;
+  for (const u of lista) {
+    if (!u.uid) continue; // solo guardar usuarios con uid de Firebase Auth
     try {
-      await setDoc(doc(db, 'usuarios', u.user), u);
+      await setDoc(doc(db, 'usuarios', u.uid), u);
     } catch(e) { console.error('Error guardando usuario:', e); }
   }
 };
@@ -2767,10 +2833,10 @@ window._deleteHygiene = async function(id) {
   } catch(e) { console.error('Error eliminando higiene:', e); }
 };
 
-// deleteUser de Firestore
-window._deleteUser = async function(username) {
+// deleteUser de Firestore (por uid)
+window._deleteUser = async function(uid) {
   try {
-    await deleteDoc(doc(db, 'usuarios', username));
+    await deleteDoc(doc(db, 'usuarios', uid));
   } catch(e) { console.error('Error eliminando usuario:', e); }
 };
 
