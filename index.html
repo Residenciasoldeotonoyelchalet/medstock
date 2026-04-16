@@ -869,6 +869,7 @@
     </div>
     <div class="topbar-user">
       <span class="user-badge" id="user-display"></span>
+      <button class="btn-logout" onclick="abrirCambioContrasena()" style="background:rgba(255,255,255,0.15);color:white;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;margin-right:4px">🔑 Contraseña</button>
       <button class="btn-logout" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -1241,7 +1242,69 @@ function checkDailyDiscount() {
 }
 
 
-function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
+function abrirCambioContrasena() {
+  showModal(`
+    <div class="modal-title">🔑 Cambiar contraseña</div>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">Ingresá tu contraseña actual y la nueva contraseña.</p>
+    <div class="form-group">
+      <label>Contraseña actual</label>
+      <input type="password" id="pass-actual" placeholder="Tu contraseña actual" autocomplete="current-password">
+    </div>
+    <div class="form-group">
+      <label>Nueva contraseña</label>
+      <input type="password" id="pass-nueva" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label>Repetir nueva contraseña</label>
+      <input type="password" id="pass-nueva2" placeholder="Repetí la nueva contraseña" autocomplete="new-password">
+    </div>
+    <div id="pass-error" style="color:var(--red);font-size:13px;display:none;margin-bottom:8px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="cambiarContrasena()">Guardar</button>
+    </div>
+  `);
+}
+
+async function cambiarContrasena() {
+  const actual = document.getElementById('pass-actual').value;
+  const nueva = document.getElementById('pass-nueva').value;
+  const nueva2 = document.getElementById('pass-nueva2').value;
+  const errEl = document.getElementById('pass-error');
+
+  if (!actual || !nueva || !nueva2) {
+    errEl.textContent = 'Completá todos los campos.'; errEl.style.display = 'block'; return;
+  }
+  if (nueva.length < 6) {
+    errEl.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.'; errEl.style.display = 'block'; return;
+  }
+  if (nueva !== nueva2) {
+    errEl.textContent = 'Las contraseñas nuevas no coinciden.'; errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.querySelector('.modal .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+  errEl.style.display = 'none';
+
+  try {
+    // Re-autenticar con la contraseña actual
+    const { EmailAuthProvider, reauthenticateWithCredential } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+    const user = window._auth.currentUser;
+    const credential = EmailAuthProvider.credential(user.email, actual);
+    await reauthenticateWithCredential(user, credential);
+    // Cambiar contraseña
+    await window._updatePassword(user, nueva);
+    closeModal();
+    showToast('✅ Contraseña cambiada correctamente');
+  } catch(e) {
+    let msg = 'Error al cambiar la contraseña.';
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = 'La contraseña actual es incorrecta.';
+    if (e.code === 'auth/weak-password') msg = 'La nueva contraseña es muy débil.';
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+  }
+}
 function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
 function canFamilyAction(){ return ['owner','manager','nurse','family'].includes(currentUser.role); }
 function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
