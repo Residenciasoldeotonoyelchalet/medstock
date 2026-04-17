@@ -1253,8 +1253,32 @@ async function runDailyDiscount(forzar = false) {
     if (hygieneCount > 0) await window._saveHygiene();
   }
 
-  showToast(`✅ Descuento aplicado: ${count} med${count !== 1 ? 's' : ''}${hygieneCount > 0 ? ` + ${hygieneCount} higiene` : ''}`);
-  renderTab(window.currentTab || 'home');
+  const msg = count > 0 || hygieneCount > 0
+    ? `✅ Descuento aplicado: ${count} med${count !== 1 ? 's' : ''}${hygieneCount > 0 ? ` + ${hygieneCount} higiene` : ''}`
+    : `✅ Descuento registrado (sin cambios de stock)`;
+  showToast(msg);
+
+  // Actualizar banner en pantalla inmediatamente, sin re-renderizar todo
+  const banner = document.getElementById('daily-discount-banner');
+  if (banner) {
+    const quien = window.currentUser ? window.currentUser.name || window.currentUser.user : '';
+    banner.style.background = 'linear-gradient(135deg,#7a9a85,#6a8a75)';
+    banner.innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px">
+        <span style="font-size:32px">✅</span>
+        <div>
+          <div style="font-weight:700;font-size:16px">Descuento del día aplicado</div>
+          <div style="font-size:13px;opacity:0.85;margin-top:3px">Realizado por ${quien} · desaparecerá mañana</div>
+        </div>
+      </div>
+    `;
+    // Desvanecer y ocultar después de 4 segundos
+    setTimeout(() => {
+      banner.style.transition = 'opacity 0.8s';
+      banner.style.opacity = '0';
+      setTimeout(() => { banner.style.display = 'none'; }, 800);
+    }, 4000);
+  }
 }
 
 function doLogout() {
@@ -1378,13 +1402,13 @@ function renderHome(c) {
 
     <div id="daily-discount-banner" style="background:linear-gradient(135deg,#4a7c59,#3a6347);border-radius:var(--radius);padding:18px 22px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
       <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:32px">💊</span>
+        <span id="discount-banner-icon" style="font-size:32px">💊</span>
         <div>
           <div style="font-weight:700;font-size:16px">Descuento diario de medicación</div>
-          <div id="discount-status-text" style="font-size:13px;opacity:0.85;margin-top:3px">Cargando estado...</div>
+          <div id="discount-status-text" style="font-size:13px;opacity:0.85;margin-top:3px">Verificando...</div>
         </div>
       </div>
-      <button onclick="runDailyDiscount()" style="background:white;color:#3a6347;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+      <button id="discount-banner-btn" onclick="runDailyDiscount()" style="background:white;color:#3a6347;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
         ✅ Descontar dosis de hoy
       </button>
     </div>
@@ -1413,24 +1437,40 @@ function renderHome(c) {
     </div>
   `;
 
-  // Actualizar estado del banner de descuento (async, sin bloquear render)
+  // Verificar estado del descuento y actualizar banner
   (async () => {
+    const banner = document.getElementById('daily-discount-banner');
     const statusEl = document.getElementById('discount-status-text');
-    if (!statusEl) return;
+    if (!banner || !statusEl) return;
     const today = new Date().toISOString().slice(0, 10);
+    let yaHecho = false;
+    let quien = '';
     try {
       const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
       const snap = await getDoc(window._discountDocRef);
       if (snap.exists() && snap.data().lastDate === today) {
-        const quien = snap.data().by || '';
-        statusEl.textContent = `✔ Ya descontado hoy${quien ? ' por ' + quien : ''}`;
-        statusEl.closest('#daily-discount-banner').style.background = 'linear-gradient(135deg,#7a9a85,#6a8a75)';
-      } else {
-        statusEl.textContent = '⚠ Pendiente — no se descontó aún hoy';
+        yaHecho = true;
+        quien = snap.data().by || '';
       }
     } catch(e) {
-      const last = localStorage.getItem('medstock_last_discount');
-      statusEl.textContent = last === today ? '✔ Ya descontado hoy' : '⚠ Pendiente — no se descontó aún hoy';
+      yaHecho = localStorage.getItem('medstock_last_discount') === today;
+    }
+
+    if (yaHecho) {
+      // Ya descontado: mostrar brevemente y ocultar
+      banner.style.background = 'linear-gradient(135deg,#7a9a85,#6a8a75)';
+      document.getElementById('discount-banner-icon').textContent = '✅';
+      statusEl.textContent = `Realizado${quien ? ' por ' + quien : ''} · hasta mañana`;
+      const btn = document.getElementById('discount-banner-btn');
+      if (btn) btn.style.display = 'none';
+      setTimeout(() => {
+        banner.style.transition = 'opacity 0.8s';
+        banner.style.opacity = '0';
+        setTimeout(() => { banner.style.display = 'none'; }, 800);
+      }, 2500);
+    } else {
+      // Pendiente: mostrar con mensaje claro
+      statusEl.textContent = '⚠ Pendiente — todavía no se descontó hoy';
     }
   })();
 }
