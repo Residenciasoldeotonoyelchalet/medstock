@@ -1193,28 +1193,33 @@ function checkDailyDiscount() {
 async function runDailyDiscount(forzar = false) {
   const today = new Date().toISOString().slice(0, 10);
 
-  // Verificar si ya se hizo hoy (Firestore primero, localStorage como fallback)
+  // Verificar si ya se hizo hoy — Firestore primero, localStorage como fallback
   if (!forzar) {
+    let yaHecho = false;
+    let quienHizo = '';
     try {
       const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
       const snap = await getDoc(window._discountDocRef);
       if (snap.exists() && snap.data().lastDate === today) {
-        const quien = snap.data().by || '';
-        showModal(`
-          <div class="modal-title">✅ Ya descontado hoy</div>
-          <p style="color:var(--text-muted);font-size:15px">El descuento del día <strong>${today}</strong> ya fue realizado${quien ? ` por <strong>${quien}</strong>` : ''}.</p>
-          <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
-            <button class="btn btn-red" onclick="closeModal();runDailyDiscount(true)">Descontar igual</button>
-          </div>
-        `);
-        return;
+        yaHecho = true;
+        quienHizo = snap.data().by || '';
       }
-    } catch(e) {
-      const last = localStorage.getItem('medstock_last_discount');
-      if (last === today) {
-        if (!confirm('El descuento de hoy ya fue realizado. ¿Descontar igual?')) return;
-      }
+    } catch(e) { /* ignorar error de red */ }
+    // Fallback: revisar localStorage (para descuentos hechos con codigo anterior)
+    if (!yaHecho && localStorage.getItem('medstock_last_discount') === today) {
+      yaHecho = true;
+    }
+    if (yaHecho) {
+      showModal(`
+        <div class="modal-title">✅ Ya descontado hoy</div>
+        <p style="color:var(--text-muted);font-size:15px">El descuento del <strong>${today}</strong> ya fue realizado${quienHizo ? ' por <strong>' + quienHizo + '</strong>' : ''}.</p>
+        <p style="color:var(--text-muted);font-size:14px;margin-top:10px">Si necesitas descontar igual, usá el botón de abajo.</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
+          <button class="btn btn-red" onclick="closeModal();runDailyDiscount(true)">Descontar de todas formas</button>
+        </div>
+      `);
+      return;
     }
   }
 
@@ -1452,15 +1457,16 @@ function renderHome(c) {
         yaHecho = true;
         quien = snap.data().by || '';
       }
-    } catch(e) {
-      yaHecho = localStorage.getItem('medstock_last_discount') === today;
+    } catch(e) { /* ignorar */ }
+    // Fallback: localStorage (cubre descuentos hechos con codigo anterior)
+    if (!yaHecho && localStorage.getItem('medstock_last_discount') === today) {
+      yaHecho = true;
     }
 
     if (yaHecho) {
-      // Ya descontado: mostrar brevemente y ocultar
       banner.style.background = 'linear-gradient(135deg,#7a9a85,#6a8a75)';
       document.getElementById('discount-banner-icon').textContent = '✅';
-      statusEl.textContent = `Realizado${quien ? ' por ' + quien : ''} · hasta mañana`;
+      statusEl.textContent = 'Realizado' + (quien ? ' por ' + quien : '') + ' · hasta mañana';
       const btn = document.getElementById('discount-banner-btn');
       if (btn) btn.style.display = 'none';
       setTimeout(() => {
@@ -1469,7 +1475,6 @@ function renderHome(c) {
         setTimeout(() => { banner.style.display = 'none'; }, 800);
       }, 2500);
     } else {
-      // Pendiente: mostrar con mensaje claro
       statusEl.textContent = '⚠ Pendiente — todavía no se descontó hoy';
     }
   })();
