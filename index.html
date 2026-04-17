@@ -1521,8 +1521,9 @@ function getStatus(m) {
     const fin = new Date(m.fechaFin + 'T00:00:00');
     if (hoy > fin) return 'finalizado';
   }
-  // Única toma, A evaluar y SOS nunca generan alarma
-  if (m.treatment === 'unica' || m.treatment === 'evolucion') return 'ok';
+  // Única toma nunca genera alarma; A evaluar sí muestra sin stock si llega a 0
+  if (m.treatment === 'unica') return 'ok';
+  if (m.treatment === 'evolucion') return m.qty <= 0 ? 'out' : 'ok';
   if (m.sos) return m.qty <= 0 ? 'out' : 'ok';
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
