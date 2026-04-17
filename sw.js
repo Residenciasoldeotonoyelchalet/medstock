@@ -1,4 +1,4 @@
-const CACHE_NAME = 'medstock-v1';
+const CACHE_NAME = 'medstock-v2';
 const ASSETS = [
   '/medstock/',
   '/medstock/index.html'
