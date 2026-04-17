@@ -904,40 +904,10 @@
 // DATOS
 // =====================================================
 
-let USERS = [
-  { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
-  { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
-  { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
-  { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
-  { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
-  { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
-  { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
-  { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
-  { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
-  { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
-  { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
-  { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
-  { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
-  { user: 'rosa.andraca', pass: '1234', name: 'Familiar – Rosa Andraca', role: 'family', residentId: 5 },
-  { user: 'emilia.giron', pass: '1234', name: 'Familiar – Emilia Girón', role: 'family', residentId: 6 },
-  { user: 'susana.bustos', pass: '1234', name: 'Familiar – Susana Bustos', role: 'family', residentId: 7 },
-  { user: 'ines.rivera', pass: '1234', name: 'Familiar – Inés Rivera', role: 'family', residentId: 8 },
-  { user: 'olga.marinelli', pass: '1234', name: 'Familiar – Olga Marinelli', role: 'family', residentId: 9 },
-  { user: 'esther.moreno', pass: '1234', name: 'Familiar – Esther Moreno', role: 'family', residentId: 10 },
-  { user: 'carlos.quiroga', pass: '1234', name: 'Familiar – Carlos Quiroga', role: 'family', residentId: 11 },
-  { user: 'mario.rivero', pass: '1234', name: 'Familiar – Mario Rivero', role: 'family', residentId: 12 },
-  { user: 'antonio.delavega', pass: '1234', name: 'Familiar – Antonio de la Vega', role: 'family', residentId: 13 },
-  { user: 'mireya.olivares', pass: '1234', name: 'Familiar – Mireya Olivares', role: 'family', residentId: 14 },
-  { user: 'rosa.oche', pass: '1234', name: 'Familiar – Rosa Oche', role: 'family', residentId: 15 },
-  { user: 'susana.serignani', pass: '1234', name: 'Familiar – Susana Serignani', role: 'family', residentId: 16 },
-  { user: 'manuel.ricavarren', pass: '1234', name: 'Familiar – Manuel Ricavarren', role: 'family', residentId: 17 },
-  { user: 'carmen.narvaez', pass: '1234', name: 'Familiar – Carmen Narváez', role: 'family', residentId: 18 },
-  { user: 'francisco.cara', pass: '1234', name: 'Familiar – Francisco Cara', role: 'family', residentId: 19 },
-  { user: 'jose.collado', pass: '1234', name: 'Familiar – José Collado', role: 'family', residentId: 20 },
-  { user: 'nelson.tello', pass: '1234', name: 'Familiar – Nelson Tello', role: 'family', residentId: 21 },
-  { user: 'linares.francisco', pass: '1234', name: 'Familiar – Linares Francisco', role: 'family', residentId: 22 },
-  { user: 'gladys.nunez', pass: '1234', name: 'Familiar – Gladys Núñez', role: 'family', residentId: 23 },
-];
+// USERS se carga 100% desde Firestore — no hay datos hardcodeados aquí.
+// Esto garantiza que la PWA instalada siempre use las claves y roles actualizados.
+let USERS = [];
+let usersLoaded = false; // flag para saber si Firestore ya devolvió los usuarios
 
 const RESIDENTS = [
   { id: 1, name: 'Amelia Ápez' },
@@ -1015,6 +985,15 @@ function saveData() {
 // =====================================================
 
 function doLogin(savedUser = null) {
+  // Si los usuarios todavía no cargaron desde Firestore, esperar
+  if (!usersLoaded) {
+    if (!savedUser) {
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '⏳ Conectando... intentá de nuevo en un momento';
+      errEl.style.display = 'block';
+    }
+    return;
+  }
   let found;
   if (savedUser) {
     found = USERS.find(x => x.user === savedUser.user && x.pass === savedUser.pass);
@@ -1024,7 +1003,11 @@ function doLogin(savedUser = null) {
     found = USERS.find(x => x.user === u && x.pass === p);
   }
   if (!found) {
-    if (!savedUser) document.getElementById('login-error').style.display = 'block';
+    if (!savedUser) {
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = 'Usuario o contraseña incorrectos';
+      errEl.style.display = 'block';
+    }
     return;
   }
   currentUser = found;
@@ -1042,9 +1025,23 @@ function doLogin(savedUser = null) {
 function tryRestoreSession() {
   try {
     const saved = localStorage.getItem('medstock_session');
-    if (saved) {
-      const parsed = JSON.parse(saved);
+    if (!saved) return;
+    const parsed = JSON.parse(saved);
+    if (usersLoaded) {
       doLogin(parsed);
+    } else {
+      // Esperar a que Firestore cargue los usuarios (máx 5 seg)
+      let intentos = 0;
+      const retry = setInterval(() => {
+        intentos++;
+        if (usersLoaded) {
+          clearInterval(retry);
+          doLogin(parsed);
+        } else if (intentos >= 25) {
+          clearInterval(retry);
+          console.warn('Timeout esperando usuarios de Firestore');
+        }
+      }, 200);
     }
   } catch(e) { localStorage.removeItem('medstock_session'); }
 }
@@ -1413,9 +1410,9 @@ function renderHome(c) {
           <div id="discount-status-text" style="font-size:13px;opacity:0.85;margin-top:3px"></div>
         </div>
       </div>
-      <button id="discount-banner-btn" onclick="runDailyDiscount()" style="background:white;color:#3a6347;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+      ${isAdmin() ? `<button id="discount-banner-btn" onclick="runDailyDiscount()" style="background:white;color:#3a6347;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
         ✅ Descontar dosis de hoy
-      </button>
+      </button>` : ''}
     </div>
 
     <div class="stats-grid">
@@ -1475,7 +1472,6 @@ function renderHome(c) {
     } catch(e) { /* ignorar error de red */ }
 
     if (yaHecho) {
-      // Ocultar banner directamente — ya está hecho
       banner.style.display = 'none';
     } else {
       statusEl.textContent = '⚠ Pendiente — todavía no se descontó hoy';
@@ -2804,7 +2800,7 @@ function showToast(msg) {
 <!-- FIREBASE + SINCRONIZACIÓN EN TIEMPO REAL -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJ1gnB9qdC7gIpTbzizN95OT2UHTlaTUo",
@@ -2837,16 +2833,28 @@ function checkReady() {
 onSnapshot(collection(db, 'usuarios'), snapshot => {
   const dbUsers = snapshot.docs.map(d => d.data());
   if (dbUsers.length > 0) {
-    // Mezclar: los usuarios de la DB sobreescriben los del código
-    dbUsers.forEach(dbU => {
-      const idx = USERS.findIndex(u => u.user === dbU.user);
-      if (idx !== -1) USERS[idx] = dbU;
-      else USERS.push(dbU);
-    });
-    // Eliminar los que están en código pero fueron borrados de DB
-    // (solo si ya hay datos en DB, para no borrar todo al inicio)
-    const dbUsernames = dbUsers.map(u => u.user);
-    // Marcar como "gestionados" solo los que alguna vez se guardaron en DB
+    // Reemplazar USERS completamente con los datos de Firestore
+    USERS.length = 0;
+    dbUsers.forEach(u => USERS.push(u));
+  }
+  usersLoaded = true;
+
+  // Si hay un usuario logueado, actualizar sus datos en memoria
+  // (por ejemplo si le cambiaron la clave o el rol)
+  if (window.currentUser) {
+    const actualizado = USERS.find(u => u.user === window.currentUser.user);
+    if (actualizado) {
+      window.currentUser = actualizado;
+      currentUser = actualizado;
+      // Actualizar sesión guardada con la nueva clave
+      localStorage.setItem('medstock_session', JSON.stringify({ user: actualizado.user, pass: actualizado.pass }));
+      // Actualizar nombre/rol en la topbar
+      const displayEl = document.getElementById('user-display');
+      if (displayEl) displayEl.textContent = actualizado.name + ' · ' + ROLE_LABELS[actualizado.role];
+    } else {
+      // El usuario fue eliminado — cerrar sesión
+      doLogout();
+    }
   }
 });
 
@@ -2883,9 +2891,7 @@ onSnapshot(collection(db, 'movimientos'), snapshot => {
 onSnapshot(doc(db, 'config', 'dailyDiscount'), snap => {
   const today = new Date().toISOString().slice(0, 10);
   if (snap.exists() && snap.data().lastDate === today) {
-    // Sincronizar localStorage
     localStorage.setItem('medstock_last_discount', today);
-    // Ocultar el banner si está visible
     const banner = document.getElementById('daily-discount-banner');
     if (banner && banner.style.display !== 'none') {
       banner.style.display = 'none';
@@ -2924,6 +2930,57 @@ window._saveUsers = async function() {
     } catch(e) { console.error('Error guardando usuario:', e); }
   }
 };
+
+// ── MIGRACIÓN INICIAL ──
+// Si la colección 'usuarios' en Firestore está vacía, sembrar los usuarios base.
+// Esto corre UNA sola vez. Después Firestore es la única fuente de verdad.
+window._migrateUsersIfEmpty = async function() {
+  const snap = await getDocs(collection(db, 'usuarios'));
+  if (!snap.empty) return; // ya hay usuarios, no hacer nada
+  console.log('Migrando usuarios iniciales a Firestore...');
+  const usuariosBase = [
+    { user: 'camila.distefano', pass: '1234', name: 'Camila Distéfano', role: 'owner' },
+    { user: 'martin.distefano', pass: '1234', name: 'Martín Distéfano', role: 'owner' },
+    { user: 'barbara.gonzalez', pass: '1234', name: 'Bárbara González', role: 'manager' },
+    { user: 'josefina.varona', pass: '1234', name: 'Josefina Varona', role: 'nurse' },
+    { user: 'erica.salas', pass: '1234', name: 'Érica Salas', role: 'nurse' },
+    { user: 'gilda.fernandez', pass: '1234', name: 'Gilda Fernández', role: 'nurse' },
+    { user: 'carolina.zarate', pass: '1234', name: 'Carolina Zárate', role: 'nurse' },
+    { user: 'melina.zabaleta', pass: '1234', name: 'Melina Zabaleta', role: 'nurse' },
+    { user: 'florencia.albert', pass: '1234', name: 'Florencia Albert', role: 'nurse' },
+    { user: 'amelia.apez', pass: '1234', name: 'Familiar – Amelia Ápez', role: 'family', residentId: 1 },
+    { user: 'maria.moreno', pass: '1234', name: 'Familiar – María D. Moreno', role: 'family', residentId: 2 },
+    { user: 'lidia.gomez', pass: '1234', name: 'Familiar – Lidia Gómez', role: 'family', residentId: 3 },
+    { user: 'amelia.cigala', pass: '1234', name: 'Familiar – Amelia Cigala', role: 'family', residentId: 4 },
+    { user: 'rosa.andraca', pass: '1234', name: 'Familiar – Rosa Andraca', role: 'family', residentId: 5 },
+    { user: 'emilia.giron', pass: '1234', name: 'Familiar – Emilia Girón', role: 'family', residentId: 6 },
+    { user: 'susana.bustos', pass: '1234', name: 'Familiar – Susana Bustos', role: 'family', residentId: 7 },
+    { user: 'ines.rivera', pass: '1234', name: 'Familiar – Inés Rivera', role: 'family', residentId: 8 },
+    { user: 'olga.marinelli', pass: '1234', name: 'Familiar – Olga Marinelli', role: 'family', residentId: 9 },
+    { user: 'esther.moreno', pass: '1234', name: 'Familiar – Esther Moreno', role: 'family', residentId: 10 },
+    { user: 'carlos.quiroga', pass: '1234', name: 'Familiar – Carlos Quiroga', role: 'family', residentId: 11 },
+    { user: 'mario.rivero', pass: '1234', name: 'Familiar – Mario Rivero', role: 'family', residentId: 12 },
+    { user: 'antonio.delavega', pass: '1234', name: 'Familiar – Antonio de la Vega', role: 'family', residentId: 13 },
+    { user: 'mireya.olivares', pass: '1234', name: 'Familiar – Mireya Olivares', role: 'family', residentId: 14 },
+    { user: 'rosa.oche', pass: '1234', name: 'Familiar – Rosa Oche', role: 'family', residentId: 15 },
+    { user: 'susana.serignani', pass: '1234', name: 'Familiar – Susana Serignani', role: 'family', residentId: 16 },
+    { user: 'manuel.ricavarren', pass: '1234', name: 'Familiar – Manuel Ricavarren', role: 'family', residentId: 17 },
+    { user: 'carmen.narvaez', pass: '1234', name: 'Familiar – Carmen Narváez', role: 'family', residentId: 18 },
+    { user: 'francisco.cara', pass: '1234', name: 'Familiar – Francisco Cara', role: 'family', residentId: 19 },
+    { user: 'jose.collado', pass: '1234', name: 'Familiar – José Collado', role: 'family', residentId: 20 },
+    { user: 'nelson.tello', pass: '1234', name: 'Familiar – Nelson Tello', role: 'family', residentId: 21 },
+    { user: 'linares.francisco', pass: '1234', name: 'Familiar – Linares Francisco', role: 'family', residentId: 22 },
+    { user: 'gladys.nunez', pass: '1234', name: 'Familiar – Gladys Núñez', role: 'family', residentId: 23 },
+  ];
+  for (const u of usuariosBase) {
+    try {
+      await setDoc(doc(db, 'usuarios', u.user), u);
+    } catch(e) { console.error('Error migrando usuario:', u.user, e); }
+  }
+  console.log('Migración completa.');
+};
+// Ejecutar migración al iniciar
+window._migrateUsersIfEmpty();
 
 // saveHygiene
 window._saveHygiene = async function(itemId = null) {
