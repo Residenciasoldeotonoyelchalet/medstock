@@ -945,6 +945,8 @@ let currentTab = 'home';
 let medications = [];
 let movements = [];
 let hygieneItems = []; // artículos de higiene por residente
+let ropaItems = []; // prendas de ropa por residente
+let cocinaItems = []; // artículos de cocina (ingredientes, insumos)
 
 function saveMeds(medId = null) {
   const trySave = () => {
@@ -1294,9 +1296,9 @@ function doLogout() {
   document.getElementById('login-error').style.display = 'none';
 }
 
-function canEdit()        { return ['owner','manager','nurse'].includes(currentUser.role); }
+function canEdit()        { return ['owner','manager','nurse','cocina'].includes(currentUser.role); }
 function canFullEdit()    { return ['owner','manager'].includes(currentUser.role); }
-function canFamilyAction(){ return ['owner','manager','nurse','family'].includes(currentUser.role); }
+function canFamilyAction(){ return ['owner','manager','nurse','family','cocina'].includes(currentUser.role); }
 function isAdmin() { return ['owner','manager'].includes(currentUser.role); }
 
 // =====================================================
@@ -1319,10 +1321,12 @@ function buildNav() {
       { id: 'medications', label: '💊 Medicamentos' },
     ];
     if (canFullEdit()) items.push({ id: 'movements', label: '📋 Movimientos' });
+    if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
+    if (['owner','manager','cocina'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
-  const activeTab = ['home','residents','medications','movements','users','my-resident'].includes(currentTab) ? currentTab : 'residents';
+  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina'].includes(currentTab) ? currentTab : 'residents';
   tabs.innerHTML = items.map(t =>
     `<div class="nav-tab ${t.id === activeTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
   ).join('');
@@ -1339,6 +1343,8 @@ function renderTab(tab) {
   else if (tab === 'medications') renderMedications(c);
   else if (tab === 'movements') renderMovements(c);
   else if (tab === 'users') renderUsers(c);
+  else if (tab === 'ropa') renderRopa(c);
+  else if (tab === 'cocina') renderCocina(c);
 }
 
 // =====================================================
@@ -1871,17 +1877,12 @@ function renderMedications(c) {
 function renderMovements(c) {
   const isFamily = currentUser.role === 'family';
 
-  // Familiar: solo su residente, solo entradas manuales (no automáticas ni tomas)
+  // Familiar: todos los movimientos de su residente (entradas Y salidas, incluyendo tomas de enfermería)
   let list = isFamily
-    ? movements.filter(m =>
-        m.residentId === currentUser.residentId &&
-        m.type === 'in' &&
-        m.by !== 'Sistema automático' &&
-        m.note !== 'Toma registrada por enfermería'
-      )
+    ? movements.filter(m => m.residentId === currentUser.residentId)
     : movements;
 
-  // También incluir movimientos de higiene para familiar
+  // Movimientos de higiene — para familiar solo los de su residente, para staff todos
   const hygieneMovs = (hygieneItems || [])
     .filter(h => !isFamily || h.residentId === currentUser.residentId)
     .filter(h => h.tipo === 'mensual' && h.fechaEntrega)
@@ -1905,11 +1906,11 @@ function renderMovements(c) {
   });
 
   const res = isFamily ? RESIDENTS.find(r => r.id === currentUser.residentId) : null;
-  const titulo = res ? `📋 Entregas de ${res.name}` : '📋 Historial de movimientos';
+  const titulo = res ? `📋 Movimientos de ${res.name}` : '📋 Historial de movimientos';
 
   c.innerHTML = `
     <h2 class="section-title">${titulo}</h2>
-    ${isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Acá aparecen las entradas de medicación e higiene que registró el personal.</p>' : ''}
+    ${isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Entradas de medicación, tomas registradas por enfermería y artículos de higiene.</p>' : ''}
     <div class="card">
       <div class="card-body">
         ${todosList.length === 0
@@ -1917,12 +1918,12 @@ function renderMovements(c) {
           : todosList.map(mov => {
             const r = RESIDENTS.find(r => r.id === mov.residentId);
             const icon = mov.isHygiene ? '🧴' : (mov.type === 'in' ? '💊' : '📤');
+            const tipoLabel = mov.isHygiene ? 'Higiene recibida' : (mov.type === 'in' ? `+${mov.qty} ${mov.unit} ingresados` : `-${mov.qty} ${mov.unit} usados`);
             return `<div class="movement-item">
               <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}" style="font-size:16px">${icon}</div>
               <div><strong>${mov.medName}</strong>${r && !isFamily ? ` — ${r.name}` : ''}<br>
               <span style="color:var(--text-muted);font-size:13px">
-                ${mov.type === 'in' ? '+ Entrada' : '- Salida'}: ${mov.qty} ${mov.unit}
-                ${mov.note && !isFamily ? `· ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
+                ${tipoLabel}${mov.note ? ` · ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
               </span></div>
             </div>`;
           }).join('')
@@ -2007,6 +2008,7 @@ function openUserModal(username = null) {
           <option value="owner"    ${u?.role === 'owner'   ? 'selected' : ''}>Dueño/a</option>
           <option value="manager"  ${u?.role === 'manager' ? 'selected' : ''}>Encargada</option>
           <option value="nurse"    ${u?.role === 'nurse'   ? 'selected' : ''}>Enfermera</option>
+          <option value="cocina"   ${u?.role === 'cocina'  ? 'selected' : ''}>Cocina</option>
           <option value="family"   ${u?.role === 'family'  ? 'selected' : ''}>Familiar</option>
         </select>
       </div>
@@ -2102,6 +2104,278 @@ function deleteUser(username) {
   }
   showToast('Usuario eliminado');
   renderTab('users');
+}
+
+// =====================================================
+// ROPA
+// =====================================================
+
+function renderRopa(c) {
+  const RESIDENTS_sorted = [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">👗 Inventario de Ropa</h2>
+      ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
+    </div>
+    <div id="ropa-content">
+      ${ropaItems.length === 0 ? `<div class="empty-state"><div class="empty-icon">👗</div><p>No hay prendas cargadas todavía</p></div>` : ''}
+      ${RESIDENTS_sorted.map(res => {
+        const prendas = ropaItems.filter(r => r.residentId === res.id);
+        if (prendas.length === 0) return '';
+        return `<div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">👤 ${res.name}</div>
+            ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddRopa(${res.id})">+ Prenda</button>` : ''}
+          </div>
+          <div class="card-body" style="padding:0">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px">
+              ${prendas.map(p => `
+                <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
+                  ${p.foto
+                    ? `<img src="${p.foto}" alt="${p.nombre}" style="width:100%;height:120px;object-fit:cover">`
+                    : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">👕</div>`
+                  }
+                  <div style="padding:8px 10px">
+                    <div style="font-weight:600;font-size:14px">${p.nombre}</div>
+                    ${p.talle ? `<div style="font-size:12px;color:var(--text-muted)">Talle: ${p.talle}</div>` : ''}
+                    ${p.cantidad ? `<div style="font-size:12px;color:var(--text-muted)">Cantidad: ${p.cantidad}</div>` : ''}
+                    ${p.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic">${p.obs}</div>` : ''}
+                    ${canEdit() ? `<div style="display:flex;gap:4px;margin-top:8px">
+                      <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px" onclick="openAddRopa(${res.id},${p.id})">✏️</button>
+                      <button class="btn btn-red btn-sm" style="flex:1;padding:4px" onclick="deleteRopa(${p.id})">🗑</button>
+                    </div>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function openAddRopa(residentId = null, itemId = null) {
+  const item = itemId ? ropaItems.find(r => r.id === itemId) : null;
+  const resOptions = RESIDENTS.map(r =>
+    `<option value="${r.id}" ${(residentId === r.id || item?.residentId === r.id) ? 'selected' : ''}>${r.name}</option>`
+  ).join('');
+  showModal(`
+    <div class="modal-title">👗 ${item ? 'Editar prenda' : 'Agregar prenda'}</div>
+    <div class="form-group"><label>Residente</label>
+      <select id="ropa-resident">${resOptions}</select>
+    </div>
+    <div class="form-group"><label>Prenda</label>
+      <input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera, Pijama..." value="${item?.nombre||''}">
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Talle</label>
+        <input type="text" id="ropa-talle" placeholder="Ej: M, 42, XL" value="${item?.talle||''}">
+      </div>
+      <div class="form-group"><label>Cantidad</label>
+        <input type="number" id="ropa-cantidad" min="1" value="${item?.cantidad||1}">
+      </div>
+    </div>
+    <div class="form-group"><label>Foto (desde galería)</label>
+      <input type="file" id="ropa-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif">
+      <div id="ropa-foto-preview" style="margin-top:8px">
+        ${item?.foto ? `<img src="${item.foto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">` : ''}
+      </div>
+    </div>
+    <div class="form-group"><label>Observaciones</label>
+      <textarea id="ropa-obs" rows="2" placeholder="Ej: Marcada con nombre, color azul...">${item?.obs||''}</textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveRopaItem(${itemId||'null'})">Guardar</button>
+    </div>
+  `);
+  // Preview de foto al seleccionar
+  document.getElementById('ropa-foto-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('ropa-foto-preview').innerHTML =
+        `<img src="${ev.target.result}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">`;
+    };
+    reader.readAsDataURL(file);
+  });
+  // Guardar la foto actual en variable temporal para no perderla
+  window._ropaFotoActual = item?.foto || null;
+}
+
+function saveRopaItem(itemId = null) {
+  const nombre = document.getElementById('ropa-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre de la prenda'); return; }
+  const residentId = parseInt(document.getElementById('ropa-resident').value);
+  const talle = document.getElementById('ropa-talle').value.trim();
+  const cantidad = parseInt(document.getElementById('ropa-cantidad').value) || 1;
+  const obs = document.getElementById('ropa-obs').value.trim();
+  const fotoInput = document.getElementById('ropa-foto-input');
+  const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
+  const foto = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+
+  const newItem = {
+    id: itemId || Date.now(),
+    residentId, nombre, talle, cantidad, obs, foto,
+    fechaCarga: itemId ? (ropaItems.find(r=>r.id===itemId)?.fechaCarga || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
+    by: currentUser.name || currentUser.user
+  };
+
+  if (itemId) {
+    ropaItems = ropaItems.map(r => r.id === itemId ? newItem : r);
+  } else {
+    ropaItems.push(newItem);
+  }
+  window._saveRopa(newItem.id);
+  showToast('Prenda guardada');
+  closeModal();
+  renderTab('ropa');
+}
+
+function deleteRopa(id) {
+  if (!confirm('¿Eliminar esta prenda?')) return;
+  ropaItems = ropaItems.filter(r => r.id !== id);
+  window._deleteRopa(id);
+  showToast('Prenda eliminada');
+  renderTab('ropa');
+}
+
+// =====================================================
+// COCINA
+// =====================================================
+
+function renderCocina(c) {
+  const isCocina = currentUser.role === 'cocina';
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">🍳 Artículos de Cocina</h2>
+      <button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        ${cocinaItems.length === 0
+          ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>`
+          : `<div class="table-wrapper"><table>
+              <thead><tr><th>Artículo</th><th>Cantidad</th><th>Unidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                ${cocinaItems.sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(item => {
+                  const bajo = item.qty <= (item.minQty || 0);
+                  const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
+                  const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Bajo' : '✅ OK';
+                  return `<tr>
+                    <td><strong>${item.nombre}</strong>${item.obs ? `<br><small style="color:var(--text-muted)">${item.obs}</small>` : ''}</td>
+                    <td>${item.qty || 0}</td>
+                    <td>${item.unidad || 'unidades'}</td>
+                    <td><span class="badge ${badge}">${label}</span></td>
+                    <td style="display:flex;gap:6px;flex-wrap:wrap">
+                      <button class="btn btn-green btn-sm" onclick="movCocina(${item.id},'in')">+ Stock</button>
+                      <button class="btn btn-secondary btn-sm" onclick="movCocina(${item.id},'out')">- Usar</button>
+                      <button class="btn btn-secondary btn-sm" onclick="openAddCocina(${item.id})">✏️</button>
+                      ${isAdmin() ? `<button class="btn btn-red btn-sm" onclick="deleteCocina(${item.id})">🗑</button>` : ''}
+                    </td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table></div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function openAddCocina(itemId = null) {
+  const item = itemId ? cocinaItems.find(c => c.id === itemId) : null;
+  showModal(`
+    <div class="modal-title">🍳 ${item ? 'Editar artículo' : 'Agregar artículo de cocina'}</div>
+    <div class="form-group"><label>Nombre</label>
+      <input type="text" id="coc-nombre" placeholder="Ej: Azúcar, Yerba, Aceite..." value="${item?.nombre||''}">
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Cantidad actual</label>
+        <input type="number" id="coc-qty" min="0" step="0.5" value="${item?.qty||0}">
+      </div>
+      <div class="form-group"><label>Unidad</label>
+        <select id="coc-unidad">
+          <option ${(item?.unidad||'kg')==='kg'?'selected':''}>kg</option>
+          <option ${item?.unidad==='g'?'selected':''}>g</option>
+          <option ${item?.unidad==='l'?'selected':''}>l</option>
+          <option ${item?.unidad==='ml'?'selected':''}>ml</option>
+          <option ${item?.unidad==='unidades'?'selected':''}>unidades</option>
+          <option ${item?.unidad==='paquetes'?'selected':''}>paquetes</option>
+          <option ${item?.unidad==='cajas'?'selected':''}>cajas</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Alerta cuando quede menos de</label>
+      <input type="number" id="coc-minqty" min="0" step="0.5" value="${item?.minQty||0}">
+    </div>
+    <div class="form-group"><label>Observaciones</label>
+      <input type="text" id="coc-obs" placeholder="Ej: Marca preferida, donde se guarda..." value="${item?.obs||''}">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveCocinaItem(${itemId||'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+function saveCocinaItem(itemId = null) {
+  const nombre = document.getElementById('coc-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre del artículo'); return; }
+  const qty = parseFloat(document.getElementById('coc-qty').value) || 0;
+  const unidad = document.getElementById('coc-unidad').value;
+  const minQty = parseFloat(document.getElementById('coc-minqty').value) || 0;
+  const obs = document.getElementById('coc-obs').value.trim();
+  const newItem = {
+    id: itemId || Date.now(),
+    nombre, qty, unidad, minQty, obs,
+    by: currentUser.name || currentUser.user
+  };
+  if (itemId) {
+    cocinaItems = cocinaItems.map(c => c.id === itemId ? newItem : c);
+  } else {
+    cocinaItems.push(newItem);
+  }
+  window._saveCocina(newItem.id);
+  showToast('Artículo guardado');
+  closeModal();
+  renderTab('cocina');
+}
+
+function movCocina(itemId, type) {
+  const item = cocinaItems.find(c => c.id === itemId);
+  if (!item) return;
+  showModal(`
+    <div class="modal-title">${type==='in'?'+ Agregar stock':'- Usar/Retirar'}: ${item.nombre}</div>
+    <div class="form-group"><label>Cantidad (${item.unidad})</label>
+      <input type="number" id="coc-mov-qty" min="0" step="0.5" value="1">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmMovCocina(${itemId},'${type}')">Confirmar</button>
+    </div>
+  `);
+}
+
+function confirmMovCocina(itemId, type) {
+  const qty = parseFloat(document.getElementById('coc-mov-qty').value) || 0;
+  const item = cocinaItems.find(c => c.id === itemId);
+  if (!item) return;
+  item.qty = Math.max(0, (item.qty || 0) + (type === 'in' ? qty : -qty));
+  window._saveCocina(item.id);
+  showToast(type==='in' ? `+${qty} ${item.unidad} agregados` : `-${qty} ${item.unidad} descontados`);
+  closeModal();
+  renderTab('cocina');
+}
+
+function deleteCocina(id) {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  cocinaItems = cocinaItems.filter(c => c.id !== id);
+  window._deleteCocina(id);
+  showToast('Artículo eliminado');
+  renderTab('cocina');
 }
 
 // =====================================================
@@ -2867,6 +3141,18 @@ onSnapshot(collection(db, 'higiene'), snapshot => {
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
+// Sincronización en tiempo real — ropa
+onSnapshot(collection(db, 'ropa'), snapshot => {
+  ropaItems = snapshot.docs.map(d => d.data());
+  if (window.currentUser) renderTab(window.currentTab || 'home');
+});
+
+// Sincronización en tiempo real — cocina
+onSnapshot(collection(db, 'cocina'), snapshot => {
+  cocinaItems = snapshot.docs.map(d => d.data());
+  if (window.currentUser) renderTab(window.currentTab || 'home');
+});
+
 // Sincronización en tiempo real — meds
 onSnapshot(collection(db, 'meds'), snapshot => {
   medications = snapshot.docs.map(d => d.data());
@@ -3005,6 +3291,36 @@ window._deleteUser = async function(username) {
   try {
     await deleteDoc(doc(db, 'usuarios', username));
   } catch(e) { console.error('Error eliminando usuario:', e); }
+};
+
+// saveRopa
+window._saveRopa = async function(itemId = null) {
+  const lista = itemId ? ropaItems.filter(r => String(r.id) === String(itemId)) : ropaItems;
+  for (const item of lista) {
+    try { await setDoc(doc(db, 'ropa', String(item.id)), item); }
+    catch(e) { console.error('Error guardando ropa:', e); }
+  }
+};
+
+// deletRopa
+window._deleteRopa = async function(id) {
+  try { await deleteDoc(doc(db, 'ropa', String(id))); }
+  catch(e) { console.error('Error eliminando ropa:', e); }
+};
+
+// saveCocina
+window._saveCocina = async function(itemId = null) {
+  const lista = itemId ? cocinaItems.filter(c => String(c.id) === String(itemId)) : cocinaItems;
+  for (const item of lista) {
+    try { await setDoc(doc(db, 'cocina', String(item.id)), item); }
+    catch(e) { console.error('Error guardando cocina:', e); }
+  }
+};
+
+// deleteCocina
+window._deleteCocina = async function(id) {
+  try { await deleteDoc(doc(db, 'cocina', String(id))); }
+  catch(e) { console.error('Error eliminando cocina:', e); }
 };
 
 // ── REFERENCIA AL DOCUMENTO DE CONTROL DE DESCUENTO ──
