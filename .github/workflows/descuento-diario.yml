@@ -19,7 +19,7 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install firebase-admin
-        working-directory: .github/workflows/.github/scripts
+        working-directory: .github/scripts
 
       - name: Ejecutar descuento diario
         env:
