@@ -618,6 +618,11 @@
 
   .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
 
+  /* Evitar que el scroll cambie valores en inputs numéricos */
+  input[type=number] { -moz-appearance: textfield; }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
   #toast {
     position: fixed;
     bottom: 24px;
@@ -3024,6 +3029,13 @@ function removeHorario(idx) {
 }
 
 function updateHorario(input, idx) { /* no usado */ }
+
+// Evitar que el scroll modifique inputs numéricos
+document.addEventListener('wheel', function(e) {
+  if (document.activeElement && document.activeElement.type === 'number') {
+    document.activeElement.blur();
+  }
+}, { passive: false });
 
 function showToast(msg) {
   const t = document.getElementById('toast');
