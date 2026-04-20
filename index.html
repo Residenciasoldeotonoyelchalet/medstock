@@ -1222,7 +1222,7 @@ function buildNav() {
       { id: 'residents', label: '👥 Residentes' },
       { id: 'medications', label: '💊 Medicamentos' },
     ];
-    if (canFullEdit()) items.push({ id: 'movements', label: '📋 Movimientos' });
+    if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
     if (['owner','manager','nurse','cocina'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
@@ -1812,14 +1812,24 @@ function renderMovements(c) {
   const res = isFamily ? RESIDENTS.find(r => r.id === currentUser.residentId) : null;
   const titulo = res ? `📋 Movimientos de ${res.name}` : '📋 Historial de movimientos';
 
+  // Filtro por residente para staff
+  const filterRes = window._movFilterRes || '';
+  const listaFinal = isFamily ? todosList : (filterRes ? todosList.filter(m => String(m.residentId) === filterRes) : todosList);
+
   c.innerHTML = `
-    <h2 class="section-title">${titulo}</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">${titulo}</h2>
+      ${!isFamily ? `<select onchange="window._movFilterRes=this.value;renderTab('movements')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px">
+        <option value="">Todos los residentes</option>
+        ${RESIDENTS.sort((a,b)=>a.name.localeCompare(b.name)).map(r=>`<option value="${r.id}" ${filterRes===String(r.id)?'selected':''}>${r.name}</option>`).join('')}
+      </select>` : ''}
+    </div>
     ${isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Entradas de medicación, tomas registradas por enfermería y artículos de higiene.</p>' : ''}
     <div class="card">
       <div class="card-body">
-        ${todosList.length === 0
+        ${listaFinal.length === 0
           ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
-          : todosList.map(mov => {
+          : listaFinal.map(mov => {
             const r = RESIDENTS.find(r => r.id === mov.residentId);
             const icon = mov.isHygiene ? '🧴' : (mov.type === 'in' ? '💊' : '📤');
             const tipoLabel = mov.isHygiene ? 'Higiene recibida' : (mov.type === 'in' ? `+${mov.qty} ${mov.unit} ingresados` : `-${mov.qty} ${mov.unit} usados`);
@@ -2109,19 +2119,43 @@ function openAddRopa(residentId = null, itemId = null) {
   window._ropaFotoActual = item?.foto || null;
 }
 
-function saveRopaItem(itemId = null) {
+function comprimirFoto(src, maxWidth = 300) {
+  return new Promise(resolve => {
+    if (!src || !src.startsWith('data:image')) { resolve(src); return; }
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.35));
+    };
+    img.src = src;
+  });
+}
+
+async function saveRopaItem(itemId = null) {
   const nombre = document.getElementById('ropa-nombre').value.trim();
   if (!nombre) { showToast('Escribí el nombre de la prenda'); return; }
   const residentId = parseInt(document.getElementById('ropa-resident').value);
   const talle = document.getElementById('ropa-talle').value.trim();
   const cantidad = parseInt(document.getElementById('ropa-cantidad').value) || 1;
   const obs = document.getElementById('ropa-obs').value.trim();
-  const fotoInput = document.getElementById('ropa-foto-input');
   const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
-  const foto = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+  const fotoRaw = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+
+  const newId = itemId || Date.now();
+  showToast('Guardando...');
+
+  // Comprimir foto para guardar en Firestore
+  let foto = window._ropaFotoActual || null;
+  if (fotoRaw && fotoRaw.startsWith('data:image')) {
+    foto = await comprimirFoto(fotoRaw);
+  }
 
   const newItem = {
-    id: itemId || Date.now(),
+    id: newId,
     residentId, nombre, talle, cantidad, obs, foto,
     fechaCarga: itemId ? (ropaItems.find(r=>r.id===itemId)?.fechaCarga || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
     by: currentUser.name || currentUser.user
@@ -2132,8 +2166,8 @@ function saveRopaItem(itemId = null) {
   } else {
     ropaItems.push(newItem);
   }
-  window._saveRopa(newItem.id);
-  showToast('Prenda guardada');
+  await window._saveRopa(newItem.id);
+  showToast('✅ Prenda guardada');
   closeModal();
   renderTab('ropa');
 }
@@ -2245,7 +2279,7 @@ function openAddCocina(itemId = null) {
   });
 }
 
-function saveCocinaItem(itemId = null) {
+async function saveCocinaItem(itemId = null) {
   const nombre = document.getElementById('coc-nombre').value.trim();
   if (!nombre) { showToast('Escribí el nombre del artículo'); return; }
   const qty = parseFloat(document.getElementById('coc-qty').value) || 0;
@@ -2253,9 +2287,19 @@ function saveCocinaItem(itemId = null) {
   const minQty = parseFloat(document.getElementById('coc-minqty').value) || 0;
   const obs = document.getElementById('coc-obs').value.trim();
   const previewImg = document.getElementById('coc-foto-preview')?.querySelector('img');
-  const foto = previewImg ? previewImg.src : (window._cocinaFotoActual || null);
+  const fotoRaw = previewImg ? previewImg.src : (window._cocinaFotoActual || null);
+
+  const newId = itemId || Date.now();
+  showToast('Guardando...');
+
+  // Comprimir foto para guardar en Firestore
+  let foto = window._cocinaFotoActual || null;
+  if (fotoRaw && fotoRaw.startsWith('data:image')) {
+    foto = await comprimirFoto(fotoRaw);
+  }
+
   const newItem = {
-    id: itemId || Date.now(),
+    id: newId,
     nombre, qty, unidad, minQty, obs, foto,
     by: currentUser.name || currentUser.user
   };
@@ -2264,8 +2308,8 @@ function saveCocinaItem(itemId = null) {
   } else {
     cocinaItems.push(newItem);
   }
-  window._saveCocina(newItem.id);
-  showToast('Artículo guardado');
+  await window._saveCocina(newItem.id);
+  showToast('✅ Artículo guardado');
   closeModal();
   renderTab('cocina');
 }
@@ -3246,8 +3290,22 @@ window._deleteResidentDoc = async function(id) {
 window._saveRopa = async function(itemId = null) {
   const lista = itemId ? ropaItems.filter(r => String(r.id) === String(itemId)) : ropaItems;
   for (const item of lista) {
-    try { await setDoc(doc(db, 'ropa', String(item.id)), item); }
-    catch(e) { console.error('Error guardando ropa:', e); }
+    try {
+      await setDoc(doc(db, 'ropa', String(item.id)), item);
+    } catch(e) {
+      // Reintentar sin foto si el documento es muy grande
+      console.warn('Error guardando ropa, reintentando sin foto:', e.message);
+      try {
+        await setDoc(doc(db, 'ropa', String(item.id)), {...item, foto: null});
+        // Actualizar en memoria también
+        const idx = ropaItems.findIndex(r => r.id === item.id);
+        if (idx !== -1) ropaItems[idx].foto = null;
+        showToast('⚠️ Guardado sin foto — la imagen era muy grande');
+      } catch(e2) {
+        console.error('Error guardando ropa:', e2);
+        showToast('❌ Error al guardar la prenda');
+      }
+    }
   }
 };
 
