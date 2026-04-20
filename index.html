@@ -940,7 +940,7 @@ let RESIDENTS = [
   { id: 23, name: 'Gladys Núñez' },
 ];
 
-const ROLE_LABELS = { owner: 'Dueño', manager: 'Encargada', nurse: 'Enfermera', family: 'Familiar' };
+const ROLE_LABELS = { owner: 'Dueño', manager: 'Encargada', nurse: 'Enfermera', family: 'Familiar', cocina: 'Cocina' };
 
 // =====================================================
 // ESTADO
@@ -1221,6 +1221,11 @@ function buildNav() {
       { id: 'ropa', label: '👗 Ropa' },
       { id: 'cocina', label: '🍳 Cocina' },
     ]; // familia: solo lectura
+  } else if (currentUser.role === 'cocina') {
+    items = [
+      { id: 'home', label: '🏠 Inicio' },
+      { id: 'cocina', label: '🍳 Cocina' },
+    ];
   } else {
     items = [
       { id: 'home', label: '🏠 Inicio' },
@@ -1229,7 +1234,7 @@ function buildNav() {
     ];
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
-    if (['owner','manager','nurse','cocina'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
+    if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
