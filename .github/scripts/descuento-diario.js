@@ -1,9 +1,33 @@
 const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
+const nodemailer = require('nodemailer');
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 initializeApp({ credential: cert(serviceAccount) });
 const db = getFirestore();
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'camila.ciaf@gmail.com',
+    pass: process.env.GMAIL_PASSWORD
+  }
+});
+
+async function sendAlert(subject, text) {
+  try {
+    await transporter.sendMail({
+      from: 'MedStock <camila.ciaf@gmail.com>',
+      to: 'camila.micol@hotmail.com',
+      cc: 'camila.ciaf@gmail.com',
+      subject: subject,
+      text: text
+    });
+    console.log('Email de alerta enviado.');
+  } catch(e) {
+    console.error('Error enviando email:', e.message);
+  }
+}
 
 async function main() {
   const today = new Date().toISOString().slice(0, 10);
@@ -79,4 +103,11 @@ async function main() {
   console.log('Descuento aplicado a ' + count + ' medicamentos.');
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch(async e => {
+  console.error('ERROR:', e);
+  await sendAlert(
+    '⚠️ MedStock — Error en el descuento automático',
+    'El descuento automático de medicación del ' + new Date().toISOString().slice(0,10) + ' NO se realizó.\n\nError: ' + e.message + '\n\nIngresá a MedStock y revisá el stock manualmente.'
+  );
+  process.exit(1);
+});
