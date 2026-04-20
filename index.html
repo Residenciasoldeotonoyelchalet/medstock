@@ -2030,15 +2030,21 @@ function deleteUser(username) {
 // =====================================================
 
 function renderRopa(c) {
-  const RESIDENTS_sorted = [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
+  const isFamily = currentUser.role === 'family';
+  const residentesFiltro = isFamily
+    ? RESIDENTS.filter(r => r.id === currentUser.residentId)
+    : [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
+  const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
+  const hayPrendas = ropaItems.filter(r => !isFamily || r.residentId === currentUser.residentId).length > 0;
+
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">👗 Inventario de Ropa</h2>
+      <h2 class="section-title" style="margin:0">👗 ${isFamily ? 'Ropa de ' + nombreFamiliar : 'Inventario de Ropa'}</h2>
       ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
     </div>
     <div id="ropa-content">
-      ${ropaItems.length === 0 ? `<div class="empty-state"><div class="empty-icon">👗</div><p>No hay prendas cargadas todavía</p></div>` : ''}
-      ${RESIDENTS_sorted.map(res => {
+      ${!hayPrendas ? `<div class="empty-state"><div class="empty-icon">👗</div><p>No hay prendas cargadas todavía</p></div>` : ''}
+      ${residentesFiltro.map(res => {
         const prendas = ropaItems.filter(r => r.residentId === res.id);
         if (prendas.length === 0) return '';
         return `<div class="card" style="margin-bottom:16px">
@@ -2073,110 +2079,6 @@ function renderRopa(c) {
     </div>
   `;
 }
-
-function openAddRopa(residentId = null, itemId = null) {
-  const item = itemId ? ropaItems.find(r => r.id === itemId) : null;
-  const resOptions = RESIDENTS.map(r =>
-    `<option value="${r.id}" ${(residentId === r.id || item?.residentId === r.id) ? 'selected' : ''}>${r.name}</option>`
-  ).join('');
-  showModal(`
-    <div class="modal-title">👗 ${item ? 'Editar prenda' : 'Agregar prenda'}</div>
-    <div class="form-group"><label>Residente</label>
-      <select id="ropa-resident">${resOptions}</select>
-    </div>
-    <div class="form-group"><label>Prenda</label>
-      <input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera, Pijama..." value="${item?.nombre||''}">
-    </div>
-    <div class="grid-2">
-      <div class="form-group"><label>Talle</label>
-        <input type="text" id="ropa-talle" placeholder="Ej: M, 42, XL" value="${item?.talle||''}">
-      </div>
-      <div class="form-group"><label>Cantidad</label>
-        <input type="number" id="ropa-cantidad" min="1" value="${item?.cantidad||1}">
-      </div>
-    </div>
-    <div class="form-group"><label>Foto (desde galería)</label>
-      <input type="file" id="ropa-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif">
-      <div id="ropa-foto-preview" style="margin-top:8px">
-        ${item?.foto ? `<img src="${item.foto}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">` : ''}
-      </div>
-    </div>
-    <div class="form-group"><label>Observaciones</label>
-      <textarea id="ropa-obs" rows="2" placeholder="Ej: Marcada con nombre, color azul...">${item?.obs||''}</textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveRopaItem(${itemId||'null'})">Guardar</button>
-    </div>
-  `);
-  // Preview de foto al seleccionar
-  document.getElementById('ropa-foto-input').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('ropa-foto-preview').innerHTML =
-        `<img src="${ev.target.result}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">`;
-    };
-    reader.readAsDataURL(file);
-  });
-  // Guardar la foto actual en variable temporal para no perderla
-  window._ropaFotoActual = item?.foto || null;
-}
-
-function comprimirFoto(src, maxWidth = 300) {
-  return new Promise(resolve => {
-    if (!src || !src.startsWith('data:image')) { resolve(src); return; }
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxWidth / img.width);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.35));
-    };
-    img.src = src;
-  });
-}
-
-async function saveRopaItem(itemId = null) {
-  const nombre = document.getElementById('ropa-nombre').value.trim();
-  if (!nombre) { showToast('Escribí el nombre de la prenda'); return; }
-  const residentId = parseInt(document.getElementById('ropa-resident').value);
-  const talle = document.getElementById('ropa-talle').value.trim();
-  const cantidad = parseInt(document.getElementById('ropa-cantidad').value) || 1;
-  const obs = document.getElementById('ropa-obs').value.trim();
-  const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
-  const fotoRaw = previewImg ? previewImg.src : (window._ropaFotoActual || null);
-
-  const newId = itemId || Date.now();
-  showToast('Guardando...');
-
-  // Comprimir foto para guardar en Firestore
-  let foto = window._ropaFotoActual || null;
-  if (fotoRaw && fotoRaw.startsWith('data:image')) {
-    foto = await comprimirFoto(fotoRaw);
-  }
-
-  const newItem = {
-    id: newId,
-    residentId, nombre, talle, cantidad, obs, foto,
-    fechaCarga: itemId ? (ropaItems.find(r=>r.id===itemId)?.fechaCarga || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10),
-    by: currentUser.name || currentUser.user
-  };
-
-  if (itemId) {
-    ropaItems = ropaItems.map(r => r.id === itemId ? newItem : r);
-  } else {
-    ropaItems.push(newItem);
-  }
-  await window._saveRopa(newItem.id);
-  showToast('✅ Prenda guardada');
-  closeModal();
-  renderTab('ropa');
-}
-
 function deleteRopa(id) {
   if (!confirm('¿Eliminar esta prenda?')) return;
   ropaItems = ropaItems.filter(r => r.id !== id);
@@ -2190,18 +2092,32 @@ function deleteRopa(id) {
 // =====================================================
 
 function renderCocina(c) {
+  const isFamily = currentUser.role === 'family';
   const canEditCocina = ['owner','manager','nurse','cocina'].includes(currentUser.role);
+  const residentesFiltro = isFamily
+    ? RESIDENTS.filter(r => r.id === currentUser.residentId)
+    : [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
+  const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
+  const hayItems = cocinaItems.filter(i => !isFamily || i.residentId === currentUser.residentId).length > 0;
+
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">🍳 Artículos de Cocina</h2>
+      <h2 class="section-title" style="margin:0">🍳 ${isFamily ? 'Cocina de ' + nombreFamiliar : 'Artículos de Cocina'}</h2>
       ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
     </div>
-    <div class="card">
-      <div class="card-body" style="padding:0">
-        ${cocinaItems.length === 0
-          ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>`
-          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px">
-              ${cocinaItems.sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(item => {
+    <div id="cocina-content">
+      ${!hayItems ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>` : ''}
+      ${residentesFiltro.map(res => {
+        const items = cocinaItems.filter(i => i.residentId === res.id);
+        if (items.length === 0) return '';
+        return `<div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title">👤 ${res.name}</div>
+            ${canEditCocina ? `<button class="btn btn-primary btn-sm" onclick="openAddCocina(null,${res.id})">+ Artículo</button>` : ''}
+          </div>
+          <div class="card-body" style="padding:0">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px">
+              ${items.sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(item => {
                 const bajo = item.minQty > 0 && item.qty <= item.minQty;
                 const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
                 const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Bajo' : '✅ OK';
@@ -2224,17 +2140,23 @@ function renderCocina(c) {
                   </div>
                 </div>`;
               }).join('')}
-            </div>`
-        }
-      </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>
   `;
 }
-
-function openAddCocina(itemId = null) {
+function openAddCocina(itemId = null, preResidentId = null) {
   const item = itemId ? cocinaItems.find(c => c.id === itemId) : null;
+  const resOptions = RESIDENTS.map(r =>
+    `<option value="${r.id}" ${(preResidentId === r.id || item?.residentId === r.id) ? 'selected' : ''}>${r.name}</option>`
+  ).join('');
   showModal(`
     <div class="modal-title">🍳 ${item ? 'Editar artículo' : 'Agregar artículo de cocina'}</div>
+    <div class="form-group"><label>Residente</label>
+      <select id="coc-resident">${resOptions}</select>
+    </div>
     <div class="form-group"><label>Nombre</label>
       <input type="text" id="coc-nombre" placeholder="Ej: Azúcar, Yerba, Aceite..." value="${item?.nombre||''}">
     </div>
@@ -2303,9 +2225,10 @@ async function saveCocinaItem(itemId = null) {
     foto = await comprimirFoto(fotoRaw);
   }
 
+  const residentId = parseInt(document.getElementById('coc-resident').value);
   const newItem = {
     id: newId,
-    nombre, qty, unidad, minQty, obs, foto,
+    residentId, nombre, qty, unidad, minQty, obs, foto,
     by: currentUser.name || currentUser.user
   };
   if (itemId) {
