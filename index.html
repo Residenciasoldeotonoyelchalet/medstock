@@ -909,7 +909,7 @@
 let USERS = [];
 let usersLoaded = false; // flag para saber si Firestore ya devolvió los usuarios
 
-const RESIDENTS = [
+let RESIDENTS = [
   { id: 1, name: 'Amelia Ápez' },
   { id: 2, name: 'María Doralinda Moreno' },
   { id: 3, name: 'Lidia Esther Gómez' },
@@ -1406,16 +1406,18 @@ function getStatus(m) {
 
 function renderResidents(c) {
   if (window._resSearch === undefined) window._resSearch = '';
-  
   const searchTerm = window._resSearch.toLowerCase();
   const list = RESIDENTS.filter(r => r.name.toLowerCase().includes(searchTerm));
 
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">👥 Residentes</h2>
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="res-search-input" placeholder="Buscar residente..." value="${window._resSearch}">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="res-search-input" placeholder="Buscar residente..." value="${window._resSearch}">
+        </div>
+        ${isAdmin() ? `<button class="btn btn-primary btn-sm" onclick="openAddResident()">+ Agregar residente</button>` : ''}
       </div>
     </div>
     <div class="resident-grid">
@@ -1423,7 +1425,8 @@ function renderResidents(c) {
         const meds = medications.filter(m => m.residentId === r.id);
         const alerts = meds.filter(m => getStatus(m) !== 'ok').length;
         return `
-          <div class="resident-card" onclick="showResident(${r.id})">
+          <div class="resident-card" style="position:relative" onclick="showResident(${r.id})">
+            ${isAdmin() ? `<button onclick="event.stopPropagation();deleteResident(${r.id})" style="position:absolute;top:8px;right:8px;background:var(--red);color:white;border:none;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;line-height:1">🗑</button>` : ''}
             <div class="resident-name">👤 ${r.name}</div>
             <div class="resident-meta">
               <span>💊 ${meds.length} medicamento${meds.length !== 1 ? 's' : ''}</span>
@@ -1441,6 +1444,55 @@ function renderResidents(c) {
     window._resSearch = this.value;
     renderResidents(c);
   };
+}
+
+function openAddResident(resId = null) {
+  const res = resId ? RESIDENTS.find(r => r.id === resId) : null;
+  showModal(`
+    <div class="modal-title">👤 ${res ? 'Editar residente' : 'Agregar residente'}</div>
+    <div class="form-group"><label>Nombre completo</label>
+      <input type="text" id="res-nombre" placeholder="Ej: María García" value="${res?.name||''}">
+    </div>
+    <div class="form-group"><label>Habitación (opcional)</label>
+      <input type="text" id="res-habitacion" placeholder="Ej: 12A" value="${res?.habitacion||''}">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveResident(${resId||'null'})">Guardar</button>
+    </div>
+  `);
+}
+
+function saveResident(resId = null) {
+  const nombre = document.getElementById('res-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre del residente'); return; }
+  const habitacion = document.getElementById('res-habitacion').value.trim();
+  if (resId) {
+    const res = RESIDENTS.find(r => r.id === resId);
+    if (res) { res.name = nombre; res.habitacion = habitacion; }
+  } else {
+    const newId = Math.max(...RESIDENTS.map(r => r.id), 0) + 1;
+    RESIDENTS.push({ id: newId, name: nombre, habitacion });
+  }
+  window._saveResidents();
+  showToast(resId ? 'Residente actualizado' : 'Residente agregado');
+  closeModal();
+  renderTab('residents');
+}
+
+function deleteResident(id) {
+  const res = RESIDENTS.find(r => r.id === id);
+  if (!res) return;
+  const meds = medications.filter(m => m.residentId === id);
+  const msg = meds.length > 0
+    ? `¿Eliminar a ${res.name}? Tiene ${meds.length} medicamento${meds.length!==1?'s':''} cargado${meds.length!==1?'s':''}. Esto NO elimina los medicamentos.`
+    : `¿Eliminar a ${res.name}?`;
+  if (!confirm(msg)) return;
+  const idx = RESIDENTS.findIndex(r => r.id === id);
+  if (idx !== -1) RESIDENTS.splice(idx, 1);
+  window._saveResidents();
+  showToast('Residente eliminado');
+  renderTab('residents');
 }
 
 // =====================================================
@@ -3015,6 +3067,15 @@ onSnapshot(collection(db, 'higiene'), snapshot => {
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
+// Sincronización en tiempo real — residentes
+onSnapshot(collection(db, 'residents'), snapshot => {
+  if (snapshot.docs.length > 0) {
+    RESIDENTS.length = 0;
+    snapshot.docs.map(d => d.data()).sort((a,b) => a.name.localeCompare(b.name)).forEach(r => RESIDENTS.push(r));
+    if (window.currentUser) renderTab(window.currentTab || 'home');
+  }
+});
+
 // Sincronización en tiempo real — ropa
 onSnapshot(collection(db, 'ropa'), snapshot => {
   ropaItems = snapshot.docs.map(d => d.data());
@@ -3084,6 +3145,16 @@ window._saveUsers = async function() {
 // ── MIGRACIÓN INICIAL ──
 // Si la colección 'usuarios' en Firestore está vacía, sembrar los usuarios base.
 // Esto corre UNA sola vez. Después Firestore es la única fuente de verdad.
+window._migrateResidentsIfEmpty = async function() {
+  const snap = await getDocs(collection(db, 'residents'));
+  if (!snap.empty) return;
+  console.log('Migrando residentes a Firestore...');
+  for (const res of RESIDENTS) {
+    await setDoc(doc(db, 'residents', String(res.id)), res);
+  }
+  console.log('Residentes migrados.');
+};
+
 window._migrateUsersIfEmpty = async function() {
   const snap = await getDocs(collection(db, 'usuarios'));
   if (!snap.empty) return; // ya hay usuarios, no hacer nada
@@ -3130,6 +3201,7 @@ window._migrateUsersIfEmpty = async function() {
   console.log('Migración completa.');
 };
 // Ejecutar migración al iniciar
+window._migrateResidentsIfEmpty();
 window._migrateUsersIfEmpty();
 
 // saveHygiene
@@ -3154,6 +3226,20 @@ window._deleteUser = async function(username) {
   try {
     await deleteDoc(doc(db, 'usuarios', username));
   } catch(e) { console.error('Error eliminando usuario:', e); }
+};
+
+// saveResidents
+window._saveResidents = async function() {
+  for (const res of RESIDENTS) {
+    try { await setDoc(doc(db, 'residents', String(res.id)), res); }
+    catch(e) { console.error('Error guardando residente:', e); }
+  }
+};
+
+// deleteResident from Firestore
+window._deleteResidentDoc = async function(id) {
+  try { await deleteDoc(doc(db, 'residents', String(id))); }
+  catch(e) { console.error('Error eliminando residente:', e); }
 };
 
 // saveRopa
