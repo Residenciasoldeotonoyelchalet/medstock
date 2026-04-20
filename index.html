@@ -1213,7 +1213,9 @@ function buildNav() {
       { id: 'home', label: '🏠 Inicio' },
       { id: 'my-resident', label: '👤 Mi familiar' },
       { id: 'movements', label: '📋 Movimientos' },
-    ]; // familia: solo lectura + movimientos
+      { id: 'ropa', label: '👗 Ropa' },
+      { id: 'cocina', label: '🍳 Cocina' },
+    ]; // familia: solo lectura
   } else {
     items = [
       { id: 'home', label: '🏠 Inicio' },
@@ -1222,11 +1224,11 @@ function buildNav() {
     ];
     if (canFullEdit()) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
-    if (['owner','manager','cocina'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
+    if (['owner','manager','nurse','cocina'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
-  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina'].includes(currentTab) ? currentTab : 'residents';
+  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina'].includes(currentTab) ? currentTab : (currentUser.role === 'family' ? 'home' : 'residents');
   tabs.innerHTML = items.map(t =>
     `<div class="nav-tab ${t.id === activeTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
   ).join('');
@@ -2097,38 +2099,41 @@ function deleteRopa(id) {
 // =====================================================
 
 function renderCocina(c) {
-  const isCocina = currentUser.role === 'cocina';
+  const canEditCocina = ['owner','manager','nurse','cocina'].includes(currentUser.role);
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">🍳 Artículos de Cocina</h2>
-      <button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>
+      ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
     </div>
     <div class="card">
       <div class="card-body" style="padding:0">
         ${cocinaItems.length === 0
           ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>`
-          : `<div class="table-wrapper"><table>
-              <thead><tr><th>Artículo</th><th>Cantidad</th><th>Unidad</th><th>Estado</th><th>Acciones</th></tr></thead>
-              <tbody>
-                ${cocinaItems.sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(item => {
-                  const bajo = item.qty <= (item.minQty || 0);
-                  const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
-                  const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Bajo' : '✅ OK';
-                  return `<tr>
-                    <td><strong>${item.nombre}</strong>${item.obs ? `<br><small style="color:var(--text-muted)">${item.obs}</small>` : ''}</td>
-                    <td>${item.qty || 0}</td>
-                    <td>${item.unidad || 'unidades'}</td>
-                    <td><span class="badge ${badge}">${label}</span></td>
-                    <td style="display:flex;gap:6px;flex-wrap:wrap">
-                      <button class="btn btn-green btn-sm" onclick="movCocina(${item.id},'in')">+ Stock</button>
-                      <button class="btn btn-secondary btn-sm" onclick="movCocina(${item.id},'out')">- Usar</button>
-                      <button class="btn btn-secondary btn-sm" onclick="openAddCocina(${item.id})">✏️</button>
-                      ${isAdmin() ? `<button class="btn btn-red btn-sm" onclick="deleteCocina(${item.id})">🗑</button>` : ''}
-                    </td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table></div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px">
+              ${cocinaItems.sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(item => {
+                const bajo = item.minQty > 0 && item.qty <= item.minQty;
+                const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
+                const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Bajo' : '✅ OK';
+                return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
+                  ${item.foto
+                    ? `<img src="${item.foto}" alt="${item.nombre}" style="width:100%;height:120px;object-fit:cover">`
+                    : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">🧂</div>`
+                  }
+                  <div style="padding:8px 10px">
+                    <div style="font-weight:600;font-size:14px">${item.nombre}</div>
+                    <div style="font-size:12px;color:var(--text-muted)">${item.qty || 0} ${item.unidad || 'unidades'}</div>
+                    ${item.obs ? `<div style="font-size:11px;color:var(--text-muted);font-style:italic">${item.obs}</div>` : ''}
+                    <span class="badge ${badge}" style="margin-top:4px;display:inline-block">${label}</span>
+                    ${canEditCocina ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
+                      <button class="btn btn-green btn-sm" style="flex:1;padding:4px;font-size:12px" onclick="movCocina(${item.id},'in')">+ Stock</button>
+                      <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:12px" onclick="movCocina(${item.id},'out')">- Usar</button>
+                      <button class="btn btn-secondary btn-sm" style="padding:4px 6px" onclick="openAddCocina(${item.id})">✏️</button>
+                      ${isAdmin() ? `<button class="btn btn-red btn-sm" style="padding:4px 6px" onclick="deleteCocina(${item.id})">🗑</button>` : ''}
+                    </div>` : ''}
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>`
         }
       </div>
     </div>
@@ -2161,6 +2166,12 @@ function openAddCocina(itemId = null) {
     <div class="form-group"><label>Alerta cuando quede menos de</label>
       <input type="number" id="coc-minqty" min="0" step="0.5" value="${item?.minQty||0}">
     </div>
+    <div class="form-group"><label>Foto (opcional)</label>
+      <input type="file" id="coc-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif">
+      <div id="coc-foto-preview" style="margin-top:8px">
+        ${item?.foto ? `<img src="${item.foto}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">` : ''}
+      </div>
+    </div>
     <div class="form-group"><label>Observaciones</label>
       <input type="text" id="coc-obs" placeholder="Ej: Marca preferida, donde se guarda..." value="${item?.obs||''}">
     </div>
@@ -2169,6 +2180,17 @@ function openAddCocina(itemId = null) {
       <button class="btn btn-primary" onclick="saveCocinaItem(${itemId||'null'})">Guardar</button>
     </div>
   `);
+  window._cocinaFotoActual = item?.foto || null;
+  document.getElementById('coc-foto-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('coc-foto-preview').innerHTML =
+        `<img src="${ev.target.result}" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">`;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function saveCocinaItem(itemId = null) {
@@ -2178,9 +2200,11 @@ function saveCocinaItem(itemId = null) {
   const unidad = document.getElementById('coc-unidad').value;
   const minQty = parseFloat(document.getElementById('coc-minqty').value) || 0;
   const obs = document.getElementById('coc-obs').value.trim();
+  const previewImg = document.getElementById('coc-foto-preview')?.querySelector('img');
+  const foto = previewImg ? previewImg.src : (window._cocinaFotoActual || null);
   const newItem = {
     id: itemId || Date.now(),
-    nombre, qty, unidad, minQty, obs,
+    nombre, qty, unidad, minQty, obs, foto,
     by: currentUser.name || currentUser.user
   };
   if (itemId) {
