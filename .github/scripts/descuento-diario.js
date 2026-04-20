@@ -17,7 +17,7 @@ async function main() {
   }
 
   const medsSnap = await db.collection('meds').get();
-  const meds = medsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const meds = medsSnap.docs.map(d => ({ docId: d.id, ...d.data() }));
 
   const hoy = new Date();
   hoy.setHours(0,0,0,0);
@@ -61,6 +61,7 @@ async function main() {
   const batch = db.batch();
 
   for (const med of meds) {
+    if (!med.docId) continue;
     if (med.treatment !== 'prolongado') continue;
     if (med.sos) continue;
     if ((med.qty || 0) <= 0) continue;
@@ -69,12 +70,12 @@ async function main() {
     const dosis = getDosisdiaria(med);
     if (dosis <= 0) continue;
     const newQty = Math.max(0, (med.qty || 0) - Math.min(dosis, med.qty));
-    batch.update(db.collection('meds').doc(med.id), { qty: newQty });
+    batch.update(db.collection('meds').doc(med.docId), { qty: newQty });
     count++;
   }
 
   await batch.commit();
-  await cfgRef.set({ lastDate: today, by: 'automático (sistema)' });
+  await cfgRef.set({ lastDate: today, by: 'automatico (sistema)' });
   console.log('Descuento aplicado a ' + count + ' medicamentos.');
 }
 
