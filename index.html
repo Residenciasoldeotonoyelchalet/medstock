@@ -1791,71 +1791,85 @@ function renderMedications(c) {
 function renderMovements(c) {
   const isFamily = currentUser.role === 'family';
 
-  // Familiar: todos los movimientos de su residente (entradas Y salidas, incluyendo tomas de enfermería)
+  // Movimientos de medicación
   let list = isFamily
     ? movements.filter(m => m.residentId === currentUser.residentId)
     : movements;
 
-  // Movimientos de higiene — para familiar solo los de su residente, para staff todos
+  // Movimientos de higiene
   const hygieneMovs = (hygieneItems || [])
     .filter(h => !isFamily || h.residentId === currentUser.residentId)
     .filter(h => h.tipo === 'mensual' && h.fechaEntrega)
     .map(h => ({
-      id: 'hyg_' + h.id,
-      type: 'in',
-      medName: h.nombre,
-      residentId: h.residentId,
-      qty: 1,
-      unit: 'unidad',
+      id: 'hyg_' + h.id, type: 'in', medName: h.nombre,
+      residentId: h.residentId, qty: 1, unit: 'unidad',
       by: h.entregadoPor || 'Registrado',
       date: h.fechaEntrega ? new Date(h.fechaEntrega + 'T00:00:00').toLocaleDateString('es-AR') : '',
-      note: 'Artículo de higiene recibido',
-      isHygiene: true
+      note: 'Higiene', isHygiene: true
     }));
 
-  const todosList = [...list, ...hygieneMovs].sort((a,b) => {
+  // Movimientos de ropa
+  const ropaMovs = (ropaItems || [])
+    .filter(r => !isFamily || r.residentId === currentUser.residentId)
+    .filter(r => r.fechaCarga)
+    .map(r => ({
+      id: 'ropa_' + r.id, type: 'in',
+      medName: r.nombre + (r.talle ? ' (talle ' + r.talle + ')' : ''),
+      residentId: r.residentId, qty: r.cantidad || 1, unit: 'prenda',
+      by: r.by || 'Registrado',
+      date: r.fechaCarga ? new Date(r.fechaCarga + 'T00:00:00').toLocaleDateString('es-AR') : '',
+      note: 'Ropa', isRopa: true
+    }));
+
+  // Movimientos de cocina
+  const cocinaMovs = (cocinaItems || [])
+    .filter(i => !isFamily || i.residentId === currentUser.residentId)
+    .map(i => ({
+      id: 'coc_' + i.id, type: 'in', medName: i.nombre,
+      residentId: i.residentId, qty: i.qty || 0, unit: i.unidad || 'unidades',
+      by: i.by || 'Registrado', date: '—',
+      note: 'Cocina', isCocina: true
+    }));
+
+  const todosList = [...list, ...hygieneMovs, ...ropaMovs, ...cocinaMovs].sort((a,b) => {
     const idA = typeof a.id === 'number' ? a.id : 0;
     const idB = typeof b.id === 'number' ? b.id : 0;
     return idB - idA;
   });
 
   const res = isFamily ? RESIDENTS.find(r => r.id === currentUser.residentId) : null;
-  const titulo = res ? `📋 Movimientos de ${res.name}` : '📋 Historial de movimientos';
-
-  // Filtro por residente para staff
+  const titulo = res ? ('📋 Movimientos de ' + res.name) : '📋 Historial de movimientos';
   const filterRes = window._movFilterRes || '';
   const listaFinal = isFamily ? todosList : (filterRes ? todosList.filter(m => String(m.residentId) === filterRes) : todosList);
 
-  c.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <h2 class="section-title" style="margin:0">${titulo}</h2>
-      ${!isFamily ? `<select onchange="window._movFilterRes=this.value;renderTab('movements')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px">
-        <option value="">Todos los residentes</option>
-        ${RESIDENTS.sort((a,b)=>a.name.localeCompare(b.name)).map(r=>`<option value="${r.id}" ${filterRes===String(r.id)?'selected':''}>${r.name}</option>`).join('')}
-      </select>` : ''}
-    </div>
-    ${isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Entradas de medicación, tomas registradas por enfermería y artículos de higiene.</p>' : ''}
-    <div class="card">
-      <div class="card-body">
-        ${listaFinal.length === 0
-          ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
-          : listaFinal.map(mov => {
-            const r = RESIDENTS.find(r => r.id === mov.residentId);
-            const icon = mov.isHygiene ? '🧴' : (mov.type === 'in' ? '💊' : '📤');
-            const tipoLabel = mov.isHygiene ? 'Higiene recibida' : (mov.type === 'in' ? `+${mov.qty} ${mov.unit} ingresados` : `-${mov.qty} ${mov.unit} usados`);
-            return `<div class="movement-item">
-              <div class="movement-icon ${mov.type === 'in' ? 'mov-in' : 'mov-out'}" style="font-size:16px">${icon}</div>
-              <div><strong>${mov.medName}</strong>${r && !isFamily ? ` — ${r.name}` : ''}<br>
-              <span style="color:var(--text-muted);font-size:13px">
-                ${tipoLabel}${mov.note ? ` · ${mov.note}` : ''} · <strong>${mov.by}</strong> · ${mov.date}
-              </span></div>
-            </div>`;
-          }).join('')
-        }
-      </div>
-    </div>
-  `;
+  c.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">' +
+    '<h2 class="section-title" style="margin:0">' + titulo + '</h2>' +
+    (!isFamily ? '<select onchange="window._movFilterRes=this.value;renderTab('movements')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px"><option value="">Todos los residentes</option>' +
+      RESIDENTS.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(r=>'<option value="'+r.id+'"'+(filterRes===String(r.id)?' selected':'')+'>'+r.name+'</option>').join('') +
+    '</select>' : '') +
+    '</div>' +
+    (isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Medicación, higiene, ropa y cocina de tu familiar.</p>' : '') +
+    '<div class="card"><div class="card-body">' +
+    (listaFinal.length === 0
+      ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
+      : listaFinal.map(mov => {
+          const r = RESIDENTS.find(r => r.id === mov.residentId);
+          const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : (mov.type === 'in' ? '💊' : '📤');
+          const tipoLabel = mov.isHygiene ? 'Higiene recibida'
+            : mov.isRopa ? (mov.qty + ' prenda/s')
+            : mov.isCocina ? (mov.qty + ' ' + mov.unit)
+            : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
+          return '<div class="movement-item">' +
+            '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>' +
+            '<div><strong>' + mov.medName + '</strong>' + (r && !isFamily ? ' — ' + r.name : '') + '<br>' +
+            '<span style="color:var(--text-muted);font-size:13px">' + tipoLabel + ' · ' + mov.note + ' · <strong>' + mov.by + '</strong> · ' + mov.date + '</span></div>' +
+            '</div>';
+        }).join('')
+    ) +
+    '</div></div>';
 }
+
 
 function renderUsers(c) {
   const staff  = USERS.filter(u => u.role !== 'family');
