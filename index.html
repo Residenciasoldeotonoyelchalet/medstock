@@ -1791,12 +1791,10 @@ function renderMedications(c) {
 function renderMovements(c) {
   const isFamily = currentUser.role === 'family';
 
-  // Movimientos de medicación
   let list = isFamily
     ? movements.filter(m => m.residentId === currentUser.residentId)
     : movements;
 
-  // Movimientos de higiene
   const hygieneMovs = (hygieneItems || [])
     .filter(h => !isFamily || h.residentId === currentUser.residentId)
     .filter(h => h.tipo === 'mensual' && h.fechaEntrega)
@@ -1808,7 +1806,6 @@ function renderMovements(c) {
       note: 'Higiene', isHygiene: true
     }));
 
-  // Movimientos de ropa
   const ropaMovs = (ropaItems || [])
     .filter(r => !isFamily || r.residentId === currentUser.residentId)
     .filter(r => r.fechaCarga)
@@ -1821,7 +1818,6 @@ function renderMovements(c) {
       note: 'Ropa', isRopa: true
     }));
 
-  // Movimientos de cocina
   const cocinaMovs = (cocinaItems || [])
     .filter(i => !isFamily || i.residentId === currentUser.residentId)
     .map(i => ({
@@ -1842,32 +1838,33 @@ function renderMovements(c) {
   const filterRes = window._movFilterRes || '';
   const listaFinal = isFamily ? todosList : (filterRes ? todosList.filter(m => String(m.residentId) === filterRes) : todosList);
 
-  c.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">' +
-    '<h2 class="section-title" style="margin:0">' + titulo + '</h2>' +
-    (!isFamily ? '<select onchange="window._movFilterRes=this.value;renderTab(\'movements\')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px"><option value="">Todos los residentes</option>' +
-      RESIDENTS.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(r=>'<option value="'+r.id+'"'+(filterRes===String(r.id)?' selected':'')+'>'+r.name+'</option>').join('') +
-    '</select>' : '') +
-    '</div>' +
-    (isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Medicación, higiene, ropa y cocina de tu familiar.</p>' : '') +
-    '<div class="card"><div class="card-body">' +
-    (listaFinal.length === 0
-      ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
-      : listaFinal.map(mov => {
-          const r = RESIDENTS.find(r => r.id === mov.residentId);
-          const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : (mov.type === 'in' ? '💊' : '📤');
-          const tipoLabel = mov.isHygiene ? 'Higiene recibida'
-            : mov.isRopa ? (mov.qty + ' prenda/s')
-            : mov.isCocina ? (mov.qty + ' ' + mov.unit)
-            : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
-          return '<div class="movement-item">' +
-            '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>' +
-            '<div><strong>' + mov.medName + '</strong>' + (r && !isFamily ? ' — ' + r.name : '') + '<br>' +
-            '<span style="color:var(--text-muted);font-size:13px">' + tipoLabel + ' · ' + mov.note + ' · <strong>' + mov.by + '</strong> · ' + mov.date + '</span></div>' +
-            '</div>';
-        }).join('')
-    ) +
-    '</div></div>';
+  const resOptions = RESIDENTS.slice().sort((a,b) => a.name.localeCompare(b.name))
+    .map(r => '<option value="' + r.id + '"' + (filterRes === String(r.id) ? ' selected' : '') + '>' + r.name + '</option>').join('');
+
+  const selectHtml = '<select onchange="window._movFilterRes=this.value;renderTab(\u0027movements\u0027)" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px"><option value="">Todos los residentes</option>' + resOptions + '</select>';
+
+  const rows = listaFinal.length === 0
+    ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
+    : listaFinal.map(function(mov) {
+        const r = RESIDENTS.find(function(r) { return r.id === mov.residentId; });
+        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : (mov.type === 'in' ? '💊' : '📤');
+        const tipoLabel = mov.isHygiene ? 'Higiene recibida'
+          : mov.isRopa ? (mov.qty + ' prenda/s')
+          : mov.isCocina ? (mov.qty + ' ' + mov.unit)
+          : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
+        return '<div class="movement-item">'
+          + '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>'
+          + '<div><strong>' + mov.medName + '</strong>' + (r && !isFamily ? ' — ' + r.name : '') + '<br>'
+          + '<span style="color:var(--text-muted);font-size:13px">' + tipoLabel + ' · ' + mov.note + ' · <strong>' + mov.by + '</strong> · ' + mov.date + '</span></div>'
+          + '</div>';
+      }).join('');
+
+  c.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">'
+    + '<h2 class="section-title" style="margin:0">' + titulo + '</h2>'
+    + (!isFamily ? selectHtml : '')
+    + '</div>'
+    + (isFamily ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">Medicación, higiene, ropa y cocina de tu familiar.</p>' : '')
+    + '<div class="card"><div class="card-body">' + rows + '</div></div>';
 }
 
 
