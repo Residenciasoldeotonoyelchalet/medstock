@@ -24,4 +24,4 @@ jobs:
       - name: Ejecutar descuento diario
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: node .github/workflows/.github/scripts/descuento-diario.js
+        run: node .github/scripts/descuento-diario.js
