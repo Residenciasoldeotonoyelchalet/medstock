@@ -1184,106 +1184,6 @@ function frecuenciaLabel(med) {
 }
 
 // ── DESCUENTO AUTOMÁTICO DIARIO ──
-function checkDailyDiscount() {
-  // Ya no se ejecuta automáticamente. El descuento se hace
-  // manualmente con el botón "Descontar dosis del día" en el panel.
-}
-
-async function runDailyDiscount(forzar = false) {
-  const today = new Date().toISOString().slice(0, 10);
-
-  // Verificar si ya se hizo hoy — Firestore primero, localStorage como fallback
-  if (!forzar) {
-    let yaHecho = false;
-    let quienHizo = '';
-    try {
-      const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-      const snap = await getDoc(window._discountDocRef);
-      if (snap.exists() && snap.data().lastDate === today) {
-        yaHecho = true;
-        quienHizo = snap.data().by || '';
-      }
-    } catch(e) { /* ignorar error de red */ }
-    // Fallback: revisar localStorage (para descuentos hechos con codigo anterior)
-    if (!yaHecho && localStorage.getItem('medstock_last_discount') === today) {
-      yaHecho = true;
-    }
-    if (yaHecho) {
-      showModal(`
-        <div class="modal-title">✅ Ya descontado hoy</div>
-        <p style="color:var(--text-muted);font-size:15px">El descuento del <strong>${today}</strong> ya fue realizado${quienHizo ? ' por <strong>' + quienHizo + '</strong>' : ''}.</p>
-        <p style="color:var(--text-muted);font-size:14px;margin-top:10px">Si necesitas descontar igual, usá el botón de abajo.</p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" onclick="closeModal()">Cerrar</button>
-          <button class="btn btn-red" onclick="closeModal();runDailyDiscount(true)">Descontar de todas formas</button>
-        </div>
-      `);
-      return;
-    }
-  }
-
-  let count = 0;
-
-  medications.forEach(med => {
-    if (med.treatment !== 'prolongado') return;
-    if (med.sos) return;
-    if (med.qty <= 0) return;
-    if (getStatus(med) === 'finalizado') return;
-    if (!debeTomarsHoy(med)) return;
-    const dosis = getDosisdiaria(med);
-    if (dosis <= 0) return;
-    med.qty = Math.max(0, med.qty - Math.min(dosis, med.qty));
-    count++;
-  });
-
-  let hygieneCount = 0;
-  hygieneItems.forEach(h => {
-    if (h.tipo !== 'necesidad') return;
-    if (!h.dailyUse || h.dailyUse <= 0) return;
-    if (h.qty <= 0) return;
-    h.qty = Math.max(0, h.qty - Math.min(h.dailyUse, h.qty));
-    hygieneCount++;
-  });
-
-  // Guardar fecha y quién lo hizo
-  const quien = window.currentUser ? window.currentUser.name || window.currentUser.user : 'desconocido';
-  try {
-    await setDoc(window._discountDocRef, { lastDate: today, by: quien });
-  } catch(e) { /* ignorar */ }
-  localStorage.setItem('medstock_last_discount', today);
-
-  if (count > 0 || hygieneCount > 0) {
-    await window._saveMeds();
-    if (hygieneCount > 0) await window._saveHygiene();
-  }
-
-  const msg = count > 0 || hygieneCount > 0
-    ? `✅ Descuento aplicado: ${count} med${count !== 1 ? 's' : ''}${hygieneCount > 0 ? ` + ${hygieneCount} higiene` : ''}`
-    : `✅ Descuento registrado (sin cambios de stock)`;
-  showToast(msg);
-
-  // Actualizar banner en pantalla inmediatamente, sin re-renderizar todo
-  const banner = document.getElementById('daily-discount-banner');
-  if (banner) {
-    const quien = window.currentUser ? window.currentUser.name || window.currentUser.user : '';
-    banner.style.background = 'linear-gradient(135deg,#7a9a85,#6a8a75)';
-    banner.innerHTML = `
-      <div style="display:flex;align-items:center;gap:14px">
-        <span style="font-size:32px">✅</span>
-        <div>
-          <div style="font-weight:700;font-size:16px">Descuento del día aplicado</div>
-          <div style="font-size:13px;opacity:0.85;margin-top:3px">Realizado por ${quien} · desaparecerá mañana</div>
-        </div>
-      </div>
-    `;
-    // Desvanecer y ocultar después de 4 segundos
-    setTimeout(() => {
-      banner.style.transition = 'opacity 0.8s';
-      banner.style.opacity = '0';
-      setTimeout(() => { banner.style.display = 'none'; }, 800);
-    }, 4000);
-  }
-}
 
 function doLogout() {
   currentUser = null;
@@ -1408,19 +1308,6 @@ function renderHome(c) {
         </div>
       </div>` : ''}
 
-    <div id="daily-discount-banner" style="background:linear-gradient(135deg,#4a7c59,#3a6347);border-radius:var(--radius);padding:18px 22px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px;box-shadow:var(--shadow-lg)">
-      <div style="display:flex;align-items:center;gap:14px">
-        <span id="discount-banner-icon" style="font-size:32px">💊</span>
-        <div>
-          <div style="font-weight:700;font-size:16px">Descuento diario de medicación</div>
-          <div id="discount-status-text" style="font-size:13px;opacity:0.85;margin-top:3px"></div>
-        </div>
-      </div>
-      ${isAdmin() ? `<button id="discount-banner-btn" onclick="runDailyDiscount()" style="background:white;color:#3a6347;border:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
-        ✅ Descontar dosis de hoy
-      </button>` : ''}
-    </div>
-
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">${RESIDENTS.length}</div><div class="stat-label">Residentes</div></div>
       <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${totalMeds}</div><div class="stat-label">Medicamentos cargados</div></div>
@@ -1445,44 +1332,7 @@ function renderHome(c) {
     </div>
   `;
 
-  // Verificar estado del descuento y actualizar banner
-  (async () => {
-    const banner = document.getElementById('daily-discount-banner');
-    const statusEl = document.getElementById('discount-status-text');
-    if (!banner || !statusEl) return;
-    const today = new Date().toISOString().slice(0, 10);
-    let yaHecho = false;
-    let quien = '';
 
-    // Chequeo rápido por localStorage antes de ir a Firestore
-    if (localStorage.getItem('medstock_last_discount') === today) {
-      yaHecho = true;
-    }
-
-    // Si localStorage ya dice que está hecho, ocultar banner de inmediato
-    if (yaHecho) {
-      banner.style.display = 'none';
-      return;
-    }
-
-    // Si no, verificar Firestore (puede tardar)
-    try {
-      const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-      const snap = await getDoc(window._discountDocRef);
-      if (snap.exists() && snap.data().lastDate === today) {
-        yaHecho = true;
-        quien = snap.data().by || '';
-        // Sincronizar localStorage para la próxima vez
-        localStorage.setItem('medstock_last_discount', today);
-      }
-    } catch(e) { /* ignorar error de red */ }
-
-    if (yaHecho) {
-      banner.style.display = 'none';
-    } else {
-      statusEl.textContent = '⚠ Pendiente — todavía no se descontó hoy';
-    }
-  })();
 }
 
 function renderAlertsSection(meds) {
@@ -3173,18 +3023,7 @@ onSnapshot(collection(db, 'movimientos'), snapshot => {
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
-// Sincronización en tiempo real — descuento diario
-// Si otro dispositivo hace el descuento, el banner se oculta automáticamente aquí
-onSnapshot(doc(db, 'config', 'dailyDiscount'), snap => {
-  const today = new Date().toISOString().slice(0, 10);
-  if (snap.exists() && snap.data().lastDate === today) {
-    localStorage.setItem('medstock_last_discount', today);
-    const banner = document.getElementById('daily-discount-banner');
-    if (banner && banner.style.display !== 'none') {
-      banner.style.display = 'none';
-    }
-  }
-});
+
 
 // saveMeds — guarda todos los meds o uno específico
 window._saveMeds = async function(medId = null) {
@@ -3322,9 +3161,6 @@ window._deleteCocina = async function(id) {
   try { await deleteDoc(doc(db, 'cocina', String(id))); }
   catch(e) { console.error('Error eliminando cocina:', e); }
 };
-
-// ── REFERENCIA AL DOCUMENTO DE CONTROL DE DESCUENTO ──
-window._discountDocRef = doc(db, 'config', 'dailyDiscount');
 
 // deleteMed
 window.deleteMed = async function(id) {
