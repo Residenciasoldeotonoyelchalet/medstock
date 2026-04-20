@@ -1845,7 +1845,7 @@ function renderMovements(c) {
   c.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">' +
     '<h2 class="section-title" style="margin:0">' + titulo + '</h2>' +
-    (!isFamily ? '<select onchange="window._movFilterRes=this.value;renderTab('movements')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px"><option value="">Todos los residentes</option>' +
+    (!isFamily ? '<select onchange="window._movFilterRes=this.value;renderTab(\'movements\')" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px"><option value="">Todos los residentes</option>' +
       RESIDENTS.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(r=>'<option value="'+r.id+'"'+(filterRes===String(r.id)?' selected':'')+'>'+r.name+'</option>').join('') +
     '</select>' : '') +
     '</div>' +
