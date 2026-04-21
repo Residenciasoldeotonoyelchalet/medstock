@@ -1472,7 +1472,13 @@ function getStatus(m) {
   // Única toma nunca genera alarma; A evaluar sí muestra sin stock si llega a 0
   if (m.treatment === 'unica') return 'ok';
   if (m.treatment === 'evolucion') return m.qty <= 0 ? 'out' : 'ok';
-  if (m.sos) return m.qty <= 0 ? 'out' : 'ok';
+  if (m.sos) {
+    if (m.qty <= 0) return 'out';
+    const sosDosis = m.sosDosis || 1;
+    const minDays = m.minDays || 7;
+    if (m.qty < sosDosis * minDays) return 'low';
+    return 'ok';
+  }
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
   // Porcentaje
@@ -1646,9 +1652,11 @@ function showResident(id) {
                   ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
                 <td style="font-size:12px">
-                  ${normalizarHorarios(m).length > 0
-                    ? normalizarHorarios(m).map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
-                    : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
+                  ${m.sos
+                    ? `<span style="display:inline-block;background:#fde8b0;color:#7a4800;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">SOS · ${m.sosDosis || 1} ${m.unit}/toma</span>`
+                    : normalizarHorarios(m).length > 0
+                      ? normalizarHorarios(m).map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
+                      : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
                 <td style="font-size:11px;color:var(--text-muted)">${frecuenciaLabel(m)}</td>
                 <td><strong>${getDosisdiaria(m)}</strong> ${m.unit}/día</td>
@@ -2523,8 +2531,18 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="form-group" style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto; margin:0;">
+      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto; margin:0;" onchange="document.getElementById('sos-dosis-group').style.display=this.checked?'block':'none'">
       <label for="m-sos" style="margin:0; text-transform:none; font-size:14px; letter-spacing:0; cursor:pointer;">Es SOS (no descontar stock automáticamente)</label>
+    </div>
+
+    <div id="sos-dosis-group" style="display:${med?.sos ? 'block' : 'none'}">
+      <div class="form-group">
+        <label>Dosis por toma SOS <span style="font-weight:400;color:var(--text-muted)">(ej: 8 gotas, 1 comprimido)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="m-sos-dosis" min="0" step="0.5" value="${med?.sosDosis || 1}" style="width:100px">
+          <span style="color:var(--text-muted);font-size:14px">${med?.unit || 'unidades'}</span>
+        </div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -2660,6 +2678,7 @@ function saveMed(residentId, medId = null) {
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
+    sosDosis: parseFloat(document.getElementById('m-sos-dosis')?.value) || 1,
     obs: document.getElementById('m-obs').value,
     horarios: Array.from(document.querySelectorAll('#horarios-container .horario-row')).map(row => ({
       hora: row.querySelector('input[type=time]')?.value || '',
