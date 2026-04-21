@@ -991,6 +991,70 @@ function saveData() {
 // AUTH
 // =====================================================
 
+
+// ── CONTROL DE UBICACIÓN ──
+const RESIDENCIAS = [
+  { nombre: 'El Chalet', lat: -31.540953, lng: -68.5008408 },
+  { nombre: 'Sol de Otoño', lat: -31.5866159, lng: -68.5373806 }
+];
+const GPS_RADIO_METROS = 500; // 500 metros de tolerancia
+
+function distanciaMetros(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function estaEnResidencia(lat, lng) {
+  return RESIDENCIAS.some(r => distanciaMetros(lat, lng, r.lat, r.lng) <= GPS_RADIO_METROS);
+}
+
+function verificarUbicacionYEntrar(user) {
+  const rolesConGPS = ['nurse', 'cocina'];
+  if (!rolesConGPS.includes(user.role)) {
+    completarLogin(user);
+    return;
+  }
+  if (!navigator.geolocation) {
+    completarLogin(user); // Si el browser no soporta GPS, dejar pasar
+    return;
+  }
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '📍 Verificando ubicación...';
+  errEl.style.display = 'block';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude, longitude } = pos.coords;
+      if (estaEnResidencia(latitude, longitude)) {
+        errEl.style.display = 'none';
+        completarLogin(user);
+      } else {
+        errEl.textContent = '🚫 Solo podés acceder desde la residencia';
+        errEl.style.display = 'block';
+      }
+    },
+    err => {
+      // Si niegan el GPS o hay error, bloquear
+      errEl.textContent = '📍 Necesitás permitir el acceso a tu ubicación para ingresar';
+      errEl.style.display = 'block';
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function completarLogin(found) {
+  currentUser = found;
+  window.currentUser = found;
+  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
+  buildNav();
+  renderTab('home');
+}
+
 function doLogin(savedUser = null) {
   // Si los usuarios todavía no cargaron desde Firestore, esperar
   if (!usersLoaded) {
@@ -1017,15 +1081,11 @@ function doLogin(savedUser = null) {
     }
     return;
   }
-  currentUser = found;
-  window.currentUser = found;
-  // Guardar sesión en localStorage
-  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
-  buildNav();
-  renderTab('home');
+  if (savedUser) {
+    completarLogin(found);
+  } else {
+    verificarUbicacionYEntrar(found);
+  }
 }
 
 // Restaurar sesión al cargar la página
@@ -1298,6 +1358,26 @@ function renderHome(c) {
         <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
       </div>
       ${renderAlertsSection(myMeds)}
+    `;
+    return;
+  }
+
+  if (currentUser.role === 'cocina') {
+    const misCocina = cocinaItems.length;
+    const cocinaLow = cocinaItems.filter(i => i.minQty > 0 && i.qty <= i.minQty && i.qty > 0).length;
+    const cocinaOut = cocinaItems.filter(i => i.qty <= 0).length;
+    c.innerHTML = `
+      <h2 class="section-title">🍳 Panel de Cocina</h2>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🧂</div><div class="stat-value">${misCocina}</div><div class="stat-label">Artículos cargados</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${cocinaLow}</div><div class="stat-label">Stock bajo</div></div>
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${cocinaOut}</div><div class="stat-label">Sin stock</div></div>
+      </div>
+      <div class="card" style="margin-top:4px">
+        <div class="card-body" style="text-align:center;padding:20px">
+          <button class="btn btn-primary" onclick="renderTab('cocina')" style="font-size:16px;padding:14px 32px">🍳 Ir a Cocina</button>
+        </div>
+      </div>
     `;
     return;
   }
@@ -1847,11 +1927,11 @@ function renderMovements(c) {
     ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
     : listaFinal.map(function(mov) {
         const r = RESIDENTS.find(function(r) { return r.id === mov.residentId; });
-        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : (mov.type === 'in' ? '💊' : '📤');
+        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : mov.type === 'edit' ? '✏️' : (mov.type === 'in' ? '💊' : '📤');
         const tipoLabel = mov.isHygiene ? 'Higiene recibida'
           : mov.isRopa ? (mov.qty + ' prenda/s')
           : mov.isCocina ? (mov.qty + ' ' + mov.unit)
-          : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
+          : mov.type === 'edit' ? mov.note : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
         return '<div class="movement-item">'
           + '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>'
           + '<div><strong>' + mov.medName + '</strong>' + (r && !isFamily ? ' — ' + r.name : '') + '<br>'
@@ -2520,16 +2600,41 @@ function saveMed(residentId, medId = null) {
   };
 
   if (medId) {
+    // Registrar cambios en movimientos si es enfermera
+    const medAnterior = medications.find(m => m.id === medId);
+    if (medAnterior && currentUser.role === 'nurse') {
+      const cambios = [];
+      if (JSON.stringify(medAnterior.horarios) !== JSON.stringify(newMed.horarios)) {
+        const dosisAntes = (medAnterior.horarios||[]).reduce((s,h)=>s+(parseFloat(h.dosis)||0),0);
+        const dosisDespues = (newMed.horarios||[]).reduce((s,h)=>s+(parseFloat(h.dosis)||0),0);
+        cambios.push('dosis: ' + dosisAntes + ' → ' + dosisDespues + ' ' + newMed.unit + '/día');
+      }
+      if (medAnterior.frecuencia !== newMed.frecuencia) {
+        cambios.push('frecuencia: ' + (medAnterior.frecuencia||'diario') + ' → ' + newMed.frecuencia);
+      }
+      if (cambios.length > 0) {
+        const mov = {
+          id: Date.now(),
+          medId: medId,
+          medName: newMed.name,
+          residentId: parseInt(residentId),
+          type: 'edit',
+          qty: 0,
+          unit: newMed.unit,
+          by: currentUser.name || currentUser.user,
+          date: new Date().toLocaleDateString('es-AR'),
+          note: 'Modificación de ' + cambios.join(', ')
+        };
+        movements.push(mov);
+        window._saveMovs && window._saveMovs();
+      }
+    }
     medications = medications.map(m => m.id === medId ? newMed : m);
-    showToast('Medicamento actualizado ✅');
   } else {
     medications.push(newMed);
-    showToast('Medicamento agregado ✅');
   }
 
-  // Guardar solo este medicamento específico en Firestore
   saveMeds(newMed.id);
-  saveMovs();
   closeModal();
   showToast(medId ? 'Medicamento actualizado ✅' : 'Medicamento guardado ✅');
   showResident(parseInt(residentId));
