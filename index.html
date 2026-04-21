@@ -994,10 +994,10 @@ function saveData() {
 
 // ── CONTROL DE UBICACIÓN ──
 const RESIDENCIAS = [
-  { nombre: 'El Chalet', lat: -31.540953, lng: -68.5008408 },
+  { nombre: 'El Chalet', lat: -31.5411371, lng: -68.5012521 },
   { nombre: 'Sol de Otoño', lat: -31.5866159, lng: -68.5373806 }
 ];
-const GPS_RADIO_METROS = 500; // 500 metros de tolerancia
+const GPS_RADIO_METROS = 300;
 
 function distanciaMetros(lat1, lng1, lat2, lng2) {
   const R = 6371000;
@@ -1670,8 +1670,10 @@ function showResident(id) {
                     <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">✅ Dar</button>
                     <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')">+ Stock</button>
                     <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                    ${canFullEdit() ? `
+                    ${canEdit() ? `
                       <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})">✏️</button>
+                    ` : ''}
+                    ${canFullEdit() ? `
                       <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
                     ` : ''}
                   </div>
