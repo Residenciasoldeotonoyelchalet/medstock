@@ -1802,7 +1802,7 @@ function registerTake(mid) {
     type: 'out',
     qty: dosisHoy,
     unit: med.unit,
-    date: new Date().toLocaleString(),
+    date: new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     by: currentUser.name,
     note: 'Toma registrada por enfermería'
   });
@@ -1896,7 +1896,7 @@ function renderMovements(c) {
       medName: r.nombre + (r.talle ? ' (talle ' + r.talle + ')' : ''),
       residentId: r.residentId, qty: r.cantidad || 1, unit: 'prenda',
       by: r.by || 'Registrado',
-      date: r.fechaCarga ? new Date(r.fechaCarga + 'T00:00:00').toLocaleDateString('es-AR') : '',
+      date: r.fechaCarga || '—',
       note: 'Ropa', isRopa: true
     }));
 
@@ -2624,7 +2624,7 @@ function saveMed(residentId, medId = null) {
           qty: 0,
           unit: newMed.unit,
           by: currentUser.name || currentUser.user,
-          date: new Date().toLocaleDateString('es-AR'),
+          date: new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
           note: 'Modificación de ' + cambios.join(', ')
         };
         movements.push(mov);
@@ -2898,7 +2898,7 @@ function closeModal() {
 // =====================================================
 
 function today() {
-  return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // =====================================================
