@@ -2177,6 +2177,77 @@ function renderRopa(c) {
     </div>
   `;
 }
+
+function openAddRopa(residentId, itemId) {
+  residentId = residentId || null;
+  itemId = itemId || null;
+  const item = itemId ? ropaItems.find(r => r.id === itemId) : null;
+  const resOptions = RESIDENTS.map(r =>
+    '<option value="' + r.id + '"' + ((residentId == r.id || item?.residentId == r.id) ? ' selected' : '') + '>' + r.name + '</option>'
+  ).join('');
+  showModal(
+    '<div class="modal-title">👗 ' + (item ? 'Editar prenda' : 'Agregar prenda') + '</div>' +
+    '<div class="form-group"><label>Residente</label><select id="ropa-resident">' + resOptions + '</select></div>' +
+    '<div class="form-group"><label>Prenda</label><input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera..." value="' + (item?.nombre||'') + '"></div>' +
+    '<div class="grid-2">' +
+      '<div class="form-group"><label>Talle</label><input type="text" id="ropa-talle" placeholder="Ej: M, 42" value="' + (item?.talle||'') + '"></div>' +
+      '<div class="form-group"><label>Cantidad</label><input type="number" id="ropa-cantidad" min="1" value="' + (item?.cantidad||1) + '"></div>' +
+    '</div>' +
+    '<div class="form-group"><label>Foto (desde galería)</label>' +
+      '<input type="file" id="ropa-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px">' +
+      '<div id="ropa-foto-preview" style="margin-top:8px">' + (item?.foto ? '<img src="' + item.foto + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">' : '') + '</div>' +
+    '</div>' +
+    '<div class="form-group"><label>Observaciones</label><textarea id="ropa-obs" rows="2" placeholder="Ej: Marcada con nombre...">' + (item?.obs||'') + '</textarea></div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>' +
+      '<button class="btn btn-primary" onclick="saveRopaItem(' + (itemId||'null') + ')">Guardar</button>' +
+    '</div>'
+  );
+  window._ropaFotoActual = item?.foto || null;
+  document.getElementById('ropa-foto-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('ropa-foto-preview').innerHTML =
+        '<img src="' + ev.target.result + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveRopaItem(itemId) {
+  itemId = itemId || null;
+  const nombre = document.getElementById('ropa-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre de la prenda'); return; }
+  const residentId = parseInt(document.getElementById('ropa-resident').value);
+  const talle = document.getElementById('ropa-talle').value.trim();
+  const cantidad = parseInt(document.getElementById('ropa-cantidad').value) || 1;
+  const obs = document.getElementById('ropa-obs').value.trim();
+  const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
+  const fotoRaw = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+  const newId = itemId || Date.now();
+  showToast('Guardando...');
+  let foto = window._ropaFotoActual || null;
+  if (fotoRaw && fotoRaw.startsWith('data:image')) {
+    foto = await comprimirFoto(fotoRaw);
+  }
+  const newItem = {
+    id: newId, residentId, nombre, talle, cantidad, obs, foto,
+    fechaCarga: new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    by: currentUser.name || currentUser.user
+  };
+  if (itemId) {
+    ropaItems = ropaItems.map(r => r.id === itemId ? newItem : r);
+  } else {
+    ropaItems.push(newItem);
+  }
+  await window._saveRopa(newItem.id);
+  showToast('✅ Prenda guardada');
+  closeModal();
+  renderTab('ropa');
+}
+
 function deleteRopa(id) {
   if (!confirm('¿Eliminar esta prenda?')) return;
   ropaItems = ropaItems.filter(r => r.id !== id);
