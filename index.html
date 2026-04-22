@@ -1013,7 +1013,8 @@ function estaEnResidencia(lat, lng) {
 
 function verificarUbicacionYEntrar(user) {
   const rolesConGPS = ['nurse', 'cocina'];
-  if (!rolesConGPS.includes(user.role)) {
+  // Si el GPS está desactivado por el admin, dejar pasar siempre
+  if (!rolesConGPS.includes(user.role) || localStorage.getItem('medstock_gps_off') === '1') {
     completarLogin(user);
     return;
   }
@@ -1958,6 +1959,13 @@ function renderMovements(c) {
 }
 
 
+function toggleGPS() {
+  const off = localStorage.getItem('medstock_gps_off') === '1';
+  localStorage.setItem('medstock_gps_off', off ? '0' : '1');
+  showToast(off ? '🟢 GPS activado — enfermeras necesitan estar en la residencia' : '🔴 GPS desactivado — cualquiera puede entrar');
+  renderTab('users');
+}
+
 function renderUsers(c) {
   const staff  = USERS.filter(u => u.role !== 'family');
   const family = USERS.filter(u => u.role === 'family');
@@ -1966,8 +1974,12 @@ function renderUsers(c) {
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">⚙️ Usuarios del sistema</h2>
-      ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
-    </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
+        ${isOwner ? `<button id="gps-toggle-btn" class="btn btn-sm" onclick="toggleGPS()" style="background:${localStorage.getItem('medstock_gps_off')==='1'?'#c0392b':'#4a7c59'};color:white;padding:7px 14px;font-size:13px">
+          ${localStorage.getItem('medstock_gps_off')==='1' ? '🔴 GPS desactivado (clic para activar)' : '🟢 GPS activado (clic para desactivar)'}
+        </button>` : ''}
+      </div>
 
     <!-- PERSONAL -->
     <div class="card" style="margin-bottom:20px">
