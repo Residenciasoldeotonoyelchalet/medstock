@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#5c3d1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,6 +12,14 @@
 <title>MedStock – Residencia Sol de Otoño y El Chalet</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  @media (max-width: 480px) {
+    html { font-size: 15px; }
+    .card { border-radius: 10px; }
+    .modal { max-width: 95vw; border-radius: 14px; }
+    .btn { padding: 10px 16px; font-size: 14px; }
+    .section-title { font-size: 20px; }
+  }
+
   :root {
     --cream: #faf7f2;
     --warm-white: #fff9f2;
@@ -2600,7 +2608,11 @@ function renderRopa(c) {
   const hayPrendas = ropaItems.filter(r => !isFamily || r.residentId === currentUser.residentId).length > 0;
 
   const ropaSearch = window._ropaSearch || '';
-  const residentesFiltroSearch = residentesFiltro.filter(r => !ropaSearch || r.name.toLowerCase().includes(ropaSearch.toLowerCase()));
+  const residentesFiltroSearch = residentesFiltro.filter(r => {
+    if (!ropaSearch) return true;
+    const words = ropaSearch.toLowerCase().split(' ').filter(Boolean);
+    return words.every(w => r.name.toLowerCase().includes(w));
+  });
 
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
@@ -2764,7 +2776,11 @@ function renderCocina(c) {
   const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
   const hayItems = cocinaItems.filter(i => !isFamily || i.residentId === currentUser.residentId).length > 0;
   const cocinaSearch = window._cocinaSearch || '';
-  const residentesFiltroSearch = residentesFiltro.filter(r => !cocinaSearch || r.name.toLowerCase().includes(cocinaSearch.toLowerCase()));
+  const residentesFiltroSearch = residentesFiltro.filter(r => {
+    if (!cocinaSearch) return true;
+    const words = cocinaSearch.toLowerCase().split(' ').filter(Boolean);
+    return words.every(w => r.name.toLowerCase().includes(w));
+  });
 
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
