@@ -243,15 +243,18 @@
   .nav-tabs {
     background: white;
     border-bottom: 2px solid var(--border);
-    padding: 0 24px;
+    padding: 0 12px;
     display: flex;
-    gap: 4px;
+    gap: 2px;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .nav-tabs::-webkit-scrollbar { display: none; }
 
   .nav-tab {
-    padding: 14px 20px;
-    font-size: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
@@ -261,7 +264,7 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
   .nav-tab:hover { color: var(--amber); }
@@ -2029,13 +2032,9 @@ function openAddResidencia(itemId) {
   itemId = itemId || null;
   const item = itemId ? residenciaItems.find(i => i.id === itemId) : null;
   const emojis = ['🛏️','🛁','🧺','🪣','🧴','🧻','🪒','🧼','🛋️','🪑','📦'];
-  const emojiOpts = emojis.map(e => '<option value="'+e+'"'+(item?.emoji===e?' selected':'')+'>'+e+'</option>').join('');
   showModal(
     '<div class="modal-title">🏠 '+(item?'Editar':'Agregar artículo')+'</div>'+
-    '<div class="grid-2">'+
-    '<div class="form-group"><label>Ícono</label><select id="res-emoji" style="font-size:20px">'+emojiOpts+'</select></div>'+
-    '<div class="form-group"><label>Nombre</label><input type="text" id="res-nombre" placeholder="Ej: Sábanas, Toallas..." value="'+(item?.nombre||'')+'"></div>'+
-    '</div>'+
+    '<div class="form-group"><label>Nombre</label><input type="text" id="res-nombre" placeholder="Ej: Sábanas, Toallas, Almohadas..." value="'+(item?.nombre||'')+'"></div>'+
     '<div class="grid-2">'+
     '<div class="form-group"><label>Cantidad</label><input type="number" id="res-qty" min="0" value="'+(item?.qty||0)+'"></div>'+
     '<div class="form-group"><label>Unidad</label><input type="text" id="res-unidad" placeholder="Ej: unidades, juegos" value="'+(item?.unidad||'unidades')+'"></div>'+
@@ -2055,7 +2054,6 @@ function saveResidenciaItem(itemId) {
   if (!nombre) { showToast('Escribí el nombre del artículo'); return; }
   const newItem = {
     id: itemId || Date.now(),
-    emoji: document.getElementById('res-emoji').value,
     nombre,
     qty: parseFloat(document.getElementById('res-qty').value) || 0,
     unidad: document.getElementById('res-unidad').value.trim() || 'unidades',
