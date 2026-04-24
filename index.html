@@ -2685,7 +2685,6 @@ function openAddRopa(residentId, itemId) {
     '<div class="form-group"><label>Residente</label><select id="ropa-resident">' + resOptions + '</select></div>' +
     '<div class="form-group"><label>Prenda</label><input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera..." value="' + (item?.nombre||'') + '"></div>' +
     '<div class="form-group"><label>Estado</label><select id="ropa-estado"><option value="activa">✅ En uso / Disponible</option><option value="retirada">📤 Retirada</option></select></div>' +
-    '<div class="form-group"><label>Estado</label><select id="ropa-estado"><option value="activa"' + ((!item||item.estado!==\'retirada\')?\' selected\':\'\') + '>✅ En uso / Disponible</option><option value="retirada"' + (item?.estado===\'retirada\'?\' selected\':\'\') + '>📤 Retirada</option></select></div>' +
     '<div class="grid-2">' +
       '<div class="form-group"><label>Talle</label><input type="text" id="ropa-talle" placeholder="Ej: M, 42" value="' + (item?.talle||'') + '"></div>' +
       '<div class="form-group"><label>Cantidad</label><input type="number" id="ropa-cantidad" min="1" value="' + (item?.cantidad||1) + '"></div>' +
