@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#5c3d1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -953,6 +953,7 @@ let hygieneItems = []; // artículos de higiene por residente
 let ropaItems = []; // prendas de ropa por residente
 let cocinaItems = []; // artículos de cocina (ingredientes, insumos)
 let entregas = []; // registro de entregas de familiares
+let residenciaItems = []; // stock general de la residencia (sábanas, toallas, etc.)
 
 function saveMeds(medId = null) {
   const trySave = () => {
@@ -1296,11 +1297,12 @@ function buildNav() {
     ];
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
+    if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'residencia', label: '🏠 Residencia' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
-  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina'].includes(currentTab) ? currentTab : (currentUser.role === 'family' ? 'home' : 'residents');
+  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina','residencia'].includes(currentTab) ? currentTab : (currentUser.role === 'family' ? 'home' : 'residents');
   tabs.innerHTML = items.map(t =>
     `<div class="nav-tab ${t.id === activeTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
   ).join('');
@@ -1318,6 +1320,7 @@ function renderTab(tab) {
   else if (tab === 'movements') renderMovements(c);
   else if (tab === 'users') renderUsers(c);
   else if (tab === 'ropa') renderRopa(c);
+  else if (tab === 'residencia') renderResidencia(c);
   else if (tab === 'cocina') renderCocina(c);
 }
 
@@ -1354,7 +1357,18 @@ function renderHome(c) {
           <button onclick="localStorage.setItem('medstock_install_dismissed','1');document.getElementById('install-card').remove()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:9px 12px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">×</button>
         </div>
       </div>` : ''}
-      <div class="stats-grid">
+      ${currentUser.role === 'family' && typeof Notification !== 'undefined' && Notification.permission !== 'granted' ? `
+    <div style="background:linear-gradient(135deg,#2c3e50,#3498db);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">🔔</span>
+        <div>
+          <div style="font-weight:700;font-size:15px">Activar notificaciones</div>
+          <div style="font-size:12px;opacity:0.85;margin-top:2px">Recibí alertas cuando el stock esté bajo</div>
+        </div>
+      </div>
+      <button onclick="solicitarPermisoPush()" style="background:white;color:#2c3e50;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Activar</button>
+    </div>` : ''}
+    <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
         <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
         <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
@@ -1740,9 +1754,9 @@ function renderHygieneSection(id) {
         const obs = h.obs ? `<br><small style="color:var(--text-muted);font-style:italic">${h.obs}</small>` : '';
         return `<tr>
           <td><strong>${h.nombre}</strong>${obs}</td>
-          <td style="font-size:13px">${entregaLabel}${h.entregadoPor ? `<br><span style="font-size:11px;color:var(--text-muted)">👤 ${h.entregadoPor}${h.fechaEntregaHora ? ' · ' + h.fechaEntregaHora : ''}</span>` : ''}</td>
+          <td style="font-size:13px">${entregaLabel}</td>
           <td style="font-size:13px">${proxima}</td>
-          <td><span class="badge ${badge}">${label}</span>${h.by && !h.entregadoPor ? `<br><span style="font-size:10px;color:var(--text-muted)">Cargado: ${h.by}${h.fechaCarga ? ' · ' + h.fechaCarga : ''}</span>` : ''}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
           ${editTd}
         </tr>`;
       }).join('');
@@ -1771,7 +1785,7 @@ function renderHygieneSection(id) {
           <td><strong>${h.nombre}</strong>${obs}</td>
           <td>${h.qty || 0} ${h.unidad || 'unidades'}</td>
           <td style="color:var(--text-muted);font-size:13px">${h.dailyUse > 0 ? `${h.dailyUse}/día` : '<span style="color:#ccc">—</span>'}</td>
-          <td><span class="badge ${badge}">${label}</span>${h.ultimoMovBy ? `<br><span style="font-size:10px;color:var(--text-muted)">📝 ${h.ultimoMovBy}${h.ultimoMovFecha ? ' · ' + h.ultimoMovFecha : ''}</span>` : (h.by ? `<br><span style="font-size:10px;color:var(--text-muted)">➕ ${h.by}${h.fechaCarga ? ' · ' + h.fechaCarga : ''}</span>` : '')}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
           ${editTd}
         </tr>`;
       }).join('');
@@ -1917,8 +1931,7 @@ function renderMovements(c) {
     .map(i => ({
       id: 'coc_' + i.id, type: 'in', medName: i.nombre,
       residentId: i.residentId, qty: i.qty || 0, unit: i.unidad || 'unidades',
-      by: i.ultimoMovBy || i.by || 'Registrado',
-      date: i.ultimoMovFecha || i.fechaCarga || '—',
+      by: i.by || 'Registrado', date: '—',
       note: 'Cocina', isCocina: true
     }));
 
@@ -1942,11 +1955,10 @@ function renderMovements(c) {
     ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
     : listaFinal.map(function(mov) {
         const r = RESIDENTS.find(function(r) { return r.id === mov.residentId; });
-        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : mov.isOtro ? '📦' : mov.type === 'edit' ? '✏️' : (mov.type === 'in' ? '💊' : '📤');
+        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : mov.type === 'edit' ? '✏️' : (mov.type === 'in' ? '💊' : '📤');
         const tipoLabel = mov.isHygiene ? 'Higiene recibida'
           : mov.isRopa ? (mov.qty + ' prenda/s')
           : mov.isCocina ? (mov.qty + ' ' + mov.unit)
-          : mov.isOtro ? 'Otro ítem entregado'
           : mov.type === 'edit' ? mov.note : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
         return '<div class="movement-item">'
           + '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>'
@@ -1963,6 +1975,171 @@ function renderMovements(c) {
     + '<div class="card"><div class="card-body">' + rows + '</div></div>';
 }
 
+
+// =====================================================
+// STOCK RESIDENCIA (sábanas, toallas, etc.)
+// =====================================================
+
+function renderResidencia(c) {
+  const canEditRes = ['owner','manager','nurse'].includes(currentUser.role);
+  const resSearch = window._resStockSearch || '';
+  const lista = resSearch
+    ? residenciaItems.filter(i => i.nombre.toLowerCase().includes(resSearch.toLowerCase()))
+    : residenciaItems;
+
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">🏠 Stock de Residencia</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="resstock-search" placeholder="Buscar artículo..." value="${resSearch}" oninput="window._resStockSearch=this.value;renderTab('residencia')"></div>
+        ${canEditRes ? `<button class="btn btn-primary" onclick="openAddResidencia()">+ Agregar artículo</button>` : ''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        ${lista.length === 0
+          ? `<div class="empty-state"><div class="empty-icon">🏠</div><p>No hay artículos cargados todavía</p></div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px">
+              ${lista.map(item => {
+                const bajo = item.minQty > 0 && item.qty <= item.minQty;
+                const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
+                const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Stock bajo' : '✅ OK';
+                return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--warm-white)">
+                  <div style="font-size:28px;margin-bottom:8px">${item.emoji || '📦'}</div>
+                  <div style="font-weight:600;font-size:15px">${item.nombre}</div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${item.qty || 0} ${item.unidad || 'unidades'}</div>
+                  ${item.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:2px">${item.obs}</div>` : ''}
+                  <span class="badge ${badge}" style="margin-top:6px;display:inline-block">${label}</span>
+                  ${canEditRes ? `<div style="display:flex;gap:4px;margin-top:10px">
+                    <button class="btn btn-green btn-sm" style="flex:1;font-size:12px;padding:5px" onclick="movResidencia(${item.id},'in')">+ Stock</button>
+                    <button class="btn btn-secondary btn-sm" style="flex:1;font-size:12px;padding:5px" onclick="movResidencia(${item.id},'out')">- Usar</button>
+                    <button class="btn btn-secondary btn-sm" style="padding:5px 8px" onclick="openAddResidencia(${item.id})">✏️</button>
+                    ${isAdmin() ? `<button class="btn btn-red btn-sm" style="padding:5px 8px" onclick="deleteResidencia(${item.id})">🗑</button>` : ''}
+                  </div>` : ''}
+                </div>`;
+              }).join('')}
+            </div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function openAddResidencia(itemId) {
+  itemId = itemId || null;
+  const item = itemId ? residenciaItems.find(i => i.id === itemId) : null;
+  const emojis = ['🛏️','🛁','🧺','🪣','🧴','🧻','🪒','🧼','🛋️','🪑','📦'];
+  const emojiOpts = emojis.map(e => '<option value="'+e+'"'+(item?.emoji===e?' selected':'')+'>'+e+'</option>').join('');
+  showModal(
+    '<div class="modal-title">🏠 '+(item?'Editar':'Agregar artículo')+'</div>'+
+    '<div class="grid-2">'+
+    '<div class="form-group"><label>Ícono</label><select id="res-emoji" style="font-size:20px">'+emojiOpts+'</select></div>'+
+    '<div class="form-group"><label>Nombre</label><input type="text" id="res-nombre" placeholder="Ej: Sábanas, Toallas..." value="'+(item?.nombre||'')+'"></div>'+
+    '</div>'+
+    '<div class="grid-2">'+
+    '<div class="form-group"><label>Cantidad</label><input type="number" id="res-qty" min="0" value="'+(item?.qty||0)+'"></div>'+
+    '<div class="form-group"><label>Unidad</label><input type="text" id="res-unidad" placeholder="Ej: unidades, juegos" value="'+(item?.unidad||'unidades')+'"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>Alerta cuando quede menos de</label><input type="number" id="res-minqty" min="0" value="'+(item?.minQty||0)+'"></div>'+
+    '<div class="form-group"><label>Observaciones</label><input type="text" id="res-obs" placeholder="Ej: Habitación 1, lavandería..." value="'+(item?.obs||'')+'"></div>'+
+    '<div class="modal-actions">'+
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn btn-primary" onclick="saveResidenciaItem('+(itemId||'null')+')">Guardar</button>'+
+    '</div>'
+  );
+}
+
+function saveResidenciaItem(itemId) {
+  itemId = itemId || null;
+  const nombre = document.getElementById('res-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre del artículo'); return; }
+  const newItem = {
+    id: itemId || Date.now(),
+    emoji: document.getElementById('res-emoji').value,
+    nombre,
+    qty: parseFloat(document.getElementById('res-qty').value) || 0,
+    unidad: document.getElementById('res-unidad').value.trim() || 'unidades',
+    minQty: parseFloat(document.getElementById('res-minqty').value) || 0,
+    obs: document.getElementById('res-obs').value.trim(),
+    by: currentUser.name || currentUser.user
+  };
+  if (itemId) {
+    residenciaItems = residenciaItems.map(i => i.id === itemId ? newItem : i);
+  } else {
+    residenciaItems.push(newItem);
+  }
+  window._saveResidencia(newItem.id);
+  showToast('Artículo guardado');
+  closeModal();
+  renderTab('residencia');
+}
+
+function movResidencia(itemId, type) {
+  const item = residenciaItems.find(i => i.id === itemId);
+  if (!item) return;
+  showModal(
+    '<div class="modal-title">'+(type==='in'?'+ Agregar':'- Usar')+': '+item.nombre+'</div>'+
+    '<div class="form-group"><label>Cantidad ('+item.unidad+')</label><input type="number" id="res-mov-qty" min="1" value="1"></div>'+
+    '<div class="modal-actions">'+
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn btn-primary" onclick="confirmMovResidencia('+itemId+',\''+type+'\')">Confirmar</button>'+
+    '</div>'
+  );
+}
+
+function confirmMovResidencia(itemId, type) {
+  const qty = parseFloat(document.getElementById('res-mov-qty').value) || 0;
+  const item = residenciaItems.find(i => i.id === itemId);
+  if (!item) return;
+  item.qty = Math.max(0, (item.qty||0) + (type==='in'?qty:-qty));
+  window._saveResidencia(item.id);
+  showToast(type==='in'?'+'+qty+' '+item.unidad+' agregados':'-'+qty+' '+item.unidad+' descontados');
+  closeModal();
+  renderTab('residencia');
+}
+
+function deleteResidencia(id) {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  residenciaItems = residenciaItems.filter(i => i.id !== id);
+  window._deleteResidencia(id);
+  showToast('Artículo eliminado');
+  renderTab('residencia');
+}
+
+// =====================================================
+// NOTIFICACIONES PUSH
+// =====================================================
+
+async function solicitarPermisoPush() {
+  if (!('Notification' in window)) { showToast('Este navegador no soporta notificaciones'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    localStorage.setItem('medstock_push_enabled', '1');
+    showToast('✅ Notificaciones activadas');
+  } else {
+    showToast('❌ Permiso de notificaciones denegado');
+  }
+}
+
+function enviarNotificacionLocal(titulo, cuerpo, icon) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  new Notification(titulo, { body: cuerpo, icon: icon || '/medstock/icon-192.png' });
+}
+
+// Verificar stock bajo y notificar al familiar
+function verificarStockYNotificar() {
+  if (currentUser.role !== 'family' || !currentUser.residentId) return;
+  if (Notification.permission !== 'granted') return;
+  const meds = medications.filter(m => m.residentId === currentUser.residentId);
+  meds.forEach(m => {
+    const status = getStatus(m);
+    if (status === 'out') {
+      enviarNotificacionLocal('🚨 Sin stock — ' + m.name, m.name + ' de ' + (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') + ' no tiene stock. Por favor traé más.');
+    } else if (status === 'low') {
+      enviarNotificacionLocal('⚠️ Stock bajo — ' + m.name, m.name + ' tiene poco stock. Quedan aproximadamente ' + m.qty + ' ' + m.unit + '.');
+    }
+  });
+}
 
 // =====================================================
 // ENTREGAS DE FAMILIARES
@@ -1989,7 +2166,6 @@ function openEntrega(residentId) {
     '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'med\','+residentId+')">+ Medicación</button>' +
     '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'higiene\','+residentId+')">+ Higiene</button>' +
     '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'ropa\','+residentId+')">+ Ropa</button>' +
-    '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'cocina\','+residentId+')">+ Cocina</button>' +
     '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'otro\','+residentId+')">+ Otro</button>' +
     '</div></div>' +
 
@@ -2052,20 +2228,6 @@ function addEntregaItem(tipo, residentId) {
       '<input type="text" class="ent-ropa-nombre" placeholder="Prenda (ej: Pantalón)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px">' +
       '<input type="text" class="ent-ropa-talle" placeholder="Talle (ej: M, 42)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
       '</div>' +
-      '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
-  } else if (tipo === 'cocina') {
-    const cocinaRes = cocinaItems.filter(i => i.residentId === residentId);
-    const opts = cocinaRes.length > 0
-      ? cocinaRes.map(i => '<option value="' + i.id + '">' + i.nombre + ' (' + (i.qty||0) + ' ' + (i.unidad||'unidades') + ')</option>').join('')
-      : '<option value="">Sin artículos de cocina cargados</option>';
-    div.innerHTML =
-      '<span style="font-size:18px">🍳</span>' +
-      '<div style="flex:1;min-width:200px">' +
-      '<select class="ent-coc-id" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:\'DM Sans\',sans-serif;margin-bottom:6px">' + opts + '</select>' +
-      '<div style="display:flex;gap:8px;align-items:center">' +
-      '<input type="number" class="ent-qty" min="1" step="0.5" value="1" style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
-      '<span style="font-size:13px;color:var(--text-muted)">unidades</span>' +
-      '</div></div>' +
       '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
   } else {
     div.innerHTML =
@@ -2152,10 +2314,10 @@ async function confirmarEntrega(residentId) {
       window._saveHygiene && window._saveHygiene(hygId);
       movements.push({
         id: Date.now() + Math.random(),
-        medId: hygId, medName: hyg.nombre,
+        medName: hyg.nombre,
         residentId, type: 'in', qty, unit: hyg.unidad || 'unidades',
         by, date: fechaHora,
-        note: 'Higiene · Entrega familiar · ' + nombre + ' DNI ' + dni,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni,
         isHygiene: true
       });
       window._saveMovs && window._saveMovs();
@@ -2175,42 +2337,24 @@ async function confirmarEntrega(residentId) {
       window._saveRopa && window._saveRopa(newRopa.id);
       movements.push({
         id: Date.now() + Math.random(),
-        medId: newRopa.id, medName: ropaNombre + (ropaTalle ? ' talle ' + ropaTalle : ''),
+        medName: ropaNombre + (ropaTalle ? ' (talle ' + ropaTalle + ')' : ''),
         residentId, type: 'in', qty: 1, unit: 'prenda',
         by, date: fechaHora,
-        note: 'Ropa · Entrega familiar · ' + nombre + ' DNI ' + dni,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni,
         isRopa: true
       });
       window._saveMovs && window._saveMovs();
       itemsRegistrados.push('👗 ' + ropaNombre + (ropaTalle ? ' talle ' + ropaTalle : ''));
-
-    } else if (tipo === 'cocina') {
-      const cocId = parseInt(item.querySelector('.ent-coc-id').value);
-      const cocItem = cocinaItems.find(c => c.id === cocId);
-      if (!cocItem) continue;
-      cocItem.qty = (cocItem.qty || 0) + qty;
-      window._saveCocina && window._saveCocina(cocId);
-      movements.push({
-        id: Date.now() + Math.random(),
-        medId: cocId, medName: cocItem.nombre,
-        residentId, type: 'in', qty, unit: cocItem.unidad || 'unidades',
-        by, date: fechaHora,
-        note: 'Cocina · Entrega familiar · ' + nombre + ' DNI ' + dni,
-        isCocina: true
-      });
-      window._saveMovs && window._saveMovs();
-      itemsRegistrados.push('🍳 ' + cocItem.nombre + ' +' + qty);
 
     } else {
       const desc = item.querySelector('.ent-otro-desc').value.trim();
       if (!desc) continue;
       movements.push({
         id: Date.now() + Math.random(),
-        medId: null, medName: desc,
-        residentId, type: 'in', qty: 1, unit: 'ítem',
+        medName: desc,
+        residentId, type: 'in', qty: 1, unit: 'unidad',
         by, date: fechaHora,
-        note: 'Otro · Entrega familiar · ' + nombre + ' DNI ' + dni,
-        isOtro: true
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni
       });
       window._saveMovs && window._saveMovs();
       itemsRegistrados.push('📦 ' + desc);
@@ -2457,14 +2601,20 @@ function renderRopa(c) {
   const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
   const hayPrendas = ropaItems.filter(r => !isFamily || r.residentId === currentUser.residentId).length > 0;
 
+  const ropaSearch = window._ropaSearch || '';
+  const residentesFiltroSearch = residentesFiltro.filter(r => !ropaSearch || r.name.toLowerCase().includes(ropaSearch.toLowerCase()));
+
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">👗 ${isFamily ? 'Ropa de ' + nombreFamiliar : 'Inventario de Ropa'}</h2>
-      ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="ropa-search-input" placeholder="Buscar residente..." value="${ropaSearch}" oninput="window._ropaSearch=this.value;renderTab('ropa')"></div>` : ''}
+        ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
+      </div>
     </div>
     <div id="ropa-content">
       ${!hayPrendas ? `<div class="empty-state"><div class="empty-icon">👗</div><p>No hay prendas cargadas todavía</p></div>` : ''}
-      ${residentesFiltro.map(res => {
+      ${residentesFiltroSearch.map(res => {
         const prendas = ropaItems.filter(r => r.residentId === res.id);
         if (prendas.length === 0) return '';
         return `<div class="card" style="margin-bottom:16px">
@@ -2474,25 +2624,29 @@ function renderRopa(c) {
           </div>
           <div class="card-body" style="padding:0">
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px">
-              ${prendas.map(p => `
-                <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
-                  ${p.foto
-                    ? `<img src="${p.foto}" alt="${p.nombre}" style="width:100%;height:120px;object-fit:cover">`
-                    : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">👕</div>`
-                  }
-                  <div style="padding:8px 10px">
-                    <div style="font-weight:600;font-size:14px">${p.nombre}</div>
-                    ${p.talle ? `<div style="font-size:12px;color:var(--text-muted)">Talle: ${p.talle}</div>` : ''}
-                    ${p.cantidad ? `<div style="font-size:12px;color:var(--text-muted)">Cantidad: ${p.cantidad}</div>` : ''}
-                    ${p.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic">${p.obs}</div>` : ''}
-                    ${p.by ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">➕ ${p.by}<br>${p.fechaCarga||''}</div>` : ''}
-                    ${canEdit() ? `<div style="display:flex;gap:4px;margin-top:8px">
-                      <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px" onclick="openAddRopa(${res.id},${p.id})">✏️</button>
-                      <button class="btn btn-red btn-sm" style="flex:1;padding:4px" onclick="deleteRopa(${p.id})">🗑</button>
-                    </div>` : ''}
-                  </div>
-                </div>
-              `).join('')}
+              ${(() => {
+                const activas = prendas.filter(p => p.estado !== 'retirada');
+                const retiradas = prendas.filter(p => p.estado === 'retirada');
+                const renderPrenda = (p, retirada) => `
+                  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:${retirada?'#f5f5f5':'var(--warm-white)'};opacity:${retirada?'0.7':'1'}">
+                    ${p.foto
+                      ? `<img src="${p.foto}" alt="${p.nombre}" style="width:100%;height:120px;object-fit:cover;${retirada?'filter:grayscale(60%)':''}">`
+                      : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">👕</div>`
+                    }
+                    <div style="padding:8px 10px">
+                      <div style="font-weight:600;font-size:14px">${p.nombre}${retirada?' <span style="font-size:10px;background:#e0e0e0;border-radius:3px;padding:1px 5px">RETIRADA</span>':''}</div>
+                      ${p.talle ? `<div style="font-size:12px;color:var(--text-muted)">Talle: ${p.talle}</div>` : ''}
+                      ${p.cantidad ? `<div style="font-size:12px;color:var(--text-muted)">Cantidad: ${p.cantidad}</div>` : ''}
+                      ${p.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic">${p.obs}</div>` : ''}
+                      ${canEdit() ? `<div style="display:flex;gap:4px;margin-top:8px">
+                        <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px" onclick="openAddRopa(${res.id},${p.id})">✏️</button>
+                        <button class="btn btn-red btn-sm" style="flex:1;padding:4px" onclick="deleteRopa(${p.id})">🗑</button>
+                      </div>` : ''}
+                    </div>
+                  </div>`;
+                return activas.map(p=>renderPrenda(p,false)).join('') +
+                  (retiradas.length>0 ? '<div style="grid-column:1/-1;font-size:12px;color:var(--text-muted);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">📤 Prendas retiradas</div>' + retiradas.map(p=>renderPrenda(p,true)).join('') : '');
+              })()}
             </div>
           </div>
         </div>`;
@@ -2530,6 +2684,8 @@ function openAddRopa(residentId, itemId) {
     '<div class="modal-title">👗 ' + (item ? 'Editar prenda' : 'Agregar prenda') + '</div>' +
     '<div class="form-group"><label>Residente</label><select id="ropa-resident">' + resOptions + '</select></div>' +
     '<div class="form-group"><label>Prenda</label><input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera..." value="' + (item?.nombre||'') + '"></div>' +
+    '<div class="form-group"><label>Estado</label><select id="ropa-estado"><option value="activa">✅ En uso / Disponible</option><option value="retirada">📤 Retirada</option></select></div>' +
+    '<div class="form-group"><label>Estado</label><select id="ropa-estado"><option value="activa"' + ((!item||item.estado!==\'retirada\')?\' selected\':\'\') + '>✅ En uso / Disponible</option><option value="retirada"' + (item?.estado===\'retirada\'?\' selected\':\'\') + '>📤 Retirada</option></select></div>' +
     '<div class="grid-2">' +
       '<div class="form-group"><label>Talle</label><input type="text" id="ropa-talle" placeholder="Ej: M, 42" value="' + (item?.talle||'') + '"></div>' +
       '<div class="form-group"><label>Cantidad</label><input type="number" id="ropa-cantidad" min="1" value="' + (item?.cantidad||1) + '"></div>' +
@@ -2567,6 +2723,7 @@ async function saveRopaItem(itemId) {
   const obs = document.getElementById('ropa-obs').value.trim();
   const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
   const fotoRaw = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+  const estado = document.getElementById('ropa-estado')?.value || 'activa';
   const newId = itemId || Date.now();
   showToast('Guardando...');
   let foto = window._ropaFotoActual || null;
@@ -2574,7 +2731,7 @@ async function saveRopaItem(itemId) {
     foto = await comprimirFoto(fotoRaw);
   }
   const newItem = {
-    id: newId, residentId, nombre, talle, cantidad, obs, foto,
+    id: newId, residentId, nombre, talle, cantidad, obs, foto, estado,
     fechaCarga: new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
     by: currentUser.name || currentUser.user
   };
@@ -2609,15 +2766,20 @@ function renderCocina(c) {
     : [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
   const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
   const hayItems = cocinaItems.filter(i => !isFamily || i.residentId === currentUser.residentId).length > 0;
+  const cocinaSearch = window._cocinaSearch || '';
+  const residentesFiltroSearch = residentesFiltro.filter(r => !cocinaSearch || r.name.toLowerCase().includes(cocinaSearch.toLowerCase()));
 
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">🍳 ${isFamily ? 'Cocina de ' + nombreFamiliar : 'Artículos de Cocina'}</h2>
-      ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="cocina-search-input" placeholder="Buscar residente..." value="${cocinaSearch}" oninput="window._cocinaSearch=this.value;renderTab('cocina')"></div>` : ''}
+        ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
+      </div>
     </div>
     <div id="cocina-content">
       ${!hayItems ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>` : ''}
-      ${residentesFiltro.map(res => {
+      ${residentesFiltroSearch.map(res => {
         const items = cocinaItems.filter(i => i.residentId === res.id);
         if (items.length === 0) return '';
         return `<div class="card" style="margin-bottom:16px">
@@ -2641,7 +2803,6 @@ function renderCocina(c) {
                     <div style="font-size:12px;color:var(--text-muted)">${item.qty || 0} ${item.unidad || 'unidades'}</div>
                     ${item.obs ? `<div style="font-size:11px;color:var(--text-muted);font-style:italic">${item.obs}</div>` : ''}
                     <span class="badge ${badge}" style="margin-top:4px;display:inline-block">${label}</span>
-                    ${item.ultimoMovBy ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">📝 Últ. mov: ${item.ultimoMovBy}<br>${item.ultimoMovFecha||''}</div>` : (item.by ? `<div style="font-size:10px;color:var(--text-muted);margin-top:4px">➕ Cargado por: ${item.by}<br>${item.fechaCarga||''}</div>` : '')}
                     ${canEditCocina ? `<div style="display:flex;gap:4px;margin-top:8px;flex-wrap:wrap">
                       <button class="btn btn-green btn-sm" style="flex:1;padding:4px;font-size:12px" onclick="movCocina(${item.id},'in')">+ Stock</button>
                       <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px;font-size:12px" onclick="movCocina(${item.id},'out')">- Usar</button>
@@ -2773,8 +2934,6 @@ function confirmMovCocina(itemId, type) {
   const item = cocinaItems.find(c => c.id === itemId);
   if (!item) return;
   item.qty = Math.max(0, (item.qty || 0) + (type === 'in' ? qty : -qty));
-  item.ultimoMovBy = currentUser.name || currentUser.user;
-  item.ultimoMovFecha = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   window._saveCocina(item.id);
   showToast(type==='in' ? `+${qty} ${item.unidad} agregados` : `-${qty} ${item.unidad} descontados`);
   closeModal();
@@ -3235,9 +3394,7 @@ function saveHygieneItem(residentId, itemId = null) {
     unidad: tipo === 'necesidad' ? (document.getElementById('h-unidad')?.value || 'unidades') : '',
     dailyUse: tipo === 'necesidad' ? (parseFloat(document.getElementById('h-daily')?.value) || 0) : 0,
     minQty: tipo === 'necesidad' ? (parseInt(document.getElementById('h-min')?.value) || 5) : 0,
-    obs: document.getElementById('h-obs')?.value || '',
-    by: currentUser.name || currentUser.user,
-    fechaCarga: new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    obs: document.getElementById('h-obs')?.value || ''
   };
 
   if (itemId) {
@@ -3258,8 +3415,6 @@ function registrarEntregaHigiene(itemId) {
   if (!item) return;
   const hoy = new Date().toISOString().slice(0,10);
   item.fechaEntrega = hoy;
-  item.entregadoPor = currentUser.name || currentUser.user;
-  item.fechaEntregaHora = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   saveHygiene(itemId);
   showResident(item.residentId);
   showToast('✅ Entrega registrada — próximo aviso en 23 días');
@@ -3288,8 +3443,6 @@ function saveMovHygiene(itemId, type) {
   if (!item) return;
   if (type === 'out' && item.qty < qty) { showToast('No hay suficiente stock'); return; }
   item.qty = type === 'in' ? item.qty + qty : item.qty - qty;
-  item.ultimoMovBy = currentUser.name || currentUser.user;
-  item.ultimoMovFecha = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   saveHygiene(itemId);
   closeModal();
   showToast(type === 'in' ? `+${qty} agregados ✅` : `-${qty} registrados ✅`);
@@ -3619,6 +3772,16 @@ onSnapshot(collection(db, 'ropa'), snapshot => {
 // Sincronización en tiempo real — cocina
 onSnapshot(collection(db, 'cocina'), snapshot => {
   cocinaItems = snapshot.docs.map(d => d.data());
+  if (window.currentUser) {
+    renderTab(window.currentTab || 'home');
+    // Verificar stock y notificar al familiar
+    if (window.currentUser.role === 'family') verificarStockYNotificar();
+  }
+});
+
+// Sincronización en tiempo real — residencia stock
+onSnapshot(collection(db, 'residencia'), snapshot => {
+  residenciaItems = snapshot.docs.map(d => d.data()).sort((a,b) => a.nombre.localeCompare(b.nombre));
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
@@ -3780,6 +3943,18 @@ window._saveResidents = async function() {
 window._deleteResidentDoc = async function(id) {
   try { await deleteDoc(doc(db, 'residents', String(id))); }
   catch(e) { console.error('Error eliminando residente:', e); }
+};
+
+// saveResidencia
+window._saveResidencia = async function(itemId) {
+  const item = residenciaItems.find(i => String(i.id) === String(itemId));
+  if (!item) return;
+  try { await setDoc(doc(db, 'residencia', String(item.id)), item); }
+  catch(e) { console.error('Error guardando residencia:', e); }
+};
+window._deleteResidencia = async function(id) {
+  try { await deleteDoc(doc(db, 'residencia', String(id))); }
+  catch(e) { console.error('Error eliminando residencia:', e); }
 };
 
 // saveEntrega
