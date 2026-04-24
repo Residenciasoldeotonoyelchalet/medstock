@@ -2270,6 +2270,22 @@ function initFirmaCanvas() {
   const canvas = document.getElementById('firma-canvas');
   if (!canvas) return;
 
+  // Intentar rotar a landscape cuando se toca el canvas para firmar
+  canvas.addEventListener('touchstart', function() {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  }, {once: true, passive: true});
+
+  // Volver a portrait cuando se cierra el modal
+  const origClose = window.closeModal;
+  window.closeModal = function() {
+    if (screen.orientation && screen.orientation.unlock) {
+      try { screen.orientation.unlock(); } catch(e) {}
+    }
+    origClose && origClose();
+  };
+
   // En pantalla angosta, hacer el canvas más alto para firmar mejor
   if (window.innerWidth < 500) {
     canvas.height = 160;
