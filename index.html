@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="any">
+  <meta name="x5-orientation" content="landscape|portrait">
+  <meta name="full-screen" content="yes">
 <meta name="theme-color" content="#5c3d1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,12 +15,24 @@
 <title>MedStock – Residencia Sol de Otoño y El Chalet</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  @media (max-width: 480px) {
+  @media (max-width: 600px) {
     html { font-size: 15px; }
-    .card { border-radius: 10px; }
-    .modal { max-width: 95vw; border-radius: 14px; }
-    .btn { padding: 10px 16px; font-size: 14px; }
-    .section-title { font-size: 20px; }
+    .card { border-radius: 10px; margin-bottom: 12px; }
+    .modal { max-width: 96vw; max-height: 92vh; border-radius: 14px; padding: 16px; }
+    .btn { padding: 10px 14px; font-size: 14px; }
+    .section-title { font-size: 19px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .main-content { padding: 12px; }
+    header { padding: 0 12px; }
+    .modal-actions { flex-direction: column; gap: 8px; }
+    .modal-actions .btn { width: 100%; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+  }
+  @media (max-width: 380px) {
+    html { font-size: 14px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   }
 
   :root {
@@ -2176,8 +2191,13 @@ function openEntrega(residentId) {
     '</div></div>' +
 
     '<div class="form-group"><label>Firma del familiar <span style="font-weight:400;color:var(--text-muted)">(firmá con el dedo)</span></label>' +
-    '<canvas id="firma-canvas" width="460" height="120" style="border:1.5px solid var(--border);border-radius:8px;background:white;width:100%;touch-action:none"></canvas>' +
-    '<button onclick="limpiarFirma()" class="btn btn-secondary btn-sm" style="margin-top:6px">🗑 Borrar firma</button>' +
+    '<div id="firma-wrapper" style="position:relative">' +
+    '<canvas id="firma-canvas" width="600" height="200" style="border:1.5px solid var(--border);border-radius:8px;background:white;width:100%;touch-action:none;display:block"></canvas>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:6px;align-items:center">' +
+    '<button onclick="limpiarFirma()" class="btn btn-secondary btn-sm">🗑 Borrar firma</button>' +
+    '<span style="font-size:12px;color:var(--text-muted)">Girá el celular para firmar más cómodo</span>' +
+    '</div>' +
     '</div>' +
 
     '<div class="modal-actions">' +
@@ -2249,23 +2269,61 @@ function addEntregaItem(tipo, residentId) {
 function initFirmaCanvas() {
   const canvas = document.getElementById('firma-canvas');
   if (!canvas) return;
+
+  // En pantalla angosta, hacer el canvas más alto para firmar mejor
+  if (window.innerWidth < 500) {
+    canvas.height = 160;
+    canvas.style.minHeight = '160px';
+  }
+
   const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#2d1f0e';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   let drawing = false;
+  let lastX, lastY;
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     const src = e.touches ? e.touches[0] : e;
-    return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+    return {
+      x: (src.clientX - rect.left) * scaleX,
+      y: (src.clientY - rect.top) * scaleY
+    };
   }
 
-  canvas.addEventListener('mousedown', e => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
-  canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = '#2d1f0e'; ctx.lineWidth = 2; ctx.stroke(); });
-  canvas.addEventListener('mouseup', () => drawing = false);
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }, {passive:false});
-  canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.strokeStyle = '#2d1f0e'; ctx.lineWidth = 2; ctx.stroke(); }, {passive:false});
-  canvas.addEventListener('touchend', () => drawing = false);
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+
+  function endDraw(e) { drawing = false; }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive:false});
+  canvas.addEventListener('touchmove', draw, {passive:false});
+  canvas.addEventListener('touchend', endDraw, {passive:false});
 }
 
 function limpiarFirma() {
@@ -3707,6 +3765,11 @@ function removeHorario(idx) {
 }
 
 function updateHorario(input, idx) { /* no usado */ }
+
+// Desbloquear rotación de pantalla
+if (screen.orientation && screen.orientation.unlock) {
+  try { screen.orientation.unlock(); } catch(e) {}
+}
 
 // Evitar que el scroll modifique inputs numéricos
 document.addEventListener('wheel', function(e) {
