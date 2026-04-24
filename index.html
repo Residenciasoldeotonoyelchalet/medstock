@@ -2411,6 +2411,32 @@ function verEntregas(residentId) {
   );
 }
 
+function filtrarRopa(val) {
+  window._ropaSearch = val;
+  const container = document.getElementById('ropa-content');
+  if (!container) return;
+  const words = val.toLowerCase().split(' ').filter(Boolean);
+  const cards = container.querySelectorAll('[data-resid]');
+  cards.forEach(card => {
+    const name = card.dataset.resname || '';
+    const match = !words.length || words.every(w => name.toLowerCase().includes(w));
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+function filtrarCocina(val) {
+  window._cocinaSearch = val;
+  const container = document.getElementById('cocina-content');
+  if (!container) return;
+  const words = val.toLowerCase().split(' ').filter(Boolean);
+  const cards = container.querySelectorAll('[data-resid]');
+  cards.forEach(card => {
+    const name = card.dataset.resname || '';
+    const match = !words.length || words.every(w => name.toLowerCase().includes(w));
+    card.style.display = match ? '' : 'none';
+  });
+}
+
 function verFotoGrande(src, nombre) {
   showModal(
     '<div class="modal-title">' + nombre + '</div>' +
@@ -2626,7 +2652,7 @@ function renderRopa(c) {
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">👗 ${isFamily ? 'Ropa de ' + nombreFamiliar : 'Inventario de Ropa'}</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="ropa-search-input" placeholder="Buscar residente..." value="${ropaSearch}" oninput="window._ropaSearch=this.value;renderTab('ropa')"></div>` : ''}
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="ropa-search-input" placeholder="Buscar residente..." value="${ropaSearch}" oninput="filtrarRopa(this.value)"></div>` : ''}
         ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
       </div>
     </div>
@@ -2635,7 +2661,7 @@ function renderRopa(c) {
       ${residentesFiltroSearch.map(res => {
         const prendas = ropaItems.filter(r => r.residentId === res.id);
         if (prendas.length === 0) return '';
-        return `<div class="card" style="margin-bottom:16px">
+        return `<div class="card" style="margin-bottom:16px" data-resid="${res.id}" data-resname="${res.name}">
           <div class="card-header">
             <div class="card-title">👤 ${res.name}</div>
             ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddRopa(${res.id})">+ Prenda</button>` : ''}
@@ -2794,7 +2820,7 @@ function renderCocina(c) {
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">🍳 ${isFamily ? 'Cocina de ' + nombreFamiliar : 'Artículos de Cocina'}</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="cocina-search-input" placeholder="Buscar residente..." value="${cocinaSearch}" oninput="window._cocinaSearch=this.value;renderTab('cocina')"></div>` : ''}
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="cocina-search-input" placeholder="Buscar residente..." value="${cocinaSearch}" oninput="filtrarCocina(this.value)"></div>` : ''}
         ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
       </div>
     </div>
@@ -2803,7 +2829,7 @@ function renderCocina(c) {
       ${residentesFiltroSearch.map(res => {
         const items = cocinaItems.filter(i => i.residentId === res.id);
         if (items.length === 0) return '';
-        return `<div class="card" style="margin-bottom:16px">
+        return `<div class="card" style="margin-bottom:16px" data-resid="${res.id}" data-resname="${res.name}">
           <div class="card-header">
             <div class="card-title">👤 ${res.name}</div>
             ${canEditCocina ? `<button class="btn btn-primary btn-sm" onclick="openAddCocina(null,${res.id})">+ Artículo</button>` : ''}
