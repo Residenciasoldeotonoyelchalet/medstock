@@ -2,7 +2,10 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="screen-orientation" content="any">
+  <meta name="x5-orientation" content="landscape|portrait">
+  <meta name="full-screen" content="yes">
 <meta name="theme-color" content="#5c3d1e">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,6 +15,26 @@
 <title>MedStock – Residencia Sol de Otoño y El Chalet</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+  @media (max-width: 600px) {
+    html { font-size: 15px; }
+    .card { border-radius: 10px; margin-bottom: 12px; }
+    .modal { max-width: 96vw; max-height: 92vh; border-radius: 14px; padding: 16px; }
+    .btn { padding: 10px 14px; font-size: 14px; }
+    .section-title { font-size: 19px; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .main-content { padding: 12px; }
+    header { padding: 0 12px; }
+    .modal-actions { flex-direction: column; gap: 8px; }
+    .modal-actions .btn { width: 100%; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+  }
+  @media (max-width: 380px) {
+    html { font-size: 14px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  }
+
   :root {
     --cream: #faf7f2;
     --warm-white: #fff9f2;
@@ -243,15 +266,18 @@
   .nav-tabs {
     background: white;
     border-bottom: 2px solid var(--border);
-    padding: 0 24px;
+    padding: 0 12px;
     display: flex;
-    gap: 4px;
+    gap: 2px;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .nav-tabs::-webkit-scrollbar { display: none; }
 
   .nav-tab {
-    padding: 14px 20px;
-    font-size: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
@@ -261,7 +287,7 @@
     transition: all 0.2s;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
   .nav-tab:hover { color: var(--amber); }
@@ -952,6 +978,8 @@ let movements = [];
 let hygieneItems = []; // artículos de higiene por residente
 let ropaItems = []; // prendas de ropa por residente
 let cocinaItems = []; // artículos de cocina (ingredientes, insumos)
+let entregas = []; // registro de entregas de familiares
+let residenciaItems = []; // stock general de la residencia (sábanas, toallas, etc.)
 
 function saveMeds(medId = null) {
   const trySave = () => {
@@ -991,6 +1019,71 @@ function saveData() {
 // AUTH
 // =====================================================
 
+
+// ── CONTROL DE UBICACIÓN ──
+const RESIDENCIAS = [
+  { nombre: 'El Chalet', lat: -31.5411371, lng: -68.5012521 },
+  { nombre: 'Sol de Otoño', lat: -31.5866159, lng: -68.5373806 }
+];
+const GPS_RADIO_METROS = 300;
+
+function distanciaMetros(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function estaEnResidencia(lat, lng) {
+  return RESIDENCIAS.some(r => distanciaMetros(lat, lng, r.lat, r.lng) <= GPS_RADIO_METROS);
+}
+
+function verificarUbicacionYEntrar(user) {
+  const rolesConGPS = ['nurse', 'cocina'];
+  // Si el GPS está desactivado por el admin, dejar pasar siempre
+  if (!rolesConGPS.includes(user.role) || localStorage.getItem('medstock_gps_off') === '1') {
+    completarLogin(user);
+    return;
+  }
+  if (!navigator.geolocation) {
+    completarLogin(user); // Si el browser no soporta GPS, dejar pasar
+    return;
+  }
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '📍 Verificando ubicación...';
+  errEl.style.display = 'block';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude, longitude } = pos.coords;
+      if (estaEnResidencia(latitude, longitude)) {
+        errEl.style.display = 'none';
+        completarLogin(user);
+      } else {
+        errEl.textContent = '🚫 Solo podés acceder desde la residencia';
+        errEl.style.display = 'block';
+      }
+    },
+    err => {
+      // Si niegan el GPS o hay error, bloquear
+      errEl.textContent = '📍 Necesitás permitir el acceso a tu ubicación para ingresar';
+      errEl.style.display = 'block';
+    },
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function completarLogin(found) {
+  currentUser = found;
+  window.currentUser = found;
+  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
+  buildNav();
+  renderTab('home');
+}
+
 function doLogin(savedUser = null) {
   // Si los usuarios todavía no cargaron desde Firestore, esperar
   if (!usersLoaded) {
@@ -1017,15 +1110,11 @@ function doLogin(savedUser = null) {
     }
     return;
   }
-  currentUser = found;
-  window.currentUser = found;
-  // Guardar sesión en localStorage
-  localStorage.setItem('medstock_session', JSON.stringify({ user: found.user, pass: found.pass }));
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  document.getElementById('user-display').textContent = found.name + ' · ' + ROLE_LABELS[found.role];
-  buildNav();
-  renderTab('home');
+  if (savedUser) {
+    completarLogin(found);
+  } else {
+    verificarUbicacionYEntrar(found);
+  }
 }
 
 // Restaurar sesión al cargar la página
@@ -1218,6 +1307,7 @@ function buildNav() {
       { id: 'home', label: '🏠 Inicio' },
       { id: 'my-resident', label: '👤 Mi familiar' },
       { id: 'movements', label: '📋 Movimientos' },
+      { id: 'movements', label: '📋 Movimientos' },
       { id: 'ropa', label: '👗 Ropa' },
       { id: 'cocina', label: '🍳 Cocina' },
     ]; // familia: solo lectura
@@ -1234,11 +1324,12 @@ function buildNav() {
     ];
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'movements', label: '📋 Movimientos' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'ropa', label: '👗 Ropa' });
+    if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'residencia', label: '🏠 Residencia' });
     if (['owner','manager','nurse'].includes(currentUser.role)) items.push({ id: 'cocina', label: '🍳 Cocina' });
     if (isAdmin()) items.push({ id: 'users', label: '⚙️ Usuarios' });
   }
   // Solo resaltar pestaña activa si es una tab real (no detalle de residente)
-  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina'].includes(currentTab) ? currentTab : (currentUser.role === 'family' ? 'home' : 'residents');
+  const activeTab = ['home','residents','medications','movements','users','my-resident','ropa','cocina','residencia'].includes(currentTab) ? currentTab : (currentUser.role === 'family' ? 'home' : 'residents');
   tabs.innerHTML = items.map(t =>
     `<div class="nav-tab ${t.id === activeTab ? 'active' : ''}" onclick="renderTab('${t.id}')">${t.label}</div>`
   ).join('');
@@ -1256,6 +1347,7 @@ function renderTab(tab) {
   else if (tab === 'movements') renderMovements(c);
   else if (tab === 'users') renderUsers(c);
   else if (tab === 'ropa') renderRopa(c);
+  else if (tab === 'residencia') renderResidencia(c);
   else if (tab === 'cocina') renderCocina(c);
 }
 
@@ -1292,12 +1384,43 @@ function renderHome(c) {
           <button onclick="localStorage.setItem('medstock_install_dismissed','1');document.getElementById('install-card').remove()" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:9px 12px;border-radius:8px;font-size:18px;cursor:pointer;line-height:1">×</button>
         </div>
       </div>` : ''}
-      <div class="stats-grid">
+      ${currentUser.role === 'family' && typeof Notification !== 'undefined' && Notification.permission !== 'granted' ? `
+    <div style="background:linear-gradient(135deg,#2c3e50,#3498db);border-radius:var(--radius);padding:16px 20px;color:white;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:28px">🔔</span>
+        <div>
+          <div style="font-weight:700;font-size:15px">Activar notificaciones</div>
+          <div style="font-size:12px;opacity:0.85;margin-top:2px">Recibí alertas cuando el stock esté bajo</div>
+        </div>
+      </div>
+      <button onclick="solicitarPermisoPush()" style="background:white;color:#2c3e50;border:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif">Activar</button>
+    </div>` : ''}
+    <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon">💊</div><div class="stat-value">${myMeds.length}</div><div class="stat-label">Medicamentos de ${res ? res.name.split(' ')[0] : ''}</div></div>
         <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${myMeds.filter(m=>getStatus(m)==='low').length}</div><div class="stat-label">Stock bajo</div></div>
         <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${myMeds.filter(m=>getStatus(m)==='out').length}</div><div class="stat-label">Sin stock</div></div>
       </div>
       ${renderAlertsSection(myMeds)}
+    `;
+    return;
+  }
+
+  if (currentUser.role === 'cocina') {
+    const misCocina = cocinaItems.length;
+    const cocinaLow = cocinaItems.filter(i => i.minQty > 0 && i.qty <= i.minQty && i.qty > 0).length;
+    const cocinaOut = cocinaItems.filter(i => i.qty <= 0).length;
+    c.innerHTML = `
+      <h2 class="section-title">🍳 Panel de Cocina</h2>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🧂</div><div class="stat-value">${misCocina}</div><div class="stat-label">Artículos cargados</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value" style="color:var(--yellow)">${cocinaLow}</div><div class="stat-label">Stock bajo</div></div>
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-value" style="color:var(--red)">${cocinaOut}</div><div class="stat-label">Sin stock</div></div>
+      </div>
+      <div class="card" style="margin-top:4px">
+        <div class="card-body" style="text-align:center;padding:20px">
+          <button class="btn btn-primary" onclick="renderTab('cocina')" style="font-size:16px;padding:14px 32px">🍳 Ir a Cocina</button>
+        </div>
+      </div>
     `;
     return;
   }
@@ -1392,7 +1515,13 @@ function getStatus(m) {
   // Única toma nunca genera alarma; A evaluar sí muestra sin stock si llega a 0
   if (m.treatment === 'unica') return 'ok';
   if (m.treatment === 'evolucion') return m.qty <= 0 ? 'out' : 'ok';
-  if (m.sos) return m.qty <= 0 ? 'out' : 'ok';
+  if (m.sos) {
+    if (m.qty <= 0) return 'out';
+    const sosDosis = m.sosDosis || 1;
+    const minDays = m.minDays || 7;
+    if (m.qty < sosDosis * minDays) return 'low';
+    return 'ok';
+  }
   if (m.qty <= 0) return 'out';
   const minDays = m.minDays || 7;
   // Porcentaje
@@ -1524,6 +1653,8 @@ function showResident(id) {
       <h2 class="section-title" style="margin:0">👤 ${res.name}</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddMed(${id})">+ Agregar medicamento</button>` : ''}
+        ${canEdit() ? `<button class="btn btn-green btn-sm" onclick="openEntrega(${id})">📦 Registrar entrega</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="verEntregas(${id})">📋 Ver entregas</button>
         ${(canFullEdit() || currentUser.role === 'family') ? `<button class="btn btn-secondary btn-sm" onclick="printResident(${id})">📥 Descargar Planilla PDF</button>` : ''}
       </div>
     </div>
@@ -1566,9 +1697,11 @@ function showResident(id) {
                   ${m.fechaFin ? `<br><small style="color:var(--text-muted);font-size:10px">🏁 Fin: ${new Date(m.fechaFin + 'T00:00:00').toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})}</small>` : ''}
                 </td>
                 <td style="font-size:12px">
-                  ${normalizarHorarios(m).length > 0
-                    ? normalizarHorarios(m).map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
-                    : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
+                  ${m.sos
+                    ? `<span style="display:inline-block;background:#fde8b0;color:#7a4800;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600">SOS · ${m.sosDosis || 1} ${m.unit}/toma</span>`
+                    : normalizarHorarios(m).length > 0
+                      ? normalizarHorarios(m).map(h => `<span style="display:inline-block;background:var(--blue-light);color:var(--blue);border-radius:4px;padding:2px 6px;margin:2px;font-size:11px;font-weight:600">${h.hora} · ${h.dosis}${m.unit}</span>`).join('')
+                      : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
                 </td>
                 <td style="font-size:11px;color:var(--text-muted)">${frecuenciaLabel(m)}</td>
                 <td><strong>${getDosisdiaria(m)}</strong> ${m.unit}/día</td>
@@ -1590,8 +1723,10 @@ function showResident(id) {
                     <button class="btn btn-green btn-sm" onclick="registerTake(${m.id})">✅ Dar</button>
                     <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'in')">+ Stock</button>
                     <button class="btn btn-secondary btn-sm" onclick="openMovement(${m.id}, 'out')">- Salida</button>
-                    ${canFullEdit() ? `
+                    ${canEdit() ? `
                       <button class="btn btn-secondary btn-sm" onclick="openAddMed(${id}, ${m.id})">✏️</button>
+                    ` : ''}
+                    ${canFullEdit() ? `
                       <button class="btn btn-red btn-sm" onclick="deleteMed(${m.id})">🗑</button>
                     ` : ''}
                   </div>
@@ -1720,7 +1855,7 @@ function registerTake(mid) {
     type: 'out',
     qty: dosisHoy,
     unit: med.unit,
-    date: new Date().toLocaleString(),
+    date: new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
     by: currentUser.name,
     note: 'Toma registrada por enfermería'
   });
@@ -1793,7 +1928,7 @@ function renderMovements(c) {
 
   let list = isFamily
     ? movements.filter(m => m.residentId === currentUser.residentId)
-    : movements;
+    : movements.filter(m => !isFamily || m.residentId);
 
   const hygieneMovs = (hygieneItems || [])
     .filter(h => !isFamily || h.residentId === currentUser.residentId)
@@ -1814,7 +1949,7 @@ function renderMovements(c) {
       medName: r.nombre + (r.talle ? ' (talle ' + r.talle + ')' : ''),
       residentId: r.residentId, qty: r.cantidad || 1, unit: 'prenda',
       by: r.by || 'Registrado',
-      date: r.fechaCarga ? new Date(r.fechaCarga + 'T00:00:00').toLocaleDateString('es-AR') : '',
+      date: r.fechaCarga || '—',
       note: 'Ropa', isRopa: true
     }));
 
@@ -1847,11 +1982,11 @@ function renderMovements(c) {
     ? '<div class="empty-state"><div class="empty-icon">📭</div><p>Sin movimientos registrados</p></div>'
     : listaFinal.map(function(mov) {
         const r = RESIDENTS.find(function(r) { return r.id === mov.residentId; });
-        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : (mov.type === 'in' ? '💊' : '📤');
+        const icon = mov.isHygiene ? '🧴' : mov.isRopa ? '👗' : mov.isCocina ? '🍳' : mov.isResidencia ? '🏠' : mov.type === 'edit' ? '✏️' : (mov.type === 'in' ? '💊' : '📤');
         const tipoLabel = mov.isHygiene ? 'Higiene recibida'
           : mov.isRopa ? (mov.qty + ' prenda/s')
           : mov.isCocina ? (mov.qty + ' ' + mov.unit)
-          : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
+          : mov.type === 'edit' ? mov.note : (mov.type === 'in' ? ('+' + mov.qty + ' ' + mov.unit + ' ingresados') : ('-' + mov.qty + ' ' + mov.unit + ' usados'));
         return '<div class="movement-item">'
           + '<div class="movement-icon ' + (mov.type === 'in' ? 'mov-in' : 'mov-out') + '" style="font-size:16px">' + icon + '</div>'
           + '<div><strong>' + mov.medName + '</strong>' + (r && !isFamily ? ' — ' + r.name : '') + '<br>'
@@ -1868,6 +2003,585 @@ function renderMovements(c) {
 }
 
 
+// =====================================================
+// STOCK RESIDENCIA (sábanas, toallas, etc.)
+// =====================================================
+
+function renderResidencia(c) {
+  const canEditRes = ['owner','manager','nurse'].includes(currentUser.role);
+  const resSearch = window._resStockSearch || '';
+  const lista = resSearch
+    ? residenciaItems.filter(i => i.nombre.toLowerCase().includes(resSearch.toLowerCase()))
+    : residenciaItems;
+
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <h2 class="section-title" style="margin:0">🏠 Stock de Residencia</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="resstock-search" placeholder="Buscar artículo..." value="${resSearch}" oninput="window._resStockSearch=this.value;renderTab('residencia')"></div>
+        ${canEditRes ? `<button class="btn btn-primary" onclick="openAddResidencia()">+ Agregar artículo</button>` : ''}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0">
+        ${lista.length === 0
+          ? `<div class="empty-state"><div class="empty-icon">🏠</div><p>No hay artículos cargados todavía</p></div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px">
+              ${lista.map(item => {
+                const bajo = item.minQty > 0 && item.qty <= item.minQty;
+                const badge = item.qty <= 0 ? 'badge-out' : bajo ? 'badge-low' : 'badge-ok';
+                const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Stock bajo' : '✅ OK';
+                return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
+                  ${item.foto ? `<img src="${item.foto}" onclick="verFotoGrande('${item.foto}','${item.nombre}')" style="width:100%;height:130px;object-fit:cover;cursor:zoom-in">` : `<div style="width:100%;height:60px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:28px">📦</div>`}
+                  <div style="padding:12px">
+                  <div style="font-weight:600;font-size:15px">${item.nombre}</div>
+                  <div style="font-size:13px;color:var(--text-muted);margin-top:2px">${item.qty || 0} ${item.unidad || 'unidades'}</div>
+                  ${item.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:2px">${item.obs}</div>` : ''}
+                  <span class="badge ${badge}" style="margin-top:6px;display:inline-block">${label}</span>
+                  ${canEditRes ? `<div style="display:flex;gap:4px;margin-top:10px">
+                    <button class="btn btn-green btn-sm" style="flex:1;font-size:12px;padding:5px" onclick="movResidencia(${item.id},'in')">+ Stock</button>
+                    <button class="btn btn-secondary btn-sm" style="flex:1;font-size:12px;padding:5px" onclick="movResidencia(${item.id},'out')">- Usar</button>
+                    <button class="btn btn-secondary btn-sm" style="padding:5px 8px" onclick="openAddResidencia(${item.id})">✏️</button>
+                    ${isAdmin() ? `<button class="btn btn-red btn-sm" style="padding:5px 8px" onclick="deleteResidencia(${item.id})">🗑</button>` : ''}
+                  </div>` : ''}
+                </div>`;
+              }).join('')}
+            </div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function openAddResidencia(itemId) {
+  itemId = itemId || null;
+  const item = itemId ? residenciaItems.find(i => i.id === itemId) : null;
+  const emojis = ['🛏️','🛁','🧺','🪣','🧴','🧻','🪒','🧼','🛋️','🪑','📦'];
+  showModal(
+    '<div class="modal-title">🏠 '+(item?'Editar':'Agregar artículo')+'</div>'+
+    '<div class="form-group"><label>Nombre</label><input type="text" id="res-nombre" placeholder="Ej: Sábanas, Toallas, Almohadas..." value="'+(item?.nombre||'')+'"></div>'+
+    '<div class="grid-2">'+
+    '<div class="form-group"><label>Cantidad</label><input type="number" id="res-qty" min="0" value="'+(item?.qty||0)+'"></div>'+
+    '<div class="form-group"><label>Unidad</label><input type="text" id="res-unidad" placeholder="Ej: unidades, juegos" value="'+(item?.unidad||'unidades')+'"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>Alerta cuando quede menos de</label><input type="number" id="res-minqty" min="0" value="'+(item?.minQty||0)+'"></div>'+
+    '<div class="form-group"><label>Foto (opcional)</label>'+
+    '<input type="file" id="res-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px">'+
+    '<div id="res-foto-preview" style="margin-top:8px">'+(item?.foto?'<img src="'+item.foto+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">':'')+'</div>'+
+    '</div>'+
+    '<div class="form-group"><label>Observaciones</label><input type="text" id="res-obs" placeholder="Ej: Habitación 1, lavandería..." value="'+(item?.obs||'')+'"></div>'+
+    '<div class="modal-actions">'+
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn btn-primary" onclick="saveResidenciaItem('+(itemId||'null')+')">Guardar</button>'+
+    '</div>'
+  );
+  setTimeout(function() {
+    const fi = document.getElementById('res-foto-input');
+    if (fi) fi.addEventListener('change', function(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        document.getElementById('res-foto-preview').innerHTML = '<img src="'+ev.target.result+'" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">';
+      };
+      reader.readAsDataURL(file);
+    });
+  }, 100);
+}
+
+async function saveResidenciaItem(itemId) {
+  itemId = itemId || null;
+  const nombre = document.getElementById('res-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre del artículo'); return; }
+  const existingItem = itemId ? residenciaItems.find(i => i.id === itemId) : null;
+  const previewImg = document.getElementById('res-foto-preview')?.querySelector('img');
+  const fotoRaw = previewImg ? previewImg.src : (existingItem?.foto || null);
+  let foto = existingItem?.foto || null;
+  if (fotoRaw && fotoRaw.startsWith('data:image')) {
+    foto = await comprimirFoto(fotoRaw);
+  }
+  // Setup foto input listener
+  const fotoInput = document.getElementById('res-foto-input');
+  if (fotoInput && !fotoInput._listenerAdded) {
+    fotoInput._listenerAdded = true;
+    fotoInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        document.getElementById('res-foto-preview').innerHTML =
+          '<img src="' + ev.target.result + '" style="width:100%;max-height:160px;object-fit:cover;border-radius:8px">';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  const newItem = {
+    id: itemId || Date.now(),
+    nombre,
+    qty: parseFloat(document.getElementById('res-qty').value) || 0,
+    unidad: document.getElementById('res-unidad').value.trim() || 'unidades',
+    minQty: parseFloat(document.getElementById('res-minqty').value) || 0,
+    obs: document.getElementById('res-obs').value.trim(),
+    foto,
+    by: currentUser.name || currentUser.user
+  };
+  if (itemId) {
+    residenciaItems = residenciaItems.map(i => i.id === itemId ? newItem : i);
+  } else {
+    residenciaItems.push(newItem);
+  }
+  window._saveResidencia(newItem.id);
+  showToast('Artículo guardado');
+  closeModal();
+  renderTab('residencia');
+  return;
+}
+
+function movResidencia(itemId, type) {
+  const item = residenciaItems.find(i => i.id === itemId);
+  if (!item) return;
+  showModal(
+    '<div class="modal-title">'+(type==='in'?'+ Agregar':'- Usar')+': '+item.nombre+'</div>'+
+    '<div class="form-group"><label>Cantidad ('+item.unidad+')</label><input type="number" id="res-mov-qty" min="1" value="1"></div>'+
+    '<div class="modal-actions">'+
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>'+
+    '<button class="btn btn-primary" onclick="confirmMovResidencia('+itemId+',\''+type+'\')">Confirmar</button>'+
+    '</div>'
+  );
+}
+
+function confirmMovResidencia(itemId, type) {
+  const qty = parseFloat(document.getElementById('res-mov-qty').value) || 0;
+  const item = residenciaItems.find(i => i.id === itemId);
+  if (!item) return;
+  item.qty = Math.max(0, (item.qty||0) + (type==='in'?qty:-qty));
+  window._saveResidencia(item.id);
+  // Registrar en movimientos
+  const fecha = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  movements.push({
+    id: Date.now(),
+    medName: item.nombre + ' (Residencia)',
+    residentId: null,
+    type,
+    qty,
+    unit: item.unidad || 'unidades',
+    by: currentUser.name || currentUser.user,
+    date: fecha,
+    note: type==='in' ? 'Stock residencia ingresado' : 'Stock residencia usado',
+    isResidencia: true
+  });
+  saveMovs && saveMovs();
+  showToast(type==='in'?'+'+qty+' '+item.unidad+' agregados':'-'+qty+' '+item.unidad+' descontados');
+  closeModal();
+  renderTab('residencia');
+}
+
+function deleteResidencia(id) {
+  if (!confirm('¿Eliminar este artículo?')) return;
+  residenciaItems = residenciaItems.filter(i => i.id !== id);
+  window._deleteResidencia(id);
+  showToast('Artículo eliminado');
+  renderTab('residencia');
+}
+
+// =====================================================
+// NOTIFICACIONES PUSH
+// =====================================================
+
+async function solicitarPermisoPush() {
+  if (!('Notification' in window)) { showToast('Este navegador no soporta notificaciones'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    localStorage.setItem('medstock_push_enabled', '1');
+    showToast('✅ Notificaciones activadas');
+  } else {
+    showToast('❌ Permiso de notificaciones denegado');
+  }
+}
+
+function enviarNotificacionLocal(titulo, cuerpo, icon) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  new Notification(titulo, { body: cuerpo, icon: icon || '/medstock/icon-192.png' });
+}
+
+// Verificar stock bajo y notificar al familiar
+function verificarStockYNotificar() {
+  if (currentUser.role !== 'family' || !currentUser.residentId) return;
+  if (Notification.permission !== 'granted') return;
+  const meds = medications.filter(m => m.residentId === currentUser.residentId);
+  meds.forEach(m => {
+    const status = getStatus(m);
+    if (status === 'out') {
+      enviarNotificacionLocal('🚨 Sin stock — ' + m.name, m.name + ' de ' + (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') + ' no tiene stock. Por favor traé más.');
+    } else if (status === 'low') {
+      enviarNotificacionLocal('⚠️ Stock bajo — ' + m.name, m.name + ' tiene poco stock. Quedan aproximadamente ' + m.qty + ' ' + m.unit + '.');
+    }
+  });
+}
+
+// =====================================================
+// ENTREGAS DE FAMILIARES
+// =====================================================
+
+function openEntrega(residentId) {
+  const res = RESIDENTS.find(r => r.id === residentId);
+  const meds = medications.filter(m => m.residentId === residentId);
+  const hyg = hygieneItems.filter(h => h.residentId === residentId && h.tipo === 'necesidad');
+
+  showModal(
+    '<div class="modal-title">📦 Registrar entrega — ' + res.name + '</div>' +
+
+    '<div class="form-group"><label>Nombre del familiar que entrega</label>' +
+    '<input type="text" id="ent-nombre" placeholder="Ej: Juan García"></div>' +
+
+    '<div class="form-group"><label>DNI</label>' +
+    '<input type="text" id="ent-dni" placeholder="Ej: 28456789" inputmode="numeric"></div>' +
+
+    '<div style="margin-bottom:16px">' +
+    '<div style="font-size:13px;font-weight:600;color:var(--brown);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Ítems entregados</div>' +
+    '<div id="ent-items" style="display:flex;flex-direction:column;gap:8px"></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+    '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'med\','+residentId+')">+ Medicación</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'higiene\','+residentId+')">+ Higiene</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'ropa\','+residentId+')">+ Ropa</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="addEntregaItem(\'otro\','+residentId+')">+ Otro</button>' +
+    '</div></div>' +
+
+    '<div class="form-group"><label>Firma del familiar <span style="font-weight:400;color:var(--text-muted)">(firmá con el dedo)</span></label>' +
+    '<div id="firma-wrapper" style="position:relative">' +
+    '<canvas id="firma-canvas" width="600" height="200" style="border:1.5px solid var(--border);border-radius:8px;background:white;width:100%;touch-action:none;display:block"></canvas>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:6px;align-items:center">' +
+    '<button onclick="limpiarFirma()" class="btn btn-secondary btn-sm">🗑 Borrar firma</button>' +
+    '<span style="font-size:12px;color:var(--text-muted)">Girá el celular para firmar más cómodo</span>' +
+    '</div>' +
+    '</div>' +
+
+    '<div class="modal-actions">' +
+    '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>' +
+    '<button class="btn btn-primary" onclick="confirmarEntrega(' + residentId + ')">✅ Confirmar entrega</button>' +
+    '</div>'
+  );
+
+  // Inicializar canvas de firma
+  setTimeout(() => initFirmaCanvas(), 100);
+  // Agregar un item de medicación por defecto
+  addEntregaItem('med', residentId);
+}
+
+function addEntregaItem(tipo, residentId) {
+  const container = document.getElementById('ent-items');
+  if (!container) return;
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap';
+  div.dataset.tipo = tipo;
+  div.dataset.idx = idx;
+
+  if (tipo === 'med') {
+    const meds = medications.filter(m => m.residentId === residentId);
+    const opts = meds.map(m => '<option value="' + m.id + '">' + m.name + (m.drug ? ' (' + m.drug + ')' : '') + '</option>').join('');
+    div.innerHTML =
+      '<span style="font-size:18px">💊</span>' +
+      '<div style="flex:1;min-width:200px">' +
+      '<select class="ent-med-id" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:\'DM Sans\',sans-serif;margin-bottom:6px">' + opts + '</select>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+      '<input type="number" class="ent-qty" min="1" value="1" style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
+      '<span style="font-size:13px;color:var(--text-muted)">unidades</span>' +
+      '</div></div>' +
+      '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
+  } else if (tipo === 'higiene') {
+    const hyg = hygieneItems.filter(h => h.residentId === residentId && h.tipo === 'necesidad');
+    const opts = hyg.length > 0
+      ? hyg.map(h => '<option value="' + h.id + '">' + h.nombre + '</option>').join('')
+      : '<option value="">Sin artículos cargados</option>';
+    div.innerHTML =
+      '<span style="font-size:18px">🧴</span>' +
+      '<div style="flex:1;min-width:200px">' +
+      '<select class="ent-hyg-id" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:\'DM Sans\',sans-serif;margin-bottom:6px">' + opts + '</select>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+      '<input type="number" class="ent-qty" min="1" value="1" style="width:80px;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
+      '<span style="font-size:13px;color:var(--text-muted)">unidades</span>' +
+      '</div></div>' +
+      '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
+  } else if (tipo === 'ropa') {
+    div.innerHTML =
+      '<span style="font-size:18px">👗</span>' +
+      '<div style="flex:1;min-width:200px">' +
+      '<input type="text" class="ent-ropa-nombre" placeholder="Prenda (ej: Pantalón)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px">' +
+      '<input type="text" class="ent-ropa-talle" placeholder="Talle (ej: M, 42)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
+      '</div>' +
+      '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
+  } else {
+    div.innerHTML =
+      '<span style="font-size:18px">📦</span>' +
+      '<div style="flex:1;min-width:200px">' +
+      '<input type="text" class="ent-otro-desc" placeholder="Descripción del artículo" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px">' +
+      '</div>' +
+      '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:0;line-height:1">×</button>';
+  }
+  container.appendChild(div);
+}
+
+function initFirmaCanvas() {
+  const canvas = document.getElementById('firma-canvas');
+  if (!canvas) return;
+
+  // Intentar rotar a landscape cuando se toca el canvas para firmar
+  canvas.addEventListener('touchstart', function() {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  }, {once: true, passive: true});
+
+  // Volver a portrait cuando se cierra el modal
+  const origClose = window.closeModal;
+  window.closeModal = function() {
+    if (screen.orientation && screen.orientation.unlock) {
+      try { screen.orientation.unlock(); } catch(e) {}
+    }
+    origClose && origClose();
+  };
+
+  // En pantalla angosta, hacer el canvas más alto para firmar mejor
+  if (window.innerWidth < 500) {
+    canvas.height = 160;
+    canvas.style.minHeight = '160px';
+  }
+
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#2d1f0e';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  let drawing = false;
+  let lastX, lastY;
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const src = e.touches ? e.touches[0] : e;
+    return {
+      x: (src.clientX - rect.left) * scaleX,
+      y: (src.clientY - rect.top) * scaleY
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  }
+
+  function draw(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+  }
+
+  function endDraw(e) { drawing = false; }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchstart', startDraw, {passive:false});
+  canvas.addEventListener('touchmove', draw, {passive:false});
+  canvas.addEventListener('touchend', endDraw, {passive:false});
+}
+
+function limpiarFirma() {
+  const canvas = document.getElementById('firma-canvas');
+  if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function confirmarEntrega(residentId) {
+  const nombre = document.getElementById('ent-nombre').value.trim();
+  const dni = document.getElementById('ent-dni').value.trim();
+  if (!nombre) { showToast('Escribí el nombre del familiar'); return; }
+  if (!dni) { showToast('Escribí el DNI'); return; }
+
+  const canvas = document.getElementById('firma-canvas');
+  const firmaData = canvas ? canvas.toDataURL('image/png') : null;
+
+  const container = document.getElementById('ent-items');
+  const items = Array.from(container.children);
+  if (items.length === 0) { showToast('Agregá al menos un ítem'); return; }
+
+  const entregaId = Date.now();
+  const fechaHora = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const by = currentUser.name || currentUser.user;
+  const res = RESIDENTS.find(r => r.id === residentId);
+  const itemsRegistrados = [];
+
+  for (const item of items) {
+    const tipo = item.dataset.tipo;
+    const qty = parseInt(item.querySelector('.ent-qty')?.value) || 1;
+
+    if (tipo === 'med') {
+      const medId = parseInt(item.querySelector('.ent-med-id').value);
+      const med = medications.find(m => m.id === medId);
+      if (!med) continue;
+      med.qty = (med.qty || 0) + qty;
+      await window._saveMeds(String(medId));
+      movements.push({
+        id: Date.now() + Math.random(),
+        medId, medName: med.name,
+        residentId, type: 'in', qty, unit: med.unit,
+        by, date: fechaHora,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni
+      });
+      window._saveMovs && window._saveMovs();
+      itemsRegistrados.push('💊 ' + med.name + ' +' + qty + ' ' + med.unit);
+
+    } else if (tipo === 'higiene') {
+      const hygId = parseInt(item.querySelector('.ent-hyg-id').value);
+      const hyg = hygieneItems.find(h => h.id === hygId);
+      if (!hyg) continue;
+      hyg.qty = (hyg.qty || 0) + qty;
+      window._saveHygiene && window._saveHygiene(hygId);
+      movements.push({
+        id: Date.now() + Math.random(),
+        medName: hyg.nombre,
+        residentId, type: 'in', qty, unit: hyg.unidad || 'unidades',
+        by, date: fechaHora,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni,
+        isHygiene: true
+      });
+      window._saveMovs && window._saveMovs();
+      itemsRegistrados.push('🧴 ' + hyg.nombre + ' +' + qty);
+
+    } else if (tipo === 'ropa') {
+      const ropaNombre = item.querySelector('.ent-ropa-nombre').value.trim();
+      const ropaTalle = item.querySelector('.ent-ropa-talle').value.trim();
+      if (!ropaNombre) continue;
+      const newRopa = {
+        id: Date.now() + Math.random(),
+        residentId, nombre: ropaNombre, talle: ropaTalle,
+        cantidad: 1, obs: 'Entregada por ' + nombre,
+        fechaCarga: fechaHora, by, foto: null
+      };
+      ropaItems.push(newRopa);
+      window._saveRopa && window._saveRopa(newRopa.id);
+      movements.push({
+        id: Date.now() + Math.random(),
+        medName: ropaNombre + (ropaTalle ? ' (talle ' + ropaTalle + ')' : ''),
+        residentId, type: 'in', qty: 1, unit: 'prenda',
+        by, date: fechaHora,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni,
+        isRopa: true
+      });
+      window._saveMovs && window._saveMovs();
+      itemsRegistrados.push('👗 ' + ropaNombre + (ropaTalle ? ' talle ' + ropaTalle : ''));
+
+    } else {
+      const desc = item.querySelector('.ent-otro-desc').value.trim();
+      if (!desc) continue;
+      movements.push({
+        id: Date.now() + Math.random(),
+        medName: desc,
+        residentId, type: 'in', qty: 1, unit: 'unidad',
+        by, date: fechaHora,
+        note: 'Entrega familiar · ' + nombre + ' DNI ' + dni
+      });
+      window._saveMovs && window._saveMovs();
+      itemsRegistrados.push('📦 ' + desc);
+    }
+  }
+
+  // Guardar registro de entrega
+  const entrega = {
+    id: entregaId,
+    residentId,
+    residentName: res ? res.name : '',
+    familiar: nombre,
+    dni,
+    items: itemsRegistrados,
+    firma: firmaData,
+    fecha: fechaHora,
+    timestamp: entregaId,
+    recibidoPor: by
+  };
+  entregas.push(entrega);
+  await window._saveEntrega(entrega);
+
+  closeModal();
+  showToast('✅ Entrega registrada — ' + itemsRegistrados.length + ' ítem/s');
+  showResident(residentId);
+}
+
+function verEntregas(residentId) {
+  const res = RESIDENTS.find(r => r.id === residentId);
+  const lista = entregas.filter(e => e.residentId === residentId);
+  if (lista.length === 0) { showToast('Sin entregas registradas para este residente'); return; }
+
+  const filas = lista.map(e =>
+    '<div style="border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:10px">' +
+    '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">' +
+    '<div><strong style="font-size:15px">' + e.familiar + '</strong> <span style="color:var(--text-muted);font-size:13px">DNI ' + e.dni + '</span></div>' +
+    '<div style="font-size:12px;color:var(--text-muted)">' + e.fecha + ' · Recibió: ' + e.recibidoPor + '</div>' +
+    '</div>' +
+    '<div style="font-size:13px;margin-bottom:8px">' + (e.items || []).join('<br>') + '</div>' +
+    (e.firma ? '<img src="' + e.firma + '" style="max-width:200px;border:1px solid var(--border);border-radius:4px">' : '') +
+    '</div>'
+  ).join('');
+
+  showModal(
+    '<div class="modal-title">📦 Entregas de ' + (res ? res.name : '') + '</div>' +
+    '<div style="max-height:60vh;overflow-y:auto">' + filas + '</div>' +
+    '<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cerrar</button></div>'
+  );
+}
+
+function filtrarRopa(val) {
+  window._ropaSearch = val;
+  const container = document.getElementById('ropa-content');
+  if (!container) return;
+  const words = val.toLowerCase().split(' ').filter(Boolean);
+  const cards = container.querySelectorAll('[data-resid]');
+  cards.forEach(card => {
+    const name = card.dataset.resname || '';
+    const match = !words.length || words.every(w => name.toLowerCase().includes(w));
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+function filtrarCocina(val) {
+  window._cocinaSearch = val;
+  const container = document.getElementById('cocina-content');
+  if (!container) return;
+  const words = val.toLowerCase().split(' ').filter(Boolean);
+  const cards = container.querySelectorAll('[data-resid]');
+  cards.forEach(card => {
+    const name = card.dataset.resname || '';
+    const match = !words.length || words.every(w => name.toLowerCase().includes(w));
+    card.style.display = match ? '' : 'none';
+  });
+}
+
+function verFotoGrande(src, nombre) {
+  showModal(
+    '<div class="modal-title">' + nombre + '</div>' +
+    '<img src="' + src + '" style="width:100%;max-height:70vh;object-fit:contain;border-radius:8px;display:block">' +
+    '<div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cerrar</button></div>'
+  );
+}
+
+function toggleGPS() {
+  const off = localStorage.getItem('medstock_gps_off') === '1';
+  localStorage.setItem('medstock_gps_off', off ? '0' : '1');
+  showToast(off ? '🟢 GPS activado — enfermeras necesitan estar en la residencia' : '🔴 GPS desactivado — cualquiera puede entrar');
+  renderTab('users');
+}
+
 function renderUsers(c) {
   const staff  = USERS.filter(u => u.role !== 'family');
   const family = USERS.filter(u => u.role === 'family');
@@ -1876,8 +2590,12 @@ function renderUsers(c) {
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">⚙️ Usuarios del sistema</h2>
-      ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
-    </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        ${isOwner ? `<button class="btn btn-primary btn-sm" onclick="openUserModal()">+ Nuevo usuario</button>` : ''}
+        ${isOwner ? `<button id="gps-toggle-btn" class="btn btn-sm" onclick="toggleGPS()" style="background:${localStorage.getItem('medstock_gps_off')==='1'?'#c0392b':'#4a7c59'};color:white;padding:7px 14px;font-size:13px">
+          ${localStorage.getItem('medstock_gps_off')==='1' ? '🔴 GPS desactivado (clic para activar)' : '🟢 GPS activado (clic para desactivar)'}
+        </button>` : ''}
+      </div>
 
     <!-- PERSONAL -->
     <div class="card" style="margin-bottom:20px">
@@ -2053,41 +2771,56 @@ function renderRopa(c) {
   const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
   const hayPrendas = ropaItems.filter(r => !isFamily || r.residentId === currentUser.residentId).length > 0;
 
+  const ropaSearch = window._ropaSearch || '';
+  const residentesFiltroSearch = residentesFiltro.filter(r => {
+    if (!ropaSearch) return true;
+    const words = ropaSearch.toLowerCase().split(' ').filter(Boolean);
+    return words.every(w => r.name.toLowerCase().includes(w));
+  });
+
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">👗 ${isFamily ? 'Ropa de ' + nombreFamiliar : 'Inventario de Ropa'}</h2>
-      ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="ropa-search-input" placeholder="Buscar residente..." value="${ropaSearch}" oninput="filtrarRopa(this.value)"></div>` : ''}
+        ${canEdit() ? `<button class="btn btn-primary" onclick="openAddRopa()">+ Agregar prenda</button>` : ''}
+      </div>
     </div>
     <div id="ropa-content">
       ${!hayPrendas ? `<div class="empty-state"><div class="empty-icon">👗</div><p>No hay prendas cargadas todavía</p></div>` : ''}
-      ${residentesFiltro.map(res => {
+      ${residentesFiltroSearch.map(res => {
         const prendas = ropaItems.filter(r => r.residentId === res.id);
         if (prendas.length === 0) return '';
-        return `<div class="card" style="margin-bottom:16px">
+        return `<div class="card" style="margin-bottom:16px" data-resid="${res.id}" data-resname="${res.name}">
           <div class="card-header">
             <div class="card-title">👤 ${res.name}</div>
             ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="openAddRopa(${res.id})">+ Prenda</button>` : ''}
           </div>
           <div class="card-body" style="padding:0">
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px">
-              ${prendas.map(p => `
-                <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
-                  ${p.foto
-                    ? `<img src="${p.foto}" alt="${p.nombre}" style="width:100%;height:120px;object-fit:cover">`
-                    : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">👕</div>`
-                  }
-                  <div style="padding:8px 10px">
-                    <div style="font-weight:600;font-size:14px">${p.nombre}</div>
-                    ${p.talle ? `<div style="font-size:12px;color:var(--text-muted)">Talle: ${p.talle}</div>` : ''}
-                    ${p.cantidad ? `<div style="font-size:12px;color:var(--text-muted)">Cantidad: ${p.cantidad}</div>` : ''}
-                    ${p.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic">${p.obs}</div>` : ''}
-                    ${canEdit() ? `<div style="display:flex;gap:4px;margin-top:8px">
-                      <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px" onclick="openAddRopa(${res.id},${p.id})">✏️</button>
-                      <button class="btn btn-red btn-sm" style="flex:1;padding:4px" onclick="deleteRopa(${p.id})">🗑</button>
-                    </div>` : ''}
-                  </div>
-                </div>
-              `).join('')}
+              ${(() => {
+                const activas = prendas.filter(p => p.estado !== 'retirada');
+                const retiradas = prendas.filter(p => p.estado === 'retirada');
+                const renderPrenda = (p, retirada) => `
+                  <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:${retirada?'#f5f5f5':'var(--warm-white)'};opacity:${retirada?'0.7':'1'}">
+                    ${p.foto
+                      ? `<img src="${p.foto}" alt="${p.nombre}" onclick="verFotoGrande('${p.foto}','${p.nombre}')" style="width:100%;height:120px;object-fit:cover;cursor:zoom-in;${retirada?'filter:grayscale(60%)':''}" title="Tocá para ampliar">`
+                      : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">👕</div>`
+                    }
+                    <div style="padding:8px 10px">
+                      <div style="font-weight:600;font-size:14px">${p.nombre}${retirada?' <span style="font-size:10px;background:#e0e0e0;border-radius:3px;padding:1px 5px">RETIRADA</span>':''}</div>
+                      ${p.talle ? `<div style="font-size:12px;color:var(--text-muted)">Talle: ${p.talle}</div>` : ''}
+                      ${p.cantidad ? `<div style="font-size:12px;color:var(--text-muted)">Cantidad: ${p.cantidad}</div>` : ''}
+                      ${p.obs ? `<div style="font-size:12px;color:var(--text-muted);font-style:italic">${p.obs}</div>` : ''}
+                      ${canEdit() ? `<div style="display:flex;gap:4px;margin-top:8px">
+                        <button class="btn btn-secondary btn-sm" style="flex:1;padding:4px" onclick="openAddRopa(${res.id},${p.id})">✏️</button>
+                        <button class="btn btn-red btn-sm" style="flex:1;padding:4px" onclick="deleteRopa(${p.id})">🗑</button>
+                      </div>` : ''}
+                    </div>
+                  </div>`;
+                return activas.map(p=>renderPrenda(p,false)).join('') +
+                  (retiradas.length>0 ? '<div style="grid-column:1/-1;font-size:12px;color:var(--text-muted);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:4px">📤 Prendas retiradas</div>' + retiradas.map(p=>renderPrenda(p,true)).join('') : '');
+              })()}
             </div>
           </div>
         </div>`;
@@ -2095,6 +2828,97 @@ function renderRopa(c) {
     </div>
   `;
 }
+
+function comprimirFoto(src, maxWidth) {
+  maxWidth = maxWidth || 200;
+  return new Promise(function(resolve) {
+    if (!src || !src.startsWith('data:image')) { resolve(src); return; }
+    const img = new Image();
+    img.onload = function() {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.3));
+    };
+    img.onerror = function() { resolve(null); };
+    img.src = src;
+  });
+}
+
+function openAddRopa(residentId, itemId) {
+  residentId = residentId || null;
+  itemId = itemId || null;
+  const item = itemId ? ropaItems.find(r => r.id === itemId) : null;
+  const resOptions = RESIDENTS.map(r =>
+    '<option value="' + r.id + '"' + ((residentId == r.id || item?.residentId == r.id) ? ' selected' : '') + '>' + r.name + '</option>'
+  ).join('');
+  showModal(
+    '<div class="modal-title">👗 ' + (item ? 'Editar prenda' : 'Agregar prenda') + '</div>' +
+    '<div class="form-group"><label>Residente</label><select id="ropa-resident">' + resOptions + '</select></div>' +
+    '<div class="form-group"><label>Prenda</label><input type="text" id="ropa-nombre" placeholder="Ej: Pantalón, Remera..." value="' + (item?.nombre||'') + '"></div>' +
+    '<div class="form-group"><label>Estado</label><select id="ropa-estado"><option value="activa">✅ En uso / Disponible</option><option value="retirada">📤 Retirada</option></select></div>' +
+    '<div class="grid-2">' +
+      '<div class="form-group"><label>Talle</label><input type="text" id="ropa-talle" placeholder="Ej: M, 42" value="' + (item?.talle||'') + '"></div>' +
+      '<div class="form-group"><label>Cantidad</label><input type="number" id="ropa-cantidad" min="1" value="' + (item?.cantidad||1) + '"></div>' +
+    '</div>' +
+    '<div class="form-group"><label>Foto (desde galería)</label>' +
+      '<input type="file" id="ropa-foto-input" accept="image/*" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px">' +
+      '<div id="ropa-foto-preview" style="margin-top:8px">' + (item?.foto ? '<img src="' + item.foto + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">' : '') + '</div>' +
+    '</div>' +
+    '<div class="form-group"><label>Observaciones</label><textarea id="ropa-obs" rows="2" placeholder="Ej: Marcada con nombre...">' + (item?.obs||'') + '</textarea></div>' +
+    '<div class="modal-actions">' +
+      '<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>' +
+      '<button class="btn btn-primary" onclick="saveRopaItem(' + (itemId||'null') + ')">Guardar</button>' +
+    '</div>'
+  );
+  window._ropaFotoActual = item?.foto || null;
+  document.getElementById('ropa-foto-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('ropa-foto-preview').innerHTML =
+        '<img src="' + ev.target.result + '" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px">';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function saveRopaItem(itemId) {
+  itemId = itemId || null;
+  const nombre = document.getElementById('ropa-nombre').value.trim();
+  if (!nombre) { showToast('Escribí el nombre de la prenda'); return; }
+  const residentId = parseInt(document.getElementById('ropa-resident').value);
+  const talle = document.getElementById('ropa-talle').value.trim();
+  const cantidad = parseInt(document.getElementById('ropa-cantidad').value) || 1;
+  const obs = document.getElementById('ropa-obs').value.trim();
+  const previewImg = document.getElementById('ropa-foto-preview').querySelector('img');
+  const fotoRaw = previewImg ? previewImg.src : (window._ropaFotoActual || null);
+  const estado = document.getElementById('ropa-estado')?.value || 'activa';
+  const newId = itemId || Date.now();
+  showToast('Guardando...');
+  let foto = window._ropaFotoActual || null;
+  if (fotoRaw && fotoRaw.startsWith('data:image')) {
+    foto = await comprimirFoto(fotoRaw);
+  }
+  const newItem = {
+    id: newId, residentId, nombre, talle, cantidad, obs, foto, estado,
+    fechaCarga: new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}),
+    by: currentUser.name || currentUser.user
+  };
+  if (itemId) {
+    ropaItems = ropaItems.map(r => r.id === itemId ? newItem : r);
+  } else {
+    ropaItems.push(newItem);
+  }
+  await window._saveRopa(newItem.id);
+  showToast('✅ Prenda guardada');
+  closeModal();
+  renderTab('ropa');
+}
+
 function deleteRopa(id) {
   if (!confirm('¿Eliminar esta prenda?')) return;
   ropaItems = ropaItems.filter(r => r.id !== id);
@@ -2115,18 +2939,27 @@ function renderCocina(c) {
     : [...RESIDENTS].sort((a,b) => a.name.localeCompare(b.name));
   const nombreFamiliar = isFamily ? (RESIDENTS.find(r=>r.id===currentUser.residentId)?.name||'') : '';
   const hayItems = cocinaItems.filter(i => !isFamily || i.residentId === currentUser.residentId).length > 0;
+  const cocinaSearch = window._cocinaSearch || '';
+  const residentesFiltroSearch = residentesFiltro.filter(r => {
+    if (!cocinaSearch) return true;
+    const words = cocinaSearch.toLowerCase().split(' ').filter(Boolean);
+    return words.every(w => r.name.toLowerCase().includes(w));
+  });
 
   c.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
       <h2 class="section-title" style="margin:0">🍳 ${isFamily ? 'Cocina de ' + nombreFamiliar : 'Artículos de Cocina'}</h2>
-      ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${!isFamily ? `<div class="search-bar"><span class="search-icon">🔍</span><input type="text" id="cocina-search-input" placeholder="Buscar residente..." value="${cocinaSearch}" oninput="filtrarCocina(this.value)"></div>` : ''}
+        ${canEditCocina ? `<button class="btn btn-primary" onclick="openAddCocina()">+ Agregar artículo</button>` : ''}
+      </div>
     </div>
     <div id="cocina-content">
       ${!hayItems ? `<div class="empty-state"><div class="empty-icon">🧂</div><p>No hay artículos cargados todavía</p></div>` : ''}
-      ${residentesFiltro.map(res => {
+      ${residentesFiltroSearch.map(res => {
         const items = cocinaItems.filter(i => i.residentId === res.id);
         if (items.length === 0) return '';
-        return `<div class="card" style="margin-bottom:16px">
+        return `<div class="card" style="margin-bottom:16px" data-resid="${res.id}" data-resname="${res.name}">
           <div class="card-header">
             <div class="card-title">👤 ${res.name}</div>
             ${canEditCocina ? `<button class="btn btn-primary btn-sm" onclick="openAddCocina(null,${res.id})">+ Artículo</button>` : ''}
@@ -2139,7 +2972,7 @@ function renderCocina(c) {
                 const label = item.qty <= 0 ? '🚨 Sin stock' : bajo ? '⚠️ Bajo' : '✅ OK';
                 return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--warm-white)">
                   ${item.foto
-                    ? `<img src="${item.foto}" alt="${item.nombre}" style="width:100%;height:120px;object-fit:cover">`
+                    ? `<img src="${item.foto}" alt="${item.nombre}" onclick="verFotoGrande('${item.foto}','${item.nombre}')" style="width:100%;height:120px;object-fit:cover;cursor:zoom-in" title="Tocá para ampliar">`
                     : `<div style="width:100%;height:120px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:36px">🧂</div>`
                   }
                   <div style="padding:8px 10px">
@@ -2370,8 +3203,18 @@ function openAddMed(residentId, medId = null) {
     </div>
 
     <div class="form-group" style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto; margin:0;">
+      <input type="checkbox" id="m-sos" ${med?.sos ? 'checked' : ''} style="width:auto; margin:0;" onchange="document.getElementById('sos-dosis-group').style.display=this.checked?'block':'none'">
       <label for="m-sos" style="margin:0; text-transform:none; font-size:14px; letter-spacing:0; cursor:pointer;">Es SOS (no descontar stock automáticamente)</label>
+    </div>
+
+    <div id="sos-dosis-group" style="display:${med?.sos ? 'block' : 'none'}">
+      <div class="form-group">
+        <label>Dosis por toma SOS <span style="font-weight:400;color:var(--text-muted)">(ej: 8 gotas, 1 comprimido)</span></label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="m-sos-dosis" min="0" step="0.5" value="${med?.sosDosis || 1}" style="width:100px">
+          <span style="color:var(--text-muted);font-size:14px">${med?.unit || 'unidades'}</span>
+        </div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -2507,6 +3350,7 @@ function saveMed(residentId, medId = null) {
     qty: parseFloat(document.getElementById('m-qty').value) || 0,
     minDays: parseInt(document.getElementById('m-min-days').value) || 7,
     sos: document.getElementById('m-sos').checked,
+    sosDosis: parseFloat(document.getElementById('m-sos-dosis')?.value) || 1,
     obs: document.getElementById('m-obs').value,
     horarios: Array.from(document.querySelectorAll('#horarios-container .horario-row')).map(row => ({
       hora: row.querySelector('input[type=time]')?.value || '',
@@ -2520,16 +3364,41 @@ function saveMed(residentId, medId = null) {
   };
 
   if (medId) {
+    // Registrar cambios en movimientos si es enfermera
+    const medAnterior = medications.find(m => m.id === medId);
+    if (medAnterior && currentUser.role === 'nurse') {
+      const cambios = [];
+      if (JSON.stringify(medAnterior.horarios) !== JSON.stringify(newMed.horarios)) {
+        const dosisAntes = (medAnterior.horarios||[]).reduce((s,h)=>s+(parseFloat(h.dosis)||0),0);
+        const dosisDespues = (newMed.horarios||[]).reduce((s,h)=>s+(parseFloat(h.dosis)||0),0);
+        cambios.push('dosis: ' + dosisAntes + ' → ' + dosisDespues + ' ' + newMed.unit + '/día');
+      }
+      if (medAnterior.frecuencia !== newMed.frecuencia) {
+        cambios.push('frecuencia: ' + (medAnterior.frecuencia||'diario') + ' → ' + newMed.frecuencia);
+      }
+      if (cambios.length > 0) {
+        const mov = {
+          id: Date.now(),
+          medId: medId,
+          medName: newMed.name,
+          residentId: parseInt(residentId),
+          type: 'edit',
+          qty: 0,
+          unit: newMed.unit,
+          by: currentUser.name || currentUser.user,
+          date: new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          note: 'Modificación de ' + cambios.join(', ')
+        };
+        movements.push(mov);
+        window._saveMovs && window._saveMovs();
+      }
+    }
     medications = medications.map(m => m.id === medId ? newMed : m);
-    showToast('Medicamento actualizado ✅');
   } else {
     medications.push(newMed);
-    showToast('Medicamento agregado ✅');
   }
 
-  // Guardar solo este medicamento específico en Firestore
   saveMeds(newMed.id);
-  saveMovs();
   closeModal();
   showToast(medId ? 'Medicamento actualizado ✅' : 'Medicamento guardado ✅');
   showResident(parseInt(residentId));
@@ -2791,7 +3660,7 @@ function closeModal() {
 // =====================================================
 
 function today() {
-  return new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return new Date().toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // =====================================================
@@ -2969,6 +3838,11 @@ function removeHorario(idx) {
 
 function updateHorario(input, idx) { /* no usado */ }
 
+// Desbloquear rotación de pantalla
+if (screen.orientation && screen.orientation.unlock) {
+  try { screen.orientation.unlock(); } catch(e) {}
+}
+
 // Evitar que el scroll modifique inputs numéricos
 document.addEventListener('wheel', function(e) {
   if (document.activeElement && document.activeElement.type === 'number') {
@@ -3080,6 +3954,22 @@ onSnapshot(collection(db, 'ropa'), snapshot => {
 // Sincronización en tiempo real — cocina
 onSnapshot(collection(db, 'cocina'), snapshot => {
   cocinaItems = snapshot.docs.map(d => d.data());
+  if (window.currentUser) {
+    renderTab(window.currentTab || 'home');
+    // Verificar stock y notificar al familiar
+    if (window.currentUser.role === 'family') verificarStockYNotificar();
+  }
+});
+
+// Sincronización en tiempo real — residencia stock
+onSnapshot(collection(db, 'residencia'), snapshot => {
+  residenciaItems = snapshot.docs.map(d => d.data()).sort((a,b) => a.nombre.localeCompare(b.nombre));
+  if (window.currentUser) renderTab(window.currentTab || 'home');
+});
+
+// Sincronización en tiempo real — entregas
+onSnapshot(collection(db, 'entregas'), snapshot => {
+  entregas = snapshot.docs.map(d => d.data()).sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
   if (window.currentUser) renderTab(window.currentTab || 'home');
 });
 
@@ -3235,6 +4125,24 @@ window._saveResidents = async function() {
 window._deleteResidentDoc = async function(id) {
   try { await deleteDoc(doc(db, 'residents', String(id))); }
   catch(e) { console.error('Error eliminando residente:', e); }
+};
+
+// saveResidencia
+window._saveResidencia = async function(itemId) {
+  const item = residenciaItems.find(i => String(i.id) === String(itemId));
+  if (!item) return;
+  try { await setDoc(doc(db, 'residencia', String(item.id)), item); }
+  catch(e) { console.error('Error guardando residencia:', e); }
+};
+window._deleteResidencia = async function(id) {
+  try { await deleteDoc(doc(db, 'residencia', String(id))); }
+  catch(e) { console.error('Error eliminando residencia:', e); }
+};
+
+// saveEntrega
+window._saveEntrega = async function(entrega) {
+  try { await setDoc(doc(db, 'entregas', String(entrega.id)), entrega); }
+  catch(e) { console.error('Error guardando entrega:', e); showToast('❌ Error al guardar la entrega'); }
 };
 
 // saveRopa
